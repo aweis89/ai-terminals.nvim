@@ -1,4 +1,4 @@
-local Core = {}
+local M = {}
 
 ------------------------------------------
 -- Ignore Patterns for Diff
@@ -88,7 +88,7 @@ end
 ---@return string filepath Filepath of the buffer
 ---@return number start_line Starting line number
 ---@return number end_line Ending line number
-function Core.get_visual_selection(bufnr)
+function M.get_visual_selection(bufnr)
 	local api = vim.api
 	local esc_feedkey = api.nvim_replace_termcodes("<ESC>", true, false, true)
 	bufnr = bufnr or 0
@@ -127,9 +127,10 @@ end
 ---@param bufnr integer|nil
 ---@param opts table|nil Options for formatting (preserve_whitespace, etc.)
 ---@return string|nil
-function Core.get_visual_selection_with_header(bufnr, opts)
+function M.get_visual_selection_with_header(bufnr, opts)
 	opts = opts or {}
-	local lines, path = Core.get_visual_selection(bufnr)
+	bufnr = bufnr or 0
+	local lines, path = M.get_visual_selection(bufnr)
 
 	if not lines or #lines == 0 then
 		vim.notify("No text selected", vim.log.levels.WARN)
@@ -147,7 +148,7 @@ end
 ---@param cmd string
 ---@param position "float"|"bottom"|"top"|"left"|"right"|nil
 ---@return snacks.win|nil
-function Core.ai_terminal(cmd, position)
+function M.ai_terminal(cmd, position)
 	position = position or "float"
 	local valid_positions = { float = true, bottom = true, top = true, left = true, right = true }
 
@@ -185,7 +186,7 @@ end
 
 ---Compare current directory with its backup in ~/tmp and open differing files
 ---@return nil
-function Core.diff_with_tmp()
+function M.diff_with_tmp()
 	local cwd = vim.fn.getcwd()
 	local cwd_name = vim.fn.fnamemodify(cwd, ":t")
 	local tmp_dir = BASE_COPY_DIR .. cwd_name
@@ -239,7 +240,7 @@ end
 ---Send text to a terminal
 ---@param text string The text to send
 ---@return nil
-function Core.send(text, opts)
+function M.send(text, opts)
 	local ok, err = pcall(vim.fn.chansend, vim.b.terminal_job_id, text)
 	if not ok then
 		vim.notify("Failed to send selection: " .. tostring(err), vim.log.levels.ERROR)
@@ -247,9 +248,9 @@ function Core.send(text, opts)
 	end
 end
 
-function Core.scratch_prompt()
+function M.scratch_prompt()
 	local bufnr = vim.api.nvim_get_current_buf()
-	local selection = Core.get_visual_selection_with_header(bufnr)
+	local selection = M.get_visual_selection_with_header(bufnr)
 	Snacks.scratch()
 	local scratch_bufnr = vim.api.nvim_get_current_buf()
 	if not selection then
@@ -270,10 +271,10 @@ function Core.scratch_prompt()
 			vim.api.nvim_del_autocmd(args.id) -- Clean up the autocommand
 			vim.api.nvim_buf_set_lines(scratch_bufnr, 0, -1, false, {})
 			vim.defer_fn(function()
-				Core.aider_terminal()
-				Core.send("\n{EOL\n")
-				Core.send(table.concat(result, "\n"))
-				Core.send("\nEOL}\n")
+				M.aider_terminal()
+				M.send("\n{EOL\n")
+				M.send(table.concat(result, "\n"))
+				M.send("\nEOL}\n")
 			end, 500)
 		end,
 	})
@@ -285,21 +286,21 @@ end
 
 ---Create a Goose terminal
 ---@return snacks.win|nil
-function Core.goose_terminal()
-	return Core.ai_terminal(string.format("GOOSE_CLI_THEME=%s goose", vim.o.background))
+function M.goose_terminal()
+	return M.ai_terminal(string.format("GOOSE_CLI_THEME=%s goose", vim.o.background))
 end
 
 ---Create a Claude terminal
 ---@return snacks.win|nil
-function Core.claude_terminal()
+function M.claude_terminal()
 	local theme = vim.o.background
-	return Core.ai_terminal(string.format("claude config set -g theme %s && claude", theme))
+	return M.ai_terminal(string.format("claude config set -g theme %s && claude", theme))
 end
 
 ---Create a Claude terminal
 ---@return snacks.win|nil
-function Core.aider_terminal()
-	return Core.ai_terminal(string.format("aider --watch-files --%s-mode", vim.o.background))
+function M.aider_terminal()
+	return M.ai_terminal(string.format("aider --watch-files --%s-mode", vim.o.background))
 end
 
 -- Helper function to map severity enum to string
@@ -314,7 +315,7 @@ local function get_severity_str(severity)
 end
 
 ---@return string
-function Core.diagnostics()
+function M.diagnostics()
 	local diagnostics = {}
 	local bufnr = 0 -- Use current buffer
 	local mode = vim.api.nvim_get_mode().mode
@@ -378,7 +379,7 @@ function Core.diagnostics()
 end
 
 ---@return string[]
-function Core.diag_format(diagnostics)
+function M.diag_format(diagnostics)
 	local output = {}
 	local severity_map = {
 		[vim.diagnostic.severity.ERROR] = "ERROR",
@@ -403,11 +404,11 @@ end
 ---Add a comment above the current line based on user input
 ---@param prefix string The prefix to add before the user's comment text
 ---@return nil
-function Core.add_comment_above_line(prefix)
+function M.add_comment_above_line(prefix)
 	prefix = prefix or "AI!" -- Default prefix if none provided
 	-- toggle aider terminal
-	Core.aider_terminal()
-	Core.aider_terminal()
+	M.aider_terminal()
+	M.aider_terminal()
 	local comment_text = vim.fn.input("Enter comment (" .. prefix .. "): ")
 	if comment_text == "" then
 		return -- Do nothing if the user entered nothing
@@ -433,7 +434,7 @@ end
 -- Helper function to send commands to aider terminal
 ---@param files string[] List of file paths to add to aider
 ---@param opts? { read_only?: boolean } Options for the command
-function Core.add_files_to_aider(files, opts)
+function M.add_files_to_aider(files, opts)
 	opts = opts or {}
 	local command = opts.read_only and "/read-only" or "/add"
 
@@ -452,4 +453,10 @@ function Core.add_files_to_aider(files, opts)
 	term.send(command .. " " .. files_str .. "\n")
 end
 
-return Core
+function M.aider_multiline(text)
+	local aider_prefix = "\n{EOL\n"
+	local aider_postfix = "\nEOL}\n"
+	return aider_prefix .. text .. aider_postfix
+end
+
+return M
