@@ -1,4 +1,32 @@
+# AI Terminals Neovim Plugin
+
+This plugin integrates any terminal/CLI-based AI agent into Neovim, providing a seamless workflow for interacting with AI assistants directly within your editor.
+
+## Features
+
+### Generic Features (Works with any terminal-based AI agent):
+
+*   **Terminal Integration:** Easily open and manage terminals running your preferred AI CLI tool (e.g., Claude, Goose, Aider, custom scripts) using `Snacks` for terminal management.
+*   **Diff View:** Compare the changes made by the AI agent in the last session with the current state of your project files. A backup of your project is created, and `diff -rq` is used to find differing files, which are then opened in diff view across multiple tabs.
+*   **Automatic File Reloading:** When you switch focus away from the AI terminal window, all listed buffers in Neovim are checked for modifications and reloaded if necessary, ensuring you see the latest changes made by the AI.
+*   **Send Visual Selection:** Send the currently selected text (visual mode) to the AI terminal, automatically wrapped in a markdown code block with the file path and language type included.
+*   **Send Diagnostics:** Send diagnostics (errors, warnings, etc.) for the current buffer or visual selection to the AI terminal, formatted with severity, line/column numbers, messages, and the corresponding source code lines.
+
+### Aider Specific Features:
+
+While the generic features work well with Aider, this plugin includes additional helpers specifically for Aider:
+
+*   **Add Files:** Quickly add the current file or a list of files to the Aider chat context using `/add` or `/read-only`.
+*   **Add Comments:** Insert comments above the current line with a custom prefix (e.g., `AI!`, `AI?`). This action automatically saves the file and can optionally start the Aider terminal if it's not already running.
+*   **Multiline Input Handling:** Automatically formats text (like visual selections or diagnostics) using Aider's specific `{EOL ... EOL}` syntax for reliable multiline input.
+
+## Dependencies
+
+*   [Snacks.nvim](https://github.com/folke/snacks.nvim): Required for terminal window management.
+
 ### Example usage with lazy.nvim
+
+#### Basic Keymaps
 
 lua```
 local plug = function()
@@ -23,6 +51,8 @@ return {
         "<leader>ass",
         function()
           plug().claude_terminal()
+          -- or start a custom terminal instead:
+          -- plug().ai_terminal("my-cli --arg")
         end,
         desc = "Toggle Claude terminal",
       },
@@ -130,3 +160,78 @@ return {
 
 ```lua
 ```
+
+#### Integrating with a File Picker (e.g., snacks.nvim)
+
+You can integrate the `add_files_to_aider` function with file pickers like `snacks.nvim` to easily add selected files to the Aider context.
+
+Here's an example of how you might configure `snacks.nvim` to add actions for sending files to Aider:
+
+```lua
+-- In your snacks.nvim configuration (e.g., lua/plugins/snacks.lua)
+
+-- Helper function to extract files from a snacks picker and send them to aider
+---@param picker snacks.Picker
+---@param opts? { read_only?: boolean } Options for the command
+local function add_files_from_picker(picker, opts)
+  local selected = picker:selected({ fallback = true })
+  local files_to_add = {}
+  for _, item in pairs(selected) do
+    if item.file then
+      local full_path = vim.fn.fnamemodify(item.file, ":p")
+      table.insert(files_to_add, full_path)
+    end
+  end
+  -- Assuming 'ai-terminals' is the name you used in lazy.nvim
+  require("ai-terminals").add_files_to_aider(files_to_add, opts)
+end
+
+-- Inside the snacks opts function:
+local overrides = {
+  picker = {
+    actions = {
+      ["aider_add"] = function(picker)
+        picker:close()
+        add_files_from_picker(picker) -- Defaults to { read_only = false } -> /add
+      end,
+      ["aider_read_only"] = function(picker)
+        picker:close()
+        add_files_from_picker(picker, { read_only = true }) -- Send /read-only
+      end,
+      -- ... other actions
+    },
+    sources = {
+      -- Add keymaps to relevant pickers (e.g., files, git_status)
+      files = {
+        win = {
+          input = {
+            keys = {
+              ["<leader><space>a"] = { "aider_add", mode = { "n", "i" } },
+              ["<leader><space>A"] = { "aider_read_only", mode = { "n", "i" } },
+              -- ... other keys
+            },
+          },
+        },
+      },
+      git_status = {
+         win = {
+          input = {
+            keys = {
+              ["<leader><space>a"] = { "aider_add", mode = { "n", "i" } },
+              ["<leader><space>A"] = { "aider_read_only", mode = { "n", "i" } },
+              -- ... other keys
+            },
+          },
+        },
+      },
+      -- ... other sources
+    },
+  },
+}
+
+-- Make sure to merge these overrides with your existing snacks options
+-- return vim.tbl_deep_extend("force", opts or {}, overrides)
+
+```
+
+This setup defines two actions, `aider_add` and `aider_read_only`, which use the helper function `add_files_from_picker` to collect selected file paths from the picker and pass them to `require("ai-terminals").add_files_to_aider`. Keymaps are then added to specific picker sources (like `files` and `git_status`) to trigger these actions.
