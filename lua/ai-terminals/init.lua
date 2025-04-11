@@ -404,7 +404,7 @@ end
 ---Add a comment above the current line based on user input
 ---@param prefix string The prefix to add before the user's comment text
 ---@return nil
-function M.add_comment_above_line(prefix)
+function M.aider_comment(prefix)
 	prefix = prefix or "AI!" -- Default prefix if none provided
 	-- toggle aider terminal
 	M.aider_terminal()
