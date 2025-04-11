@@ -236,36 +236,10 @@ function Core.diff_with_tmp()
 	end
 end
 
----Send selected text to a terminal
----@param terminal function Terminal creation function
----@param opts table|nil Optional settings {prefix: string}
----@return nil
-function Core.send_selection(terminal, opts)
-	local bufnr = vim.api.nvim_get_current_buf()
-	local selection = Core.get_visual_selection_with_header(bufnr)
-
-	terminal()
-
-	if selection then
-		Core.send(selection, opts)
-	end
-
-	vim.api.nvim_feedkeys("i", "n", false)
-end
-
 ---Send text to a terminal
 ---@param text string The text to send
----@param opts table|nil Optional settings {prefix: string}
 ---@return nil
 function Core.send(text, opts)
-	opts = opts or {}
-	if opts.prefix then
-		text = opts.prefix .. text
-	end
-	if opts.postfix then
-		text = text .. opts.postfix
-	end
-
 	local ok, err = pcall(vim.fn.chansend, vim.b.terminal_job_id, text)
 	if not ok then
 		vim.notify("Failed to send selection: " .. tostring(err), vim.log.levels.ERROR)
