@@ -45,11 +45,6 @@ While the generic features work well with Aider, this plugin includes additional
 #### Basic Keymaps
 
 ```lua
--- Helper function to require the plugin
-local aiterm = function()
-  return require("ai-terminals")
-end
-
 -- lazy.nvim plugin specification
 return {
   {
@@ -60,14 +55,14 @@ return {
       {
         "<leader>dvo",
         function()
-          aiterm().diff_changes()
+          require("ai-terminals").diff_changes()
         end,
         desc = "Show diff of last changes made",
       },
       {
         "<leader>dvc",
         function()
-          aiterm().close_diff()
+          require("ai-terminals").close_diff()
         end,
         desc = "Close all diff views (and wipeout buffers)",
       },
@@ -75,7 +70,7 @@ return {
       {
         "<leader>ass",
         function()
-          aiterm().claude_toggle()
+          require("ai-terminals").claude_toggle()
           -- Note: claude_toggle() returns the terminal instance.
           -- If you need to send data immediately after toggling,
           -- capture the return value like in the 'send selection' keymap.
@@ -85,11 +80,11 @@ return {
       {
         "<leader>ass", -- Same keybinding, but in visual mode
         function()
-          local selection = aiterm().get_visual_selection_with_header() or ""
+          local selection = require("ai-terminals").get_visual_selection_with_header() or ""
           -- Ensure the terminal is open and get its instance
-          local term = aiterm().claude_toggle()
+          local term = require("ai-terminals").claude_toggle()
           -- Send the selection to the specific terminal instance
-          aiterm().send(selection, { term = term })
+          require("ai-terminals").send(selection, { term = term })
         end,
         desc = "Send selection to Claude",
         mode = { "v" },
@@ -97,9 +92,9 @@ return {
       {
         "<leader>asd",
         function()
-          local diagnostics = aiterm().diagnostics()
-          local term = aiterm().claude_toggle() -- Ensure terminal is open
-          aiterm().send(diagnostics, { term = term })
+          local diagnostics = require("ai-terminals").diagnostics()
+          local term = require("ai-terminals").claude_toggle() -- Ensure terminal is open
+          require("ai-terminals").send(diagnostics, { term = term })
         end,
         desc = "Send diagnostics to Claude",
         mode = { "v" },
@@ -108,16 +103,16 @@ return {
       {
         "<leader>agg",
         function()
-          aiterm().goose_toggle()
+          require("ai-terminals").goose_toggle()
         end,
         desc = "Toggle Goose terminal",
       },
       {
         "<leader>agg", -- Same keybinding, visual mode
         function()
-          local selection = aiterm().get_visual_selection_with_header() or ""
-          local term = aiterm().goose_toggle()
-          aiterm().send(selection, { term = term })
+          local selection = require("ai-terminals").get_visual_selection_with_header() or ""
+          local term = require("ai-terminals").goose_toggle()
+          require("ai-terminals").send(selection, { term = term })
         end,
         desc = "Send selection to Goose",
         mode = { "v" },
@@ -125,9 +120,9 @@ return {
       {
         "<leader>agd",
         function()
-          local diagnostics = aiterm().diagnostics()
-          local term = aiterm().goose_toggle()
-          aiterm().send(diagnostics, { term = term })
+          local diagnostics = require("ai-terminals").diagnostics()
+          local term = require("ai-terminals").goose_toggle()
+          require("ai-terminals").send(diagnostics, { term = term })
         end,
         desc = "Send diagnostics to Goose",
         mode = { "v" },
@@ -136,21 +131,21 @@ return {
       {
         "<leader>aa",
         function()
-          aiterm().aider_toggle()
+          require("ai-terminals").aider_toggle()
         end,
         desc = "Toggle Aider terminal",
       },
       {
         "<leader>ac",
         function()
-          aiterm().aider_comment("AI!") -- Adds comment and saves file
+          require("ai-terminals").aider_comment("AI!") -- Adds comment and saves file
         end,
         desc = "Add 'AI!' comment above line",
       },
       {
         "<leader>aC",
         function()
-          aiterm().aider_comment("AI?") -- Adds comment and saves file
+          require("ai-terminals").aider_comment("AI?") -- Adds comment and saves file
         end,
         desc = "Add 'AI?' comment above line",
       },
@@ -159,17 +154,17 @@ return {
         function()
           local current_file = vim.fn.expand("%:p")
           -- add_files_to_aider handles toggling the terminal if needed
-          aiterm().add_files_to_aider({ current_file })
+          require("ai-terminals").add_files_to_aider({ current_file })
         end,
         desc = "Add current file to Aider",
       },
       {
         "<leader>aa", -- Same keybinding, visual mode
         function()
-          local selection = aiterm().get_visual_selection_with_header()
+          local selection = require("ai-terminals").get_visual_selection_with_header()
           if selection then -- Check if selection is not nil
-            local term = aiterm().aider_toggle() -- Ensure terminal is open
-            aiterm().send(selection, { term = term })
+            local term = require("ai-terminals").aider_toggle() -- Ensure terminal is open
+            require("ai-terminals").send(selection, { term = term })
           else
             vim.notify("No text selected to send to Aider", vim.log.levels.WARN)
           end
@@ -180,9 +175,9 @@ return {
       {
         "<leader>ad",
         function()
-          local diagnostics = aiterm().diagnostics()
-          local term = aiterm().aider_toggle() -- Ensure terminal is open
-          aiterm().send(diagnostics, { term = term })
+          local diagnostics = require("ai-terminals").diagnostics()
+          local term = require("ai-terminals").aider_toggle() -- Ensure terminal is open
+          require("ai-terminals").send(diagnostics, { term = term })
         end,
         desc = "Send diagnostics to Aider",
         mode = { "v" },
@@ -194,7 +189,7 @@ return {
         function()
           -- This command sends output to the *currently active* terminal buffer.
           -- Ensure you are focused on the correct AI terminal window first.
-          aiterm().run_command_and_send_output("make test")
+          require("ai-terminals").run_command_and_send_output("make test")
         end,
         desc = "Run 'make test' and send output to active AI terminal",
       },
