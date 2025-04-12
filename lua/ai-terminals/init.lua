@@ -307,17 +307,26 @@ function M.send(text, opts)
 	if not job_id then
 		vim.notify("No terminal job id found", vim.log.levels.ERROR)
 	end
+	if text:find("\n") then
+		text = M.multiline(text)
+	end
 	local ok, err = pcall(vim.fn.chansend, job_id, text)
 	if not ok then
 		vim.notify("Failed to send selection: " .. tostring(err), vim.log.levels.ERROR)
 		return
 	end
+	vim.api.nvim_feedkeys("i", "n", false)
 end
 
 ------------------------------------------
 -- Terminal Instances
 ------------------------------------------
 local GOOSE_CMD = string.format("GOOSE_CLI_THEME=%s goose", vim.o.background)
+
+local AICHAT_CMD = string.format(
+	"AICHAT_LIGHT_THEME=%s GEMINI_API_BASE=http://localhost:8080/v1beta aichat -r %%functions%% --session",
+	tostring(vim.o.background == "light") -- Convert boolean to string "true" or "false"
+)
 local CLAUDE_CMD = string.format("claude config set -g theme %s && claude", vim.o.background)
 local AIDER_CMD = string.format("aider --watch-files --%s-mode", vim.o.background)
 
@@ -418,15 +427,39 @@ function M.diagnostics()
 		-- Remove potential newlines from the message itself
 		message = message:gsub("\n", "")
 
-		-- Fetch the source code line (0-based index)
-		local source_line = vim.api.nvim_buf_get_lines(bufnr, diag.lnum, diag.lnum + 1, false)[1]
-		if source_line == nil then
-			source_line = "[Could not fetch source line]"
-		end
-
 		-- Format the output for this diagnostic
 		table.insert(formatted_output, string.format("[%s] L%d:%d: %s", severity_str, line_nr, col_nr, message))
-		table.insert(formatted_output, string.format("  > %s", source_line))
+
+		-- Fetch context lines (1 line before and 1 line after)
+		local context_before = 1
+		local context_after = 1
+		local start_context_lnum_0based = math.max(0, diag.lnum - context_before)
+		-- End index for get_lines is exclusive. Fetch up to line diag.lnum + context_after.
+		local end_context_lnum_exclusive = diag.lnum + 1 + context_after
+		local context_lines =
+			vim.api.nvim_buf_get_lines(bufnr, start_context_lnum_0based, end_context_lnum_exclusive, false)
+
+		-- Add context lines to the output
+		if context_lines and #context_lines > 0 then
+			for i, line_content in ipairs(context_lines) do
+				local current_line_nr_0based = start_context_lnum_0based + i - 1 -- Calculate the 0-based index
+				local current_line_nr_1based = current_line_nr_0based + 1 -- 1-based line number for display
+
+				local prefix = "  " -- Default prefix for context lines
+				if current_line_nr_0based == diag.lnum then -- Highlight the actual diagnostic line
+					prefix = ">>" -- Highlight prefix
+				end
+				local line_num_str = string.format("%4d", current_line_nr_1based) -- Pad line number for alignment
+				table.insert(formatted_output, string.format(" %s %s | %s", prefix, line_num_str, line_content))
+			end
+		else
+			-- Fallback if context lines couldn't be fetched (e.g., empty buffer)
+			local source_line = vim.api.nvim_buf_get_lines(bufnr, diag.lnum, diag.lnum + 1, false)[1]
+			if source_line == nil then
+				source_line = "[Could not fetch source line]"
+			end
+			table.insert(formatted_output, string.format("  > %s", source_line))
+		end
 	end
 
 	return string.format("Diagnostics for file: %q\n\n%s\n", file, table.concat(formatted_output, "\n\n"))
@@ -509,11 +542,35 @@ function M.add_files_to_aider(files, opts)
 	M.send(command .. " " .. files_str .. "\n", { term = term })
 end
 
-function M.aider_multiline(text)
-	local aider_prefix = "\n{EOL\n"
-	local aider_postfix = "\nEOL}\n"
+function M.multiline(text)
+	local esc = "\27"
+	local aider_prefix = esc .. "[200~" -- Start sequence: ESC [ 200 ~
+	local aider_postfix = esc .. "[201~" -- End sequence:   ESC [ 201 ~
+	-- Concatenate prefix, text, and postfix
 	return aider_prefix .. text .. aider_postfix
 end
+
+-- Example Usage:
+local my_text = "hello\nworld" -- Example multi-line text
+local wrapped_text = M.multiline(my_text)
+
+-- Printing the result:
+-- Note: When you print this directly to a terminal that *understands* these sequences,
+-- you might not see the sequences themselves. The terminal might interpret them.
+-- To see the raw characters (often represented visually), you might need specific tools
+-- or print in a context where escape codes are displayed literally.
+print("--- Raw Wrapped Text (may be interpreted by terminal) ---")
+print(wrapped_text)
+
+-- To better visualize the raw bytes/characters including the escape codes,
+-- you could print their byte values:
+print("\n--- Byte values of wrapped text ---")
+for i = 1, #wrapped_text do
+	io.write(string.format("%d ", string.byte(wrapped_text, i)))
+end
+print()
+-- Expected byte sequence start: 27 91 50 48 48 126 ... (ESC [ 2 0 0 ~)
+-- Expected byte sequence end: ... 27 91 50 48 49 126 (ESC [ 2 0 1 ~)
 
 ---Execute a shell command and send its stdout to the active terminal buffer.
 ---@param cmd string The shell command to execute.

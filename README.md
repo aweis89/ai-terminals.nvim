@@ -34,7 +34,7 @@ While the generic features work well with Aider, this plugin includes additional
 
 * **Add Files:** Quickly add the current file or a list of files to the Aider chat context using `/add` or `/read-only`.
 * **Add Comments:** Insert comments above the current line with a custom prefix (e.g., `AI!`, `AI?`). This action automatically saves the file and can optionally start the Aider terminal if it's not already running.
-* **Multiline Input Handling:** Automatically formats text (like visual selections or diagnostics) using Aider's specific `{EOL ... EOL}` syntax for reliable multiline input.
+* **Multiline Input Handling:** Automatically wraps text (like visual selections or diagnostics) containing newlines using terminal bracketed paste mode (`ESC[200~...ESC[201~`). This ensures reliable multiline input for most modern terminal applications.
 
 ## Dependencies
 
@@ -168,11 +168,8 @@ return {
         function()
           local selection = aiterm().get_visual_selection_with_header()
           if selection then -- Check if selection is not nil
-            local multiline_selection = aiterm().aider_multiline(selection)
             local term = aiterm().aider_toggle() -- Ensure terminal is open
-            aiterm().send(multiline_selection, { term = term })
-            -- Optional: Enter insert mode in the terminal after sending
-            -- vim.api.nvim_feedkeys("i", "n", false)
+            aiterm().send(selection, { term = term })
           else
             vim.notify("No text selected to send to Aider", vim.log.levels.WARN)
           end
@@ -184,9 +181,8 @@ return {
         "<leader>ad",
         function()
           local diagnostics = aiterm().diagnostics()
-          local multiline_diagnostics = aiterm().aider_multiline(diagnostics)
           local term = aiterm().aider_toggle() -- Ensure terminal is open
-          aiterm().send(multiline_diagnostics, { term = term })
+          aiterm().send(diagnostics, { term = term })
         end,
         desc = "Send diagnostics to Aider",
         mode = { "v" },
