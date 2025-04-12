@@ -188,11 +188,8 @@ return {
         "<leader>at",
         function()
           -- Ensure the terminal is open
-          local term = require("ai-terminals").aider_get()
-          term:focus()
-
           -- This command sends output to the *currently active* terminal buffer.
-          -- No args will prompt the user to enter a command
+          -- No arg will prompt the user to enter a command
           require("ai-terminals").run_command_and_send_output()
           -- or specify the command directly
           -- require("ai-terminals").run_command_and_send_output("make test")
