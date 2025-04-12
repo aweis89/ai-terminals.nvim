@@ -239,7 +239,11 @@ function M.diff_changes()
 
 	-- Notify about all diffed files at once
 	if #orig_files_to_notify > 0 then
-		vim.notify("Opened diffs for: " .. table.concat(orig_files_to_notify, ", "), vim.log.levels.INFO)
+		local notification_lines = { "Opened diffs for:" }
+		for _, filename in ipairs(orig_files_to_notify) do
+			table.insert(notification_lines, "- " .. filename)
+		end
+		vim.notify(table.concat(notification_lines, "\n"), vim.log.levels.INFO)
 	end
 end
 
