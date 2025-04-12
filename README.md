@@ -187,9 +187,13 @@ return {
       {
         "<leader>at",
         function()
-          -- This command sends output to the *currently active* terminal buffer.
           -- Ensure you are focused on the correct AI terminal window first.
-          require("ai-terminals").run_command_and_send_output("make test")
+          local term = require("ai-terminals").aider_toggle() -- Ensure terminal is open
+          -- This command sends output to the *currently active* terminal buffer.
+          -- No args will prompt the user to enter a command
+          require("ai-terminals").run_command_and_send_output()
+          -- or specify the command directly
+          -- require("ai-terminals").run_command_and_send_output("make test")
         end,
         desc = "Run 'make test' and send output to active AI terminal",
       },

@@ -609,9 +609,12 @@ function M.multiline(text)
 end
 
 ---Execute a shell command and send its stdout to the active terminal buffer.
----@param cmd string The shell command to execute.
+---@param cmd string|ni The shell command to execute.
 ---@return nil
 function M.run_command_and_send_output(cmd)
+	if cmd == "" or cmd == nil then
+		cmd = vim.fn.input("Enter command to run: ")
+	end
 	vim.notify("Running command: " .. cmd, vim.log.levels.INFO)
 	local output = vim.fn.system(cmd)
 	local exit_code = vim.v.shell_error
