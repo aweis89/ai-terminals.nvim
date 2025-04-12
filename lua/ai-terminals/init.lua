@@ -460,8 +460,10 @@ end
 ---@return nil
 function M.aider_comment(prefix)
 	prefix = prefix or "AI!" -- Default prefix if none provided
+	local bufnr = vim.api.nvim_get_current_buf()
 	-- toggle aider terminal so we know it's running
-	local _, created = M.aider_get()
+	M.aider_toggle()
+	M.aider_toggle()
 	local comment_text = vim.fn.input("Enter comment (" .. prefix .. "): ")
 	if comment_text == "" then
 		return -- Do nothing if the user entered nothing
@@ -479,12 +481,10 @@ function M.aider_comment(prefix)
 		formatted_comment = comment_string .. formatted_prefix .. comment_text
 	end
 	-- Insert the comment above the current line
-	vim.api.nvim_buf_set_lines(0, current_line - 1, current_line - 1, false, { formatted_comment })
+	vim.api.nvim_buf_set_lines(bufnr, current_line - 1, current_line - 1, false, { formatted_comment })
 	vim.cmd.write() -- Save the file
 	vim.cmd.stopinsert() -- Exit insert mode
-	if not created then
-		M.aider_toggle()
-	end
+	M.aider_toggle()
 end
 
 -- Helper function to send commands to aider terminal
