@@ -290,38 +290,6 @@ function M.send(text, opts)
 	end
 end
 
-function M.scratch_prompt()
-	local bufnr = vim.api.nvim_get_current_buf()
-	local selection = M.get_visual_selection_with_header(bufnr)
-	Snacks.scratch()
-	local scratch_bufnr = vim.api.nvim_get_current_buf()
-	if not selection then
-		return
-	end
-	local lines = vim.split(selection, "\n", { plain = true })
-	vim.api.nvim_buf_set_lines(scratch_bufnr, 0, 2, false, lines)
-
-	vim.defer_fn(function()
-		vim.cmd("normal! GA") -- Go to last line and enter Insert mode at the end
-	end, 500)
-	vim.api.nvim_create_autocmd({ "BufLeave" }, {
-		buffer = scratch_bufnr,
-		once = true, -- Ensure it only runs once for this buffer instance
-		desc = "Log closure of AI terminal scratch buffer",
-		callback = function(args)
-			local result = vim.api.nvim_buf_get_lines(scratch_bufnr, 0, -1, false)
-			vim.api.nvim_del_autocmd(args.id) -- Clean up the autocommand
-			vim.api.nvim_buf_set_lines(scratch_bufnr, 0, -1, false, {})
-			vim.defer_fn(function()
-				M.aider_terminal()
-				M.send("\n{EOL\n")
-				M.send(table.concat(result, "\n"))
-				M.send("\nEOL}\n")
-			end, 500)
-		end,
-	})
-end
-
 ------------------------------------------
 -- Terminal Instances
 ------------------------------------------
