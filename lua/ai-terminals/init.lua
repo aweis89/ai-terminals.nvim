@@ -470,11 +470,7 @@ function M.run_command_and_send_output(cmd)
 	local message_to_send = string.format("Command exited with code: %d\nOutput:\n```\n%s\n```\n", exit_code, output)
 
 	if exit_code ~= 0 then
-		vim.notify(
-			string.format("Command failed with exit code %d: %s", exit_code, cmd),
-			vim.log.levels.WARN -- Changed to WARN as we are still sending output
-		)
-		-- Continue execution to send output even on failure
+		vim.notify(string.format("Command failed with exit code %d: %s", exit_code, cmd), vim.log.levels.WARN)
 	end
 
 	if output == "" and exit_code == 0 then
