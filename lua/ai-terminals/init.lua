@@ -416,7 +416,7 @@ end
 ---@return nil
 function M.aider_comment(prefix)
 	prefix = prefix or "AI!" -- Default prefix if none provided
-	-- toggle aider terminal
+	-- toggle aider terminal so we know it's running
 	M.aider_terminal()
 	M.aider_terminal()
 	local comment_text = vim.fn.input("Enter comment (" .. prefix .. "): ")
@@ -439,6 +439,7 @@ function M.aider_comment(prefix)
 	vim.api.nvim_buf_set_lines(0, current_line - 1, current_line - 1, false, { formatted_comment })
 	vim.cmd.write() -- Save the file
 	vim.cmd.stopinsert() -- Exit insert mode
+	M.aider_terminal()
 end
 
 -- Helper function to send commands to aider terminal
