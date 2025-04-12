@@ -608,28 +608,6 @@ function M.multiline(text)
 	return aider_prefix .. text .. aider_postfix
 end
 
--- Example Usage:
-local my_text = "hello\nworld" -- Example multi-line text
-local wrapped_text = M.multiline(my_text)
-
--- Printing the result:
--- Note: When you print this directly to a terminal that *understands* these sequences,
--- you might not see the sequences themselves. The terminal might interpret them.
--- To see the raw characters (often represented visually), you might need specific tools
--- or print in a context where escape codes are displayed literally.
-print("--- Raw Wrapped Text (may be interpreted by terminal) ---")
-print(wrapped_text)
-
--- To better visualize the raw bytes/characters including the escape codes,
--- you could print their byte values:
-print("\n--- Byte values of wrapped text ---")
-for i = 1, #wrapped_text do
-	io.write(string.format("%d ", string.byte(wrapped_text, i)))
-end
-print()
--- Expected byte sequence start: 27 91 50 48 48 126 ... (ESC [ 2 0 0 ~)
--- Expected byte sequence end: ... 27 91 50 48 49 126 (ESC [ 2 0 1 ~)
-
 ---Execute a shell command and send its stdout to the active terminal buffer.
 ---@param cmd string The shell command to execute.
 ---@return nil
