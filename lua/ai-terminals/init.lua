@@ -147,14 +147,14 @@ end
 ---Create a terminal with specified position and command
 ---@param cmd string
 ---@param position "float"|"bottom"|"top"|"left"|"right"|nil
----@return snacks.win|nil
-function M.ai_terminal(cmd, position)
+---@return snacks.win
+function M.toggle(cmd, position)
 	position = position or "float"
 	local valid_positions = { float = true, bottom = true, top = true, left = true, right = true }
 
 	if not valid_positions[position] then
 		vim.notify("Invalid terminal position: " .. tostring(position), vim.log.levels.ERROR)
-		return nil
+		position = "float"
 	end
 
 	-- Build rsync exclude patterns
@@ -182,6 +182,22 @@ function M.ai_terminal(cmd, position)
 	_setup_terminal_autocmds(term.buf)
 
 	return term
+end
+
+---@param cmd string
+---@param position "float"|"bottom"|"top"|"left"|"right"|nil
+---@return snacks.win?, boolean?
+function M.get(cmd, position)
+	position = position or "float"
+	local dimensions = WINDOW_DIMENSIONS[position]
+	return Snacks.terminal.get(cmd, {
+		env = { id = cmd },
+		win = {
+			position = position,
+			height = dimensions.height,
+			width = dimensions.width,
+		},
+	})
 end
 
 ---Compare current directory with its backup in ~/tmp and open differing files
@@ -281,9 +297,17 @@ end
 
 ---Send text to a terminal
 ---@param text string The text to send
+---@param opts {term: snacks.win?}|nil
 ---@return nil
 function M.send(text, opts)
-	local ok, err = pcall(vim.fn.chansend, vim.b.terminal_job_id, text)
+	local job_id = vim.b.terminal_job_id
+	if opts and opts.term then
+		job_id = vim.b[opts.term.buf].terminal_job_id
+	end
+	if not job_id then
+		vim.notify("No terminal job id found", vim.log.levels.ERROR)
+	end
+	local ok, err = pcall(vim.fn.chansend, job_id, text)
 	if not ok then
 		vim.notify("Failed to send selection: " .. tostring(err), vim.log.levels.ERROR)
 		return
@@ -293,24 +317,44 @@ end
 ------------------------------------------
 -- Terminal Instances
 ------------------------------------------
+local GOOSE_CMD = string.format("GOOSE_CLI_THEME=%s goose", vim.o.background)
+local CLAUDE_CMD = string.format("claude config set -g theme %s && claude", vim.o.background)
+local AIDER_CMD = string.format("aider --watch-files --%s-mode", vim.o.background)
 
----Create a Goose terminal
----@return snacks.win|nil
-function M.goose_terminal()
-	return M.ai_terminal(string.format("GOOSE_CLI_THEME=%s goose", vim.o.background))
+---Create or toggle a Goose terminal
+---@return snacks.win
+function M.goose_toggle()
+	return M.toggle(GOOSE_CMD)
 end
 
----Create a Claude terminal
----@return snacks.win|nil
-function M.claude_terminal()
-	local theme = vim.o.background
-	return M.ai_terminal(string.format("claude config set -g theme %s && claude", theme))
+---Get an existing Goose terminal instance
+---@return snacks.win?, boolean?
+function M.goose_get()
+	return M.get(GOOSE_CMD)
 end
 
----Create a Claude terminal
----@return snacks.win|nil
-function M.aider_terminal()
-	return M.ai_terminal(string.format("aider --watch-files --%s-mode", vim.o.background))
+---Create or toggle a Claude terminal
+---@return snacks.win
+function M.claude_toggle()
+	return M.toggle(CLAUDE_CMD)
+end
+
+---Get an existing Claude terminal instance
+---@return snacks.win?, boolean?
+function M.claude_get()
+	return M.get(CLAUDE_CMD)
+end
+
+---Create or toggle an Aider terminal
+---@return snacks.win
+function M.aider_toggle()
+	return M.toggle(AIDER_CMD)
+end
+
+---Get an existing Aider terminal instance
+---@return snacks.win?, boolean?
+function M.aider_get()
+	return M.get(AIDER_CMD)
 end
 
 -- Helper function to map severity enum to string
@@ -417,8 +461,7 @@ end
 function M.aider_comment(prefix)
 	prefix = prefix or "AI!" -- Default prefix if none provided
 	-- toggle aider terminal so we know it's running
-	M.aider_terminal()
-	M.aider_terminal()
+	local _, created = M.aider_get()
 	local comment_text = vim.fn.input("Enter comment (" .. prefix .. "): ")
 	if comment_text == "" then
 		return -- Do nothing if the user entered nothing
@@ -439,7 +482,9 @@ function M.aider_comment(prefix)
 	vim.api.nvim_buf_set_lines(0, current_line - 1, current_line - 1, false, { formatted_comment })
 	vim.cmd.write() -- Save the file
 	vim.cmd.stopinsert() -- Exit insert mode
-	M.aider_terminal()
+	if not created then
+		M.aider_toggle()
+	end
 end
 
 -- Helper function to send commands to aider terminal
@@ -456,12 +501,12 @@ function M.add_files_to_aider(files, opts)
 
 	local files_str = table.concat(files, " ")
 
-	local term = require("ai-terminals")
 	-- Check if the aider terminal is already open
 	if not vim.b.term_title then
-		term.aider_terminal()
+		M.aider_toggle()
 	end
-	term.send(command .. " " .. files_str .. "\n")
+	local term = M.aider_get()
+	M.send(command .. " " .. files_str .. "\n", { term = term })
 end
 
 function M.aider_multiline(text)
