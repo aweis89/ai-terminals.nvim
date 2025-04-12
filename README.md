@@ -159,8 +159,6 @@ return {
 }
 ```
 
-```
-
 #### Integrating with a File Picker (e.g., snacks.nvim)
 
 You can integrate the `add_files_to_aider` function with file pickers like `snacks.nvim` to easily add selected files to the Aider context.
