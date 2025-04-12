@@ -44,7 +44,7 @@ local function _setup_terminal_autocmds(buf_id)
 
 	local function check_files()
 		vim.schedule(function() -- Defer execution slightly
-			vim.notify("AI terminal lost focus. Checking files for changes...", vim.log.levels.INFO)
+			vim.notify("Checking files for changes...", vim.log.levels.INFO)
 			for _, bufinfo in ipairs(vim.fn.getbufinfo({ buflisted = 1 })) do
 				local bnr = bufinfo.bufnr
 				-- Check if buffer is valid, loaded, modifiable, and not the terminal buffer itself
