@@ -186,7 +186,7 @@ end
 
 ---Compare current directory with its backup in ~/tmp and open differing files
 ---@return nil
-function M.diff_with_tmp()
+function M.diff_changes()
 	local cwd = vim.fn.getcwd()
 	local cwd_name = vim.fn.fnamemodify(cwd, ":t")
 	local tmp_dir = BASE_COPY_DIR .. cwd_name
@@ -234,6 +234,38 @@ function M.diff_with_tmp()
 		vim.cmd("diffthis")
 		vim.cmd("vsplit " .. vim.fn.fnameescape(files.tmp))
 		vim.cmd("diffthis")
+	end
+end
+
+---Close and wipe out any buffers whose file path is inside the BASE_COPY_DIR.
+---@return nil
+function M.close_diff()
+	local base_copy_dir_abs = vim.fn.fnamemodify(BASE_COPY_DIR, ":p") -- Get absolute path
+	local buffers_to_wipe = {}
+
+	for _, bufinfo in ipairs(vim.fn.getbufinfo({ buflisted = 1 })) do
+		local bufname = bufinfo.name
+		if bufname and bufname ~= "" then
+			local bufname_abs = vim.fn.fnamemodify(bufname, ":p") -- Get absolute path of buffer
+			-- Check if the buffer's absolute path starts with the base copy directory's absolute path
+			if bufname_abs:find(base_copy_dir_abs, 1, true) == 1 then
+				table.insert(buffers_to_wipe, bufinfo.bufnr)
+			end
+		end
+	end
+
+	if #buffers_to_wipe > 0 then
+		local wiped_count = 0
+		for _, bufnr in ipairs(buffers_to_wipe) do
+			-- Check if buffer still exists before trying to wipe
+			if vim.api.nvim_buf_is_valid(bufnr) then
+				vim.cmd(bufnr .. "bwipeout!")
+				wiped_count = wiped_count + 1
+			end
+		end
+		vim.notify(string.format("Wiped out %d buffer(s) from the diff directory.", wiped_count), vim.log.levels.INFO)
+	else
+		vim.notify("No diff buffers found to close.", vim.log.levels.INFO)
 	end
 end
 

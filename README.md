@@ -52,9 +52,16 @@ return {
       {
         "<leader>dvo",
         function()
-          plug().diff_with_tmp()
+          plug().diff_changes()
         end,
-        desc = "Compare with tmp directory backup",
+        desc = "Show diff of last changes made",
+      },
+      {
+        "<leader>dvc",
+        function()
+          plug().close_diff()
+        end,
+        desc = "Close all diff views (and wipeout buffers)",
       },
       -- Claude Keymaps
       {
