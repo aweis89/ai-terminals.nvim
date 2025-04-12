@@ -20,6 +20,7 @@ This plugin integrates any terminal/CLI-based AI agent into Neovim, providing a 
   reloaded if necessary, ensuring you see the latest changes made by the AI.
 * **Send Visual Selection:** Send the currently selected text (visual mode) to the AI terminal, automatically wrapped in a markdown code block with the file path and language type included.
 * **Send Diagnostics:** Send diagnostics (errors, warnings, etc.) for the current buffer or visual selection to the AI terminal, formatted with severity, line/column numbers, messages, and the corresponding source code lines.
+* **Run Command and Send Output:** Execute an arbitrary shell command and send its standard output along with the exit code to the active AI terminal. This is useful for running tests, linters, or other tools and feeding the results directly to the AI.
 
 ### Aider Specific Features
 
@@ -162,6 +163,14 @@ return {
         end,
         desc = "Send diagnostics to Aider",
         mode = { "v" },
+      },
+      -- Example: Run 'make test' and send output to active terminal
+      {
+        "<leader>at",
+        function()
+          plug().run_command_and_send_output("make test")
+        end,
+        desc = "Run 'make test' and send output to AI terminal",
       },
     },
   },

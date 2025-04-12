@@ -459,4 +459,43 @@ function M.aider_multiline(text)
 	return aider_prefix .. text .. aider_postfix
 end
 
+---Execute a shell command and send its stdout to the active terminal buffer.
+---@param cmd string The shell command to execute.
+---@return nil
+function M.run_command_and_send_output(cmd)
+	vim.notify("Running command: " .. cmd, vim.log.levels.INFO)
+	local output = vim.fn.system(cmd)
+	local exit_code = vim.v.shell_error
+
+	local message_to_send = string.format("Command exited with code: %d\nOutput:\n```\n%s\n```\n", exit_code, output)
+
+	if exit_code ~= 0 then
+		vim.notify(
+			string.format("Command failed with exit code %d: %s", exit_code, cmd),
+			vim.log.levels.WARN -- Changed to WARN as we are still sending output
+		)
+		-- Continue execution to send output even on failure
+	end
+
+	if output == "" and exit_code == 0 then
+		vim.notify("Command succeeded but produced no output: " .. cmd, vim.log.levels.INFO)
+		-- Still send the exit code message
+	elseif output == "" and exit_code ~= 0 then
+		vim.notify("Command failed and produced no output: " .. cmd, vim.log.levels.WARN)
+		-- Still send the exit code message
+	end
+
+	-- Check if the current buffer is a terminal buffer managed by this plugin
+	-- M.send relies on vim.b.terminal_job_id being set in the current buffer
+	if vim.b.terminal_job_id then
+		M.send(message_to_send)
+		vim.notify("Command exit code and output sent to terminal.", vim.log.levels.INFO)
+	else
+		vim.notify(
+			"Current buffer is not an active AI terminal. Cannot send command exit code and output.",
+			vim.log.levels.ERROR
+		)
+	end
+end
+
 return M
