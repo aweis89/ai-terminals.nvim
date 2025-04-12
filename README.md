@@ -40,167 +40,133 @@ While the generic features work well with Aider, this plugin includes additional
 
 * [Snacks.nvim](https://github.com/folke/snacks.nvim): Required for terminal window management.
 
-### Example usage with lazy.nvim
+## Commands
 
-#### Basic Keymaps
+This plugin exposes several user commands:
+
+*   `:AiderToggle` - Toggle the Aider terminal window.
+*   `:AiderComment[!]` - Add an AI comment on the line above the cursor. With `!` adds an `AI!` comment, without adds an `AI` comment. Saves the file.
+*   `:AiderCommentAsk` - Add an `AI?` comment on the line above the cursor. Saves the file.
+*   `:AiderAdd [files...]` - Add specified files to the Aider session. If no files are specified, the current file is added. Supports file completion.
+*   `:AiderReadOnly [files...]` - Add specified files to the Aider session in read-only mode. If no files are specified, the current file is added. Supports file completion.
+*   `:AiderAsk [prompt]` - Ask Aider a question using `/ask`. If text is visually selected, it's included after the prompt. If no prompt is given, you'll be prompted to enter one.
+*   `:AiderSend [text]` - Send arbitrary text or commands to the Aider terminal. If text is visually selected, it's appended to the command text. Executes the text by adding a newline.
+*   `:AiderFixDiagnostics` - Send Neovim diagnostics to Aider for fixing. Works on the current buffer or the visual selection if present.
+*   `:AiderRunCommand <shell_command>` - Execute a shell command and send its output and exit code to the Aider terminal. Supports command completion.
+
+*Note:* For commands that interact with the Aider terminal (`:AiderAdd`, `:AiderReadOnly`, `:AiderAsk`, `:AiderSend`, `:AiderFixDiagnostics`, `:AiderRunCommand`), the Aider terminal will be opened automatically if it's not already running.
+
+## Example Usage
+
+### Basic Keymaps (using lazy.nvim)
 
 ```lua
 -- lazy.nvim plugin specification
 return {
   {
     "aweis89/ai-terminals.nvim",
-    event = "VeryLazy", -- Load when needed
+    -- No need for event = "VeryLazy" if you define commands,
+    -- as they are registered when the plugin loads.
+    -- You might use `cmd = { ... }` if you only want to load on command usage.
+    -- Or keep event if you prefer lazy loading and define commands elsewhere.
+    -- For simplicity, let's assume it loads reasonably early.
     keys = {
-      -- Diff Tools
+      -- Diff Tools (These still use the module directly)
       {
         "<leader>dvo",
-        function()
-          require("ai-terminals").diff_changes()
-        end,
-        desc = "Show diff of last changes made",
+        function() require("ai-terminals").diff_changes() end,
+        desc = "[D]iff [V]iew [O]pen Changes",
       },
       {
         "<leader>dvc",
-        function()
-          require("ai-terminals").close_diff()
-        end,
-        desc = "Close all diff views (and wipeout buffers)",
+        function() require("ai-terminals").close_diff() end,
+        desc = "[D]iff [V]iew [C]lose",
       },
-      -- Claude Keymaps
+
+      -- Aider Keymaps (Using Commands)
+      { "<leader>aa", "<cmd>AiderToggle<cr>", desc = "[A]ider [A]ctivate/Toggle" },
+      { "<leader>ac", "<cmd>AiderComment!<cr>", desc = "[A]ider [C]omment (!)" },
+      { "<leader>aC", "<cmd>AiderCommentAsk<cr>", desc = "[A]ider [C]omment (?)" },
+      { "<leader>al", "<cmd>AiderAdd<cr>", desc = "[A]ider [L]oad Current File" },
+      -- Example: Add all lua files in cwd
+      -- { "<leader>aL", "<cmd>AiderAdd *.lua<cr>", desc = "[A]ider [L]oad Lua Files" },
       {
-        "<leader>ass",
-        function()
-          require("ai-terminals").claude_toggle()
-          -- Note: claude_toggle() returns the terminal instance.
-          -- If you need to send data immediately after toggling,
-          -- capture the return value like in the 'send selection' keymap.
-        end,
-        desc = "Toggle Claude terminal",
-      },
-      {
-        "<leader>ass", -- Same keybinding, but in visual mode
-        function()
-          local selection = require("ai-terminals").get_visual_selection_with_header() or ""
-          -- Ensure the terminal is open and get its instance
-          local term = require("ai-terminals").claude_toggle()
-          -- Send the selection to the specific terminal instance
-          require("ai-terminals").send(selection, { term = term })
-        end,
-        desc = "Send selection to Claude",
-        mode = { "v" },
+        "<leader>aa", -- Same keybinding, visual mode -> Send selection
+        ":'<,'>AiderSend<cr>",
+        mode = "v",
+        desc = "[A]ider [A]dd Visual Selection",
       },
       {
-        "<leader>asd",
-        function()
-          local diagnostics = require("ai-terminals").diagnostics()
-          local term = require("ai-terminals").claude_toggle() -- Ensure terminal is open
-          require("ai-terminals").send(diagnostics, { term = term })
-        end,
-        desc = "Send diagnostics to Claude",
-        mode = { "v" },
-      },
-      -- Goose Keymaps
-      {
-        "<leader>agg",
-        function()
-          require("ai-terminals").goose_toggle()
-        end,
-        desc = "Toggle Goose terminal",
+        "<leader>ad", -- Send diagnostics (buffer)
+        "<cmd>AiderFixDiagnostics<cr>",
+        desc = "[A]ider [D]iagnostics (Buffer)",
       },
       {
-        "<leader>agg", -- Same keybinding, visual mode
-        function()
-          local selection = require("ai-terminals").get_visual_selection_with_header() or ""
-          local term = require("ai-terminals").goose_toggle()
-          require("ai-terminals").send(selection, { term = term })
-        end,
-        desc = "Send selection to Goose",
-        mode = { "v" },
+        "<leader>ad", -- Send diagnostics (visual)
+        ":'<,'>AiderFixDiagnostics<cr>",
+        mode = "v",
+        desc = "[A]ider [D]iagnostics (Visual)",
       },
       {
-        "<leader>agd",
-        function()
-          local diagnostics = require("ai-terminals").diagnostics()
-          local term = require("ai-terminals").goose_toggle()
-          require("ai-terminals").send(diagnostics, { term = term })
-        end,
-        desc = "Send diagnostics to Goose",
-        mode = { "v" },
-      },
-      -- Aider Keymaps
-      {
-        "<leader>aa",
-        function()
-          require("ai-terminals").aider_toggle()
-        end,
-        desc = "Toggle Aider terminal",
+        "<leader>ak", -- Ask Aider (prompt)
+        "<cmd>AiderAsk<cr>",
+        desc = "[A]ider As[k] (Prompt)",
       },
       {
-        "<leader>ac",
-        function()
-          require("ai-terminals").aider_comment("AI!") -- Adds comment and saves file
-        end,
-        desc = "Add 'AI!' comment above line",
+        "<leader>ak", -- Ask Aider (visual)
+        ":'<,'>AiderAsk<cr>",
+        mode = "v",
+        desc = "[A]ider As[k] (Visual)",
       },
-      {
-        "<leader>aC",
-        function()
-          require("ai-terminals").aider_comment("AI?") -- Adds comment and saves file
-        end,
-        desc = "Add 'AI?' comment above line",
-      },
-      {
-        "<leader>al",
-        function()
-          local current_file = vim.fn.expand("%:p")
-          -- add_files_to_aider handles toggling the terminal if needed
-          require("ai-terminals").add_files_to_aider({ current_file })
-        end,
-        desc = "Add current file to Aider",
-      },
-      {
-        "<leader>aa", -- Same keybinding, visual mode
-        function()
-          local selection = require("ai-terminals").get_visual_selection_with_header()
-          if selection then -- Check if selection is not nil
-            local term = require("ai-terminals").aider_toggle() -- Ensure terminal is open
-            require("ai-terminals").send(selection, { term = term })
-          else
-            vim.notify("No text selected to send to Aider", vim.log.levels.WARN)
-          end
-        end,
-        desc = "Send selection to Aider",
-        mode = { "v" },
-      },
-      {
-        "<leader>ad",
-        function()
-          local diagnostics = require("ai-terminals").diagnostics()
-          local term = require("ai-terminals").aider_toggle() -- Ensure terminal is open
-          require("ai-terminals").send(diagnostics, { term = term })
-        end,
-        desc = "Send diagnostics to Aider",
-        mode = { "v" },
-      },
-      -- Example: Run 'make test' and send output to active terminal
-      -- Assumes the desired AI terminal is already the active buffer
+      -- Example: Run 'make test' and send output to Aider
       {
         "<leader>at",
+        "<cmd>AiderRunCommand make test<cr>",
+        desc = "[A]ider Run [T]est",
+      },
+
+      -- You can still define keymaps for other terminals like Claude/Goose
+      -- using the direct module functions if needed:
+      {
+        "<leader>gg", -- Goose Toggle
+        function() require("ai-terminals").goose_toggle() end,
+        desc = "[G]oose Toggle",
+      },
+      {
+        "<leader>gg", -- Goose Send Selection
         function()
-          -- This command sends output to the *currently active* terminal buffer.
-          -- Ensure you are focused on the correct AI terminal window first.
-          require("ai-terminals").run_command_and_send_output("make test")
+          local selection = require("ai-terminals").get_visual_selection_with_header() or ""
+          local term = require("ai-terminals").goose_toggle() -- Ensure open
+          require("ai-terminals").send(selection, { term = term })
         end,
-        desc = "Run 'make test' and send output to active AI terminal",
+        mode = "v",
+        desc = "[G]oose Send Selection",
+      },
+       {
+        "<leader>cc", -- Claude Toggle
+        function() require("ai-terminals").claude_toggle() end,
+        desc = "[C]laude Toggle",
+      },
+      {
+        "<leader>cc", -- Claude Send Selection
+        function()
+          local selection = require("ai-terminals").get_visual_selection_with_header() or ""
+          local term = require("ai-terminals").claude_toggle() -- Ensure open
+          require("ai-terminals").send(selection, { term = term })
+        end,
+        mode = "v",
+        desc = "[C]laude Send Selection",
       },
     },
   },
 }
 ```
 
-#### Integrating with a File Picker (e.g., snacks.nvim)
+### Integrating with a File Picker (e.g., snacks.nvim)
 
-You can integrate the `add_files_to_aider` function with file pickers like `snacks.nvim` to easily add selected files to the Aider context.
+You can integrate the `:AiderAdd` and `:AiderReadOnly` commands with file pickers like `snacks.nvim` to easily add selected files to the Aider context.
+
+Here's an example of how you might configure `snacks.nvim` to add actions for sending files to Aider:
 
 Here's an example of how you might configure `snacks.nvim` to add actions for sending files to Aider:
 
@@ -219,8 +185,16 @@ local function add_files_from_picker(picker, opts)
       table.insert(files_to_add, full_path)
     end
   end
-  -- Assuming 'ai-terminals' is the name you used in lazy.nvim
-  require("ai-terminals").add_files_to_aider(files_to_add, opts)
+
+  if #files_to_add > 0 then
+    local command = opts and opts.read_only and "AiderReadOnly" or "AiderAdd"
+    -- Escape file paths for the command line
+    local escaped_files = vim.tbl_map(function(f) return vim.fn.fnameescape(f) end, files_to_add)
+    local cmd_string = string.format("%s %s", command, table.concat(escaped_files, " "))
+    vim.cmd(cmd_string)
+  else
+    vim.notify("No files selected from picker.", vim.log.levels.WARN)
+  end
 end
 
 -- Inside the snacks opts function:

@@ -572,6 +572,118 @@ print()
 -- Expected byte sequence start: 27 91 50 48 48 126 ... (ESC [ 2 0 0 ~)
 -- Expected byte sequence end: ... 27 91 50 48 49 126 (ESC [ 2 0 1 ~)
 
+------------------------------------------
+-- Aider Specific Helpers
+------------------------------------------
+
+---Send text specifically to the Aider terminal.
+---Ensures the terminal is open before sending.
+---@param text string The text to send.
+---@return nil
+function M.send_to_aider(text)
+	local term = M.aider_get()
+	if not term then
+		term = M.aider_toggle() -- Open if not found
+		-- Small delay to allow terminal to initialize (adjust if needed)
+		vim.defer_fn(function()
+			M.send(text, { term = term })
+		end, 100)
+		return
+	end
+	M.send(text, { term = term })
+end
+
+---Ask Aider a question, optionally including visual selection.
+---@param prompt string|nil The question prompt. If nil, user will be prompted.
+---@param range? table { line1: number, line2: number } Range info from command.
+---@return nil
+function M.aider_ask(prompt, range)
+	local final_prompt = prompt or vim.fn.input("Ask Aider: ")
+	if final_prompt == "" then
+		vim.notify("Aider Ask cancelled.", vim.log.levels.INFO)
+		return
+	end
+
+	local selection_text = ""
+	if range and range.line1 ~= range.line2 then -- Check if a visual range exists
+		-- We need to temporarily set the visual marks to get the selection
+		local current_buf = vim.api.nvim_get_current_buf()
+		vim.api.nvim_buf_set_mark(current_buf, "<", range.line1, 0, {})
+		vim.api.nvim_buf_set_mark(current_buf, ">", range.line2, -1, {}) -- Use -1 for end of line
+		selection_text = M.get_visual_selection_with_header(current_buf) or ""
+		-- Clear the marks afterwards if necessary, though get_visual_selection might do this
+		-- vim.api.nvim_buf_del_mark(current_buf, "<")
+		-- vim.api.nvim_buf_del_mark(current_buf, ">")
+	end
+
+	local command_to_send = "/ask " .. final_prompt
+	if selection_text ~= "" then
+		command_to_send = command_to_send .. "\n" .. selection_text
+	end
+
+	M.send_to_aider(command_to_send .. "\n") -- Add newline to execute command
+end
+
+---Send diagnostics (current buffer or visual selection) to Aider for fixing.
+---@param range? table { line1: number, line2: number } Range info from command.
+---@return nil
+function M.aider_fix_diagnostics(range)
+	local diagnostics_text
+	if range and range.line1 ~= range.line2 then
+		-- Temporarily set marks for visual selection range diagnostics
+		local current_buf = vim.api.nvim_get_current_buf()
+		vim.api.nvim_buf_set_mark(current_buf, "<", range.line1, 0, {})
+		vim.api.nvim_buf_set_mark(current_buf, ">", range.line2, -1, {})
+		diagnostics_text = M.diagnostics() -- M.diagnostics already handles visual mode based on marks
+		-- Clear marks if needed
+	else
+		-- No range, get diagnostics for the whole buffer
+		diagnostics_text = M.diagnostics()
+	end
+
+	if diagnostics_text:match("No diagnostics found") then
+		vim.notify(diagnostics_text, vim.log.levels.INFO)
+		return
+	end
+
+	-- Format for Aider (consider if a specific format is better)
+	local command_to_send = "/edit --diagnostics\n" .. diagnostics_text
+
+	M.send_to_aider(command_to_send .. "\n")
+	vim.notify("Sent diagnostics to Aider.", vim.log.levels.INFO)
+end
+
+---Execute a shell command and send its stdout/stderr and exit code to the Aider terminal.
+---@param cmd string The shell command to execute.
+---@return nil
+function M.run_command_and_send_output_to_aider(cmd)
+	vim.notify("Running command for Aider: " .. cmd, vim.log.levels.INFO)
+	-- Use vim.systemlist to capture output line-by-line, potentially better for terminals
+	local output_lines = vim.systemlist(cmd)
+	local exit_code = vim.v.shell_error
+	local output = table.concat(output_lines, "\n")
+
+	local message_to_send = string.format(
+		"Command `%s` exited with code: %d\nOutput:\n```\n%s\n```\n",
+		cmd,
+		exit_code,
+		output
+	)
+
+	if exit_code ~= 0 then
+		vim.notify(string.format("Command failed with exit code %d: %s", exit_code, cmd), vim.log.levels.WARN)
+	end
+
+	if output == "" and exit_code == 0 then
+		vim.notify("Command succeeded but produced no output: " .. cmd, vim.log.levels.INFO)
+	elseif output == "" and exit_code ~= 0 then
+		vim.notify("Command failed and produced no output: " .. cmd, vim.log.levels.WARN)
+	end
+
+	M.send_to_aider(message_to_send)
+	vim.notify("Command exit code and output sent to Aider.", vim.log.levels.INFO)
+end
+
 ---Execute a shell command and send its stdout to the active terminal buffer.
 ---@param cmd string The shell command to execute.
 ---@return nil
@@ -606,5 +718,133 @@ function M.run_command_and_send_output(cmd)
 		)
 	end
 end
+
+------------------------------------------
+-- Neovim Commands
+------------------------------------------
+local function setup_commands()
+	-- Helper to get files from args or current buffer
+	local function get_files_from_args(args)
+		if #args > 0 then
+			return args
+		else
+			local current_file = vim.fn.expand("%:p")
+			if current_file == "" then
+				vim.notify("No file specified and no current buffer name.", vim.log.levels.ERROR)
+				return nil
+			end
+			return { current_file }
+		end
+	end
+
+	-- AiderComment: Add AI comment
+	vim.api.nvim_create_user_command("AiderComment", function(opts)
+		local prefix = opts.bang and "AI!" or "AI"
+		M.aider_comment(prefix)
+	end, {
+		bang = true,
+		desc = "Add AI comment (AI or AI!) above current line",
+	})
+
+	-- AiderCommentAsk: Add AI? comment
+	vim.api.nvim_create_user_command("AiderCommentAsk", function()
+		M.aider_comment("AI?")
+	end, {
+		desc = "Add AI? comment above current line to ask Aider a question",
+	})
+
+	-- AiderToggle: Toggle Aider terminal
+	vim.api.nvim_create_user_command("AiderToggle", function()
+		M.aider_toggle()
+	end, {
+		desc = "Toggle the Aider terminal window",
+		-- Add nargs/complete later if direction support is added
+	})
+
+	-- AiderAdd: Add files to Aider
+	vim.api.nvim_create_user_command("AiderAdd", function(opts)
+		local files = get_files_from_args(opts.fargs)
+		if files then
+			M.add_files_to_aider(files, { read_only = false })
+		end
+	end, {
+		nargs = "*",
+		complete = "file",
+		desc = "Add specified files (or current file) to Aider",
+	})
+
+	-- AiderReadOnly: Add files as read-only
+	vim.api.nvim_create_user_command("AiderReadOnly", function(opts)
+		local files = get_files_from_args(opts.fargs)
+		if files then
+			M.add_files_to_aider(files, { read_only = true })
+		end
+	end, {
+		nargs = "*",
+		complete = "file",
+		desc = "Add specified files (or current file) to Aider as read-only",
+	})
+
+	-- AiderAsk: Ask Aider a question
+	vim.api.nvim_create_user_command("AiderAsk", function(opts)
+		local range = { line1 = opts.line1, line2 = opts.line2 }
+		M.aider_ask(opts.args, range)
+	end, {
+		nargs = "?", -- Optional prompt argument
+		range = true, -- Allow visual selection range
+		desc = "Ask Aider a question (uses visual selection if present)",
+	})
+
+	-- AiderSend: Send text/command to Aider
+	vim.api.nvim_create_user_command("AiderSend", function(opts)
+		local text_to_send = opts.args
+		if opts.line1 ~= opts.line2 then -- Visual selection exists
+			local current_buf = vim.api.nvim_get_current_buf()
+			vim.api.nvim_buf_set_mark(current_buf, "<", opts.line1, 0, {})
+			vim.api.nvim_buf_set_mark(current_buf, ">", opts.line2, -1, {})
+			local selection = M.get_visual_selection_with_header(current_buf) or ""
+			if text_to_send and text_to_send ~= "" then
+				text_to_send = text_to_send .. "\n" .. selection
+			else
+				text_to_send = selection
+			end
+		end
+
+		if not text_to_send or text_to_send == "" then
+			vim.notify("Nothing to send to Aider.", vim.log.levels.WARN)
+			return
+		end
+		M.send_to_aider(text_to_send .. "\n") -- Add newline to execute
+	end, {
+		nargs = "?", -- Command text is optional if using visual selection
+		range = true, -- Allow visual selection range
+		desc = "Send text/command to Aider (uses visual selection if present)",
+	})
+
+	-- AiderFixDiagnostics: Send diagnostics to Aider
+	vim.api.nvim_create_user_command("AiderFixDiagnostics", function(opts)
+		local range = { line1 = opts.line1, line2 = opts.line2 }
+		M.aider_fix_diagnostics(range)
+	end, {
+		range = true, -- Allow visual selection range
+		desc = "Send diagnostics (visual selection or buffer) to Aider",
+	})
+
+	-- Command to run shell command and send output to Aider
+	vim.api.nvim_create_user_command("AiderRunCommand", function(opts)
+		if not opts.args or opts.args == "" then
+			vim.notify("No command provided to run.", vim.log.levels.ERROR)
+			return
+		end
+		M.run_command_and_send_output_to_aider(opts.args)
+	end, {
+		nargs = 1,
+		complete = "shellcmd",
+		desc = "Run shell command and send output to Aider",
+	})
+end
+
+-- Call setup function immediately when the module is loaded
+setup_commands()
 
 return M
