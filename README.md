@@ -4,31 +4,31 @@ This plugin integrates any terminal/CLI-based AI agent into Neovim, providing a 
 
 ## Features
 
-### Generic Features (Works with any terminal-based AI agent):
+### Generic Features (Works with any terminal-based AI agent)
 
-*   **Terminal Integration:** Easily open and manage terminals running your preferred AI CLI tool (e.g., Claude, Goose, Aider, custom scripts) using `Snacks` for terminal management.
-*   **Diff View:** Compare the changes made by the AI agent in the last session with the current state of your project files. A backup of your project is created, and `diff -rq` is used to find differing files, which are then opened in diff view across multiple tabs.
-*   **Automatic File Reloading:** When you switch focus away from the AI terminal window, all listed buffers in Neovim are checked for modifications and reloaded if necessary, ensuring you see the latest changes made by the AI.
-*   **Send Visual Selection:** Send the currently selected text (visual mode) to the AI terminal, automatically wrapped in a markdown code block with the file path and language type included.
-*   **Send Diagnostics:** Send diagnostics (errors, warnings, etc.) for the current buffer or visual selection to the AI terminal, formatted with severity, line/column numbers, messages, and the corresponding source code lines.
+* **Terminal Integration:** Easily open and manage terminals running your preferred AI CLI tool (e.g., Claude, Goose, Aider, custom scripts) using `Snacks` for terminal management.
+* **Diff View:** Compare the changes made by the AI agent in the last session with the current state of your project files. A backup of your project is created, and `diff -rq` is used to find differing files, which are then opened in diff view across multiple tabs.
+* **Automatic File Reloading:** When you switch focus away from the AI terminal window, all listed buffers in Neovim are checked for modifications and reloaded if necessary, ensuring you see the latest changes made by the AI.
+* **Send Visual Selection:** Send the currently selected text (visual mode) to the AI terminal, automatically wrapped in a markdown code block with the file path and language type included.
+* **Send Diagnostics:** Send diagnostics (errors, warnings, etc.) for the current buffer or visual selection to the AI terminal, formatted with severity, line/column numbers, messages, and the corresponding source code lines.
 
-### Aider Specific Features:
+### Aider Specific Features
 
 While the generic features work well with Aider, this plugin includes additional helpers specifically for Aider:
 
-*   **Add Files:** Quickly add the current file or a list of files to the Aider chat context using `/add` or `/read-only`.
-*   **Add Comments:** Insert comments above the current line with a custom prefix (e.g., `AI!`, `AI?`). This action automatically saves the file and can optionally start the Aider terminal if it's not already running.
-*   **Multiline Input Handling:** Automatically formats text (like visual selections or diagnostics) using Aider's specific `{EOL ... EOL}` syntax for reliable multiline input.
+* **Add Files:** Quickly add the current file or a list of files to the Aider chat context using `/add` or `/read-only`.
+* **Add Comments:** Insert comments above the current line with a custom prefix (e.g., `AI!`, `AI?`). This action automatically saves the file and can optionally start the Aider terminal if it's not already running.
+* **Multiline Input Handling:** Automatically formats text (like visual selections or diagnostics) using Aider's specific `{EOL ... EOL}` syntax for reliable multiline input.
 
 ## Dependencies
 
-*   [Snacks.nvim](https://github.com/folke/snacks.nvim): Required for terminal window management.
+* [Snacks.nvim](https://github.com/folke/snacks.nvim): Required for terminal window management.
 
 ### Example usage with lazy.nvim
 
 #### Basic Keymaps
 
-lua```
+```lua
 local plug = function()
   return require("ai-terminals")
 end
