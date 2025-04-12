@@ -21,6 +21,10 @@ This plugin integrates any terminal/CLI-based AI agent into Neovim, providing a 
   manage changes (see `:help diff`). The `close_diff()` command closes these
   diff tabs and removes the buffers associated with the temporary backup files
   (i.e., non-local files) from Neovim's buffer list.
+
+![Uploading ![Uploading termtosvg_rdk03vm7.svg…]()termtosvg_rdk03vm7.svg…]()
+
+  
 * **Automatic File Reloading:** When you switch focus away from the AI terminal
   window, all listed buffers in Neovim are checked for modifications and
   reloaded if necessary, ensuring you see the latest changes made by the AI.
