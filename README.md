@@ -10,11 +10,15 @@ This plugin integrates any terminal/CLI-based AI agent into Neovim, providing a 
   preferred AI CLI tool (e.g., Claude, Goose, Aider, custom scripts) using
   `Snacks` for terminal management.
 * **Diff View:** Compare the changes made by the AI agent in the last session
-  with the current state of your project files. A backup of your project is
-  created, and `diff -rq` is used to find differing files. These files are
-  then opened in Neovim's standard diff view across multiple tabs. You can use
-  standard diff commands like `:diffget` and `:diffput` to manage changes (see
-  `:help diff`).
+  with the current state of your project files. A performant backup (using
+  `rsync`) of your project is created when you first open an AI terminal in a
+  session. This backup persists even after closing Neovim. The *next* time you
+  open an AI terminal (e.g., using `aider_terminal()`), a *new* backup is
+  created, resetting the diff base. The `diff_changes()` command finds differing
+  files between the current project state and the *most recent* backup. These
+  differing files are then opened in Neovim's standard diff view across multiple
+  tabs. You can use standard diff commands like `:diffget` and `:diffput` to
+  manage changes (see `:help diff`).
 * **Automatic File Reloading:** When you switch focus away from the AI terminal
   window, all listed buffers in Neovim are checked for modifications and
   reloaded if necessary, ensuring you see the latest changes made by the AI.
