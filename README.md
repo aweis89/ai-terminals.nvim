@@ -157,8 +157,8 @@ return {
     },
   },
 }
+```
 
-```lua
 ```
 
 #### Integrating with a File Picker (e.g., snacks.nvim)
