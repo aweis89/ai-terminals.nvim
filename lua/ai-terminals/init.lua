@@ -377,37 +377,60 @@ local function get_severity_str(severity)
 	return severity_map[severity] or "UNKNOWN"
 end
 
----@return string
+---@return string|nil
+-- Enhance diagnostics output for better LLM clarity.
+-- Shows full visual selection context if run in visual mode, otherwise shows fixed context.
 function M.diagnostics()
 	local diagnostics = {}
-	local bufnr = 0 -- Use current buffer
+	local bufnr = vim.api.nvim_get_current_buf() -- Use current buffer explicitly
+	local file = vim.api.nvim_buf_get_name(bufnr)
+	local filetype = vim.bo[bufnr].filetype or "" -- Get filetype for code blocks
+
 	local mode = vim.api.nvim_get_mode().mode
+	local is_visual_selection = false
+	local selection_start_line = 1 -- 1-based
+	local selection_end_line = vim.api.nvim_buf_line_count(bufnr) -- 1-based, inclusive
 
 	if mode:match("^[vV\22]") then -- visual, visual-line, or visual-block mode
 		local start_mark = vim.api.nvim_buf_get_mark(bufnr, "<")
 		local end_mark = vim.api.nvim_buf_get_mark(bufnr, ">")
 		-- Ensure marks are valid and start <= end
 		if start_mark and end_mark and start_mark[1] > 0 and end_mark[1] > 0 then
-			local start_line = math.min(start_mark[1], end_mark[1])
-			local end_line = math.max(start_mark[1], end_mark[1])
+			selection_start_line = math.min(start_mark[1], end_mark[1])
+			selection_end_line = math.max(start_mark[1], end_mark[1])
+			is_visual_selection = true
 			-- vim.diagnostic.get uses 0-based line numbers, marks are 1-based
-			for line_num = start_line - 1, end_line - 1 do
-				local line_diags = vim.diagnostic.get(bufnr, { lnum = line_num })
-				vim.list_extend(diagnostics, line_diags)
+			-- Filter diagnostics to only include those within the visual selection
+			local all_diags = vim.diagnostic.get(bufnr)
+			for _, diag in ipairs(all_diags) do
+				if diag.lnum >= selection_start_line - 1 and diag.lnum < selection_end_line then
+					table.insert(diagnostics, diag)
+				end
 			end
 		else
-			-- Fallback or handle error if visual selection is invalid
+			-- Fallback if visual selection is invalid (e.g., just entered visual mode)
 			diagnostics = vim.diagnostic.get(bufnr)
 		end
 	else
 		diagnostics = vim.diagnostic.get(bufnr)
 	end
 
-	local file = vim.api.nvim_buf_get_name(bufnr)
 	local formatted_output = {}
+	local header_message
+
+	if is_visual_selection then
+		header_message = string.format(
+			"Diagnostics for selection (Lines %d-%d) in file: %q\n",
+			selection_start_line,
+			selection_end_line,
+			file
+		)
+	else
+		header_message = string.format("Diagnostics for file: %q\n", file)
+	end
 
 	if #diagnostics == 0 then
-		return string.format("No diagnostics found for file: %q", file)
+		return nil
 	end
 
 	-- Sort diagnostics by line number, then column
@@ -418,51 +441,86 @@ function M.diagnostics()
 		return a.col < b.col
 	end)
 
-	for _, diag in ipairs(diagnostics) do
-		-- Neovim diagnostics use 0-based indexing for line (lnum) and column (col)
-		local line_nr = diag.lnum + 1 -- Convert to 1-based for display
-		local col_nr = diag.col + 1 -- Convert to 1-based for display
+	local context_before = 3 -- Fixed context lines (if not visual selection)
+	local context_after = 3 -- Fixed context lines (if not visual selection)
+
+	for i, diag in ipairs(diagnostics) do
+		table.insert(formatted_output, string.format("--- DIAGNOSTIC %d ---", i))
+
+		-- Neovim diagnostics use 0-based indexing
+		local line_nr_1based = diag.lnum + 1
+		local col_nr_1based = diag.col + 1
 		local severity_str = get_severity_str(diag.severity)
-		local message = diag.message or ""
-		-- Remove potential newlines from the message itself
-		message = message:gsub("\n", "")
+		local message = diag.message:gsub("\n", " ") -- Ensure message is single line
+		local source = diag.source or "unknown"
 
-		-- Format the output for this diagnostic
-		table.insert(formatted_output, string.format("[%s] L%d:%d: %s", severity_str, line_nr, col_nr, message))
+		-- Add diagnostic details
+		table.insert(formatted_output, string.format("Severity: %s", severity_str))
+		table.insert(formatted_output, string.format("Source:   %s", source))
+		table.insert(formatted_output, string.format("Line:     %d", line_nr_1based))
+		table.insert(formatted_output, string.format("Column:   %d", col_nr_1based))
+		table.insert(formatted_output, string.format("Message:  %s", message))
 
-		-- Fetch context lines (1 line before and 1 line after)
-		local context_before = 1
-		local context_after = 1
-		local start_context_lnum_0based = math.max(0, diag.lnum - context_before)
-		-- End index for get_lines is exclusive. Fetch up to line diag.lnum + context_after.
-		local end_context_lnum_exclusive = diag.lnum + 1 + context_after
-		local context_lines =
-			vim.api.nvim_buf_get_lines(bufnr, start_context_lnum_0based, end_context_lnum_exclusive, false)
+		-- Fetch context lines based on mode
+		local start_context_lnum_0based
+		local end_context_lnum_exclusive -- nvim_buf_get_lines end index is exclusive
 
-		-- Add context lines to the output
-		if context_lines and #context_lines > 0 then
-			for i, line_content in ipairs(context_lines) do
-				local current_line_nr_0based = start_context_lnum_0based + i - 1 -- Calculate the 0-based index
-				local current_line_nr_1based = current_line_nr_0based + 1 -- 1-based line number for display
-
-				local prefix = "  " -- Default prefix for context lines
-				if current_line_nr_0based == diag.lnum then -- Highlight the actual diagnostic line
-					prefix = ">>" -- Highlight prefix
-				end
-				local line_num_str = string.format("%4d", current_line_nr_1based) -- Pad line number for alignment
-				table.insert(formatted_output, string.format(" %s %s | %s", prefix, line_num_str, line_content))
-			end
+		if is_visual_selection then
+			-- Use the entire visual selection range as context
+			start_context_lnum_0based = selection_start_line - 1
+			end_context_lnum_exclusive = selection_end_line -- Use the 1-based end line directly
 		else
-			-- Fallback if context lines couldn't be fetched (e.g., empty buffer)
-			local source_line = vim.api.nvim_buf_get_lines(bufnr, diag.lnum, diag.lnum + 1, false)[1]
-			if source_line == nil then
-				source_line = "[Could not fetch source line]"
-			end
-			table.insert(formatted_output, string.format("  > %s", source_line))
+			-- Use fixed context around the diagnostic line
+			start_context_lnum_0based = math.max(0, diag.lnum - context_before)
+			end_context_lnum_exclusive = math.min(vim.api.nvim_buf_line_count(bufnr), diag.lnum + 1 + context_after)
 		end
+
+		-- Check if context range is valid before fetching
+		if start_context_lnum_0based >= end_context_lnum_exclusive then
+			table.insert(formatted_output, "\nCode Context:\n[Could not fetch context lines for this range]")
+		else
+			local context_lines =
+				vim.api.nvim_buf_get_lines(bufnr, start_context_lnum_0based, end_context_lnum_exclusive, false)
+
+			if context_lines and #context_lines > 0 then
+				local context_header = string.format(
+					"\nCode Context (Lines %d-%d):",
+					start_context_lnum_0based + 1,
+					end_context_lnum_exclusive -- Display the correct inclusive end line number
+				)
+				table.insert(formatted_output, context_header)
+				table.insert(formatted_output, "```" .. filetype) -- Start code block
+
+				for line_idx, line_content in ipairs(context_lines) do
+					local current_line_nr_0based = start_context_lnum_0based + line_idx - 1
+					local current_line_nr_1based = current_line_nr_0based + 1
+
+					local prefix = "  " -- Default prefix
+					if current_line_nr_0based == diag.lnum then
+						prefix = ">>" -- Highlight diagnostic line
+					end
+					local line_num_str = string.format("%-4d", current_line_nr_1based) -- Pad line number
+					table.insert(formatted_output, string.format("%s %s | %s", prefix, line_num_str, line_content))
+
+					-- Add column marker on the next line if it's the diagnostic line
+					if current_line_nr_0based == diag.lnum and col_nr_1based > 0 then
+						-- Create a marker string with spaces and then '^'
+						local marker_padding = string.rep(" ", col_nr_1based - 1)
+						-- Adjust marker position based on prefix and line number width ("prefix Lnum | ")
+						-- Length of prefix (2) + space (1) + length of line_num_str + space (1) + pipe (1) + space (1) = #prefix + #line_num_str + 5
+						local marker_prefix_padding = string.rep(" ", #prefix + #line_num_str + 5)
+						table.insert(formatted_output, marker_prefix_padding .. marker_padding .. "^")
+					end
+				end
+				table.insert(formatted_output, "```") -- End code block
+			else
+				table.insert(formatted_output, "\nCode Context:\n[Could not fetch context lines]")
+			end
+		end
+		table.insert(formatted_output, "--- END DIAGNOSTIC ---\n") -- Add separator
 	end
 
-	return string.format("Diagnostics for file: %q\n\n%s\n", file, table.concat(formatted_output, "\n\n"))
+	return header_message .. "\n" .. table.concat(formatted_output, "\n")
 end
 
 ---@return string[]
