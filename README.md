@@ -187,8 +187,10 @@ return {
       {
         "<leader>at",
         function()
-          -- Ensure you are focused on the correct AI terminal window first.
-          local term = require("ai-terminals").aider_toggle() -- Ensure terminal is open
+          -- Ensure the terminal is open
+          local term = require("ai-terminals").aider_get()
+          term:focus()
+
           -- This command sends output to the *currently active* terminal buffer.
           -- No args will prompt the user to enter a command
           require("ai-terminals").run_command_and_send_output()
