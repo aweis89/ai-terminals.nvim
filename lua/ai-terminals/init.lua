@@ -609,7 +609,7 @@ function M.multiline(text)
 end
 
 ---Execute a shell command and send its stdout to the active terminal buffer.
----@param cmd string|ni The shell command to execute.
+---@param cmd string|nil The shell command to execute.
 ---@return nil
 function M.run_command_and_send_output(cmd)
 	if cmd == "" or cmd == nil then
