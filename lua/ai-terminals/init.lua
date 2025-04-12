@@ -273,9 +273,9 @@ function M.close_diff()
 				wiped_count = wiped_count + 1
 			end
 		end
-		vim.notify(string.format("Wiped out %d buffer(s) from the diff directory.", wiped_count), vim.log.levels.INFO)
+		vim.notify(string.format("Wiped out %d buffer(s) from the diff directory.", wiped_count), vim.log.levels.DEBUG)
 	else
-		vim.notify("No diff buffers found to close.", vim.log.levels.INFO)
+		vim.notify("No diff buffers found to close.", vim.log.levels.DEBUG)
 	end
 end
 
