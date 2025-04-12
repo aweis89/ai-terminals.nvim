@@ -221,9 +221,10 @@ function M.diff_changes()
 	vim.cmd("tabonly")
 	vim.cmd("only")
 
+	local orig_files_to_notify = {}
 	-- Open each differing file in a split view
 	for i, files in ipairs(diff_files) do
-		vim.notify(string.format("Diffing %s and %s", files.orig, files.tmp), vim.log.levels.INFO)
+		table.insert(orig_files_to_notify, vim.fn.fnamemodify(files.orig, ":t")) -- Add only the filename
 
 		if i > 1 then
 			-- Create a new tab for each additional file pair
@@ -234,6 +235,11 @@ function M.diff_changes()
 		vim.cmd("diffthis")
 		vim.cmd("vsplit " .. vim.fn.fnameescape(files.tmp))
 		vim.cmd("diffthis")
+	end
+
+	-- Notify about all diffed files at once
+	if #orig_files_to_notify > 0 then
+		vim.notify("Opened diffs for: " .. table.concat(orig_files_to_notify, ", "), vim.log.levels.INFO)
 	end
 end
 
