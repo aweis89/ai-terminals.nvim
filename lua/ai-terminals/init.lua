@@ -77,7 +77,7 @@ local BASE_COPY_DIR = vim.fn.stdpath("cache") .. "/ai_terminals_diff/"
 ---Setup autocommands for a terminal buffer to reload files on focus loss and cleanup on close.
 ---@param buf_id number The buffer ID of the terminal.
 function _setup_terminal_autocmds()
-	local group_name = "AiTermReload_" .. buf_id
+	local group_name = "AiTermReload"
 	local augroup = vim.api.nvim_create_augroup(group_name, { clear = true })
 
 	local function check_files()
@@ -401,25 +401,41 @@ end
 
 ---Send text to a terminal
 ---@param text string The text to send
----@param opts {term: snacks.win?}|nil
+---@param opts {term?: snacks.win?, submit?: boolean}|nil Options: `term` specifies the target terminal, `submit` sends a newline after the text if true.
 ---@return nil
 function M.send(text, opts)
+	opts = opts or {} -- Ensure opts is a table
 	local job_id = vim.b.terminal_job_id
-	if opts and opts.term then
+	if opts.term then
 		job_id = vim.b[opts.term.buf].terminal_job_id
 	end
 	if not job_id then
 		vim.notify("No terminal job id found", vim.log.levels.ERROR)
+		return -- Exit early if no job_id
 	end
+
+	local text_to_send = text
 	if text:find("\n") then
-		text = M.multiline(text)
+		text_to_send = M.multiline(text)
 	end
-	local ok, err = pcall(vim.fn.chansend, job_id, text)
+
+	-- Send the main text
+	local ok, err = pcall(vim.fn.chansend, job_id, text_to_send)
 	if not ok then
-		vim.notify("Failed to send selection: " .. tostring(err), vim.log.levels.ERROR)
-		return
+		vim.notify("Failed to send text: " .. tostring(err), vim.log.levels.ERROR)
+		return -- Don't proceed if sending text failed
 	end
-	vim.api.nvim_feedkeys("i", "n", false)
+
+	-- Send newline if submit is requested
+	if opts.submit then
+		local ok_nl, err_nl = pcall(vim.fn.chansend, job_id, "\n")
+		if not ok_nl then
+			vim.notify("Failed to send newline: " .. tostring(err_nl), vim.log.levels.ERROR)
+			-- Don't return here, the main text was sent successfully
+		end
+	else
+		vim.api.nvim_feedkeys("i", "n", false) -- Enter insert mode in the terminal window
+	end
 end
 
 -- Helper function to map severity enum to string
@@ -661,13 +677,13 @@ function M.add_files_to_aider(files, opts)
 		vim.defer_fn(function()
 			local term_after_toggle = M.get("aider")
 			if term_after_toggle then
-				M.send(command .. " " .. files_str .. "\n", { term = term_after_toggle })
+				M.send(command .. " " .. files_str .. "\n", { term = term_after_toggle, submit = true })
 			else
 				vim.notify("Aider terminal not found after toggle.", vim.log.levels.ERROR)
 			end
 		end, 100) -- Adjust delay as needed
 	else
-		M.send(command .. " " .. files_str .. "\n", { term = term })
+		M.send(command .. " " .. files_str .. "\n", { term = term, submit = true })
 	end
 end
 
