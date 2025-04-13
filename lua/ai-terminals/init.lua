@@ -158,20 +158,6 @@ function _setup_terminal_autocmds()
 			end
 		end,
 	})
-
-	-- Autocommand to clean up the group when the terminal closes
-	vim.api.nvim_create_autocmd("TermClose", {
-		group = augroup,
-		pattern = pattern,
-		once = true, -- Only need to clean up once
-		desc = "Clean up AI terminal autocommands",
-		callback = function()
-			pcall(vim.api.nvim_del_augroup_by_name, group_name)
-			vim.notify("AI terminal closed & autocommands cleaned up.", vim.log.levels.INFO)
-			-- Optional: Run check_files one last time on close?
-			check_files()
-		end,
-	})
 end
 
 ------------------------------------------
