@@ -1,6 +1,35 @@
 local M = {}
 
 ------------------------------------------
+-- Configuration
+------------------------------------------
+M.config = {
+	terminals = {
+		goose = {
+			cmd = string.format("GOOSE_CLI_THEME=%s goose", vim.o.background),
+		},
+		aichat = {
+			cmd = string.format(
+				"AICHAT_LIGHT_THEME=%s GEMINI_API_BASE=http://localhost:8080/v1beta aichat -r %%functions%% --session",
+				tostring(vim.o.background == "light") -- Convert boolean to string "true" or "false"
+			),
+		},
+		claude = {
+			cmd = string.format("claude config set -g theme %s && claude", vim.o.background),
+		},
+		aider = {
+			cmd = string.format("aider --watch-files --%s-mode", vim.o.background),
+		},
+	},
+}
+
+---Setup function to merge user configuration with defaults.
+---@param user_config table User-provided configuration table.
+function M.setup(user_config)
+	M.config = vim.tbl_deep_extend("force", M.config, user_config or {})
+end
+
+------------------------------------------
 -- Ignore Patterns for Diff
 ------------------------------------------
 local DIFF_IGNORE_PATTERNS = {
@@ -144,20 +173,27 @@ function M.get_visual_selection_with_header(bufnr, opts)
 	return string.format("\n# Path: %s\n%s\n", path, slines)
 end
 
----Create a terminal with specified position and command
----@param cmd string
+---Create or toggle a terminal by name with specified position
+---@param terminal_name string The name of the terminal (key in M.config.terminals)
 ---@param position "float"|"bottom"|"top"|"left"|"right"|nil
----@return snacks.win
-function M.toggle(cmd, position)
+---@return snacks.win|nil
+function M.toggle(terminal_name, position)
+	local term_config = M.config.terminals[terminal_name]
+	if not term_config then
+		vim.notify("Unknown terminal name: " .. tostring(terminal_name), vim.log.levels.ERROR)
+		return nil
+	end
+	local cmd = term_config.cmd
+
 	position = position or "float"
 	local valid_positions = { float = true, bottom = true, top = true, left = true, right = true }
 
 	if not valid_positions[position] then
 		vim.notify("Invalid terminal position: " .. tostring(position), vim.log.levels.ERROR)
-		position = "float"
+		position = "float" -- Default to float on invalid input
 	end
 
-	-- Build rsync exclude patterns
+	-- Build rsync exclude patterns (Consider if this should be conditional or part of config)
 	local rsync_args = { "rsync", "-av", "--delete" }
 	for _, pattern in ipairs(DIFF_IGNORE_PATTERNS) do
 		table.insert(rsync_args, "--exclude")
@@ -184,16 +220,25 @@ function M.toggle(cmd, position)
 	return term
 end
 
----@param cmd string
----@param position "float"|"bottom"|"top"|"left"|"right"|nil
+---Get an existing terminal instance by name
+---@param terminal_name string The name of the terminal (key in M.config.terminals)
+---@param position "float"|"bottom"|"top"|"left"|"right"|nil Optional: Specify position if needed for matching window dimensions
 ---@return snacks.win?, boolean?
-function M.get(cmd, position)
-	position = position or "float"
+function M.get(terminal_name, position)
+	local term_config = M.config.terminals[terminal_name]
+	if not term_config then
+		vim.notify("Unknown terminal name: " .. tostring(terminal_name), vim.log.levels.ERROR)
+		return nil, false
+	end
+	local cmd = term_config.cmd
+
+	position = position or "float" -- Default position if not provided
 	local dimensions = WINDOW_DIMENSIONS[position]
+	-- Use the command string as the identifier for Snacks.terminal.get
 	return Snacks.terminal.get(cmd, {
-		env = { id = cmd },
+		env = { id = cmd }, -- Use cmd as the identifier
 		win = {
-			position = position,
+			position = position, -- Pass position for potential window matching/creation logic in Snacks
 			height = dimensions.height,
 			width = dimensions.width,
 		},
@@ -316,54 +361,6 @@ function M.send(text, opts)
 		return
 	end
 	vim.api.nvim_feedkeys("i", "n", false)
-end
-
-------------------------------------------
--- Terminal Instances
-------------------------------------------
-local GOOSE_CMD = string.format("GOOSE_CLI_THEME=%s goose", vim.o.background)
-
-local AICHAT_CMD = string.format(
-	"AICHAT_LIGHT_THEME=%s GEMINI_API_BASE=http://localhost:8080/v1beta aichat -r %%functions%% --session",
-	tostring(vim.o.background == "light") -- Convert boolean to string "true" or "false"
-)
-local CLAUDE_CMD = string.format("claude config set -g theme %s && claude", vim.o.background)
-local AIDER_CMD = string.format("aider --watch-files --%s-mode", vim.o.background)
-
----Create or toggle a Goose terminal
----@return snacks.win
-function M.goose_toggle()
-	return M.toggle(GOOSE_CMD)
-end
-
----Get an existing Goose terminal instance
----@return snacks.win?, boolean?
-function M.goose_get()
-	return M.get(GOOSE_CMD)
-end
-
----Create or toggle a Claude terminal
----@return snacks.win
-function M.claude_toggle()
-	return M.toggle(CLAUDE_CMD)
-end
-
----Get an existing Claude terminal instance
----@return snacks.win?, boolean?
-function M.claude_get()
-	return M.get(CLAUDE_CMD)
-end
-
----Create or toggle an Aider terminal
----@return snacks.win
-function M.aider_toggle()
-	return M.toggle(AIDER_CMD)
-end
-
----Get an existing Aider terminal instance
----@return snacks.win?, boolean?
-function M.aider_get()
-	return M.get(AIDER_CMD)
 end
 
 -- Helper function to map severity enum to string
@@ -553,8 +550,8 @@ function M.aider_comment(prefix)
 	prefix = prefix or "AI!" -- Default prefix if none provided
 	local bufnr = vim.api.nvim_get_current_buf()
 	-- toggle aider terminal so we know it's running
-	M.aider_toggle()
-	M.aider_toggle()
+	M.toggle("aider") -- Open
+	M.toggle("aider") -- Close (or focus if already open)
 	local comment_text = vim.fn.input("Enter comment (" .. prefix .. "): ")
 	if comment_text == "" then
 		return -- Do nothing if the user entered nothing
@@ -575,10 +572,10 @@ function M.aider_comment(prefix)
 	vim.api.nvim_buf_set_lines(bufnr, current_line - 1, current_line - 1, false, { formatted_comment })
 	vim.cmd.write() -- Save the file
 	vim.cmd.stopinsert() -- Exit insert mode
-	M.aider_toggle()
+	M.toggle("aider") -- Ensure terminal is focused/open for potential follow-up
 end
 
--- Helper function to send commands to aider terminal
+-- Helper function to send commands to the aider terminal
 ---@param files string[] List of file paths to add to aider
 ---@param opts? { read_only?: boolean } Options for the command
 function M.add_files_to_aider(files, opts)
@@ -592,12 +589,27 @@ function M.add_files_to_aider(files, opts)
 
 	local files_str = table.concat(files, " ")
 
-	-- Check if the aider terminal is already open
-	if not vim.b.term_title then
-		M.aider_toggle()
+	-- Ensure the aider terminal is open and get its instance
+	local term, is_open = M.get("aider")
+	if not is_open then
+		term = M.toggle("aider") -- Open it if not already open
+		if not term then
+			vim.notify("Failed to open aider terminal.", vim.log.levels.ERROR)
+			return
+		end
+		-- Need a slight delay or check to ensure the terminal is ready after toggling
+		-- This might require adjustments based on how Snacks handles terminal readiness
+		vim.defer_fn(function()
+			local term_after_toggle = M.get("aider")
+			if term_after_toggle then
+				M.send(command .. " " .. files_str .. "\n", { term = term_after_toggle })
+			else
+				vim.notify("Aider terminal not found after toggle.", vim.log.levels.ERROR)
+			end
+		end, 100) -- Adjust delay as needed
+	else
+		M.send(command .. " " .. files_str .. "\n", { term = term })
 	end
-	local term = M.aider_get()
-	M.send(command .. " " .. files_str .. "\n", { term = term })
 end
 
 function M.multiline(text)

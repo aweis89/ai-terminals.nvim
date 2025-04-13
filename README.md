@@ -6,9 +6,9 @@ This plugin integrates any terminal/CLI-based AI agent into Neovim, providing a 
 
 ### Generic Features (Works with any terminal-based AI agent)
 
-* **Terminal Integration:** Easily open and manage terminals running your
-  preferred AI CLI tool (e.g., Claude, Goose, Aider, custom scripts) using
-  `Snacks` for terminal management.
+* **Configurable Terminal Integration:** Define and manage terminals for various
+  AI CLI tools (e.g., Claude, Goose, Aider, custom scripts) through a simple
+  configuration table. Uses `Snacks` for terminal window management.
 * **Diff View:** Compare the changes made by the AI agent in the last session
   with the current state of your project files. A performant backup (using
   `rsync`) of your project is created when you first open an AI terminal in a
@@ -40,6 +40,30 @@ While the generic features work well with Aider, this plugin includes additional
 
 * [Snacks.nvim](https://github.com/folke/snacks.nvim): Required for terminal window management.
 
+## Configuration
+
+You can configure the plugin using the `setup` function. This allows you to define your own terminals or override the default commands.
+
+```lua
+-- In your Neovim configuration (e.g., lua/plugins/ai-terminals.lua)
+require("ai-terminals").setup({
+  terminals = {
+    -- Override the default aider command
+    aider = {
+      cmd = "aider --dark-mode --no-auto-commits",
+    },
+    -- Add a new custom terminal
+    my_custom_ai = {
+      cmd = "/path/to/my/ai/script --interactive",
+    },
+    -- Keep other defaults like 'goose', 'claude', 'aichat' unless overridden
+  },
+  -- You can potentially add other configuration options here in the future
+})
+```
+
+The `cmd` field for each terminal can be a string or a function that returns a string, allowing for dynamic command generation (like the defaults which adapt to `vim.o.background`).
+
 ### Example usage with lazy.nvim
 
 #### Basic Keymaps
@@ -50,6 +74,25 @@ return {
   {
     "aweis89/ai-terminals.nvim",
     event = "VeryLazy", -- Load when needed
+    opts = {
+      terminals = {
+        goose = {
+          cmd = string.format("GOOSE_CLI_THEME=%s goose", vim.o.background),
+        },
+        claude = {
+          cmd = string.format("claude config set -g theme %s && claude", vim.o.background),
+        },
+        aider = {
+          cmd = string.format("aider --watch-files --%s-mode", vim.o.background),
+        },
+        aichat = {
+         cmd = string.format(
+            "AICHAT_LIGHT_THEME=%s GEMINI_API_BASE=http://localhost:8080/v1beta aichat -r %%functions%% --session",
+            tostring(vim.o.background == "light") -- Convert boolean to string "true" or "false"
+         ),
+        },
+      },
+    },
     keys = {
       -- Diff Tools
       {
@@ -67,71 +110,89 @@ return {
         desc = "Close all diff views (and wipeout buffers)",
       },
       -- Claude Keymaps
+      -- Example Keymaps (using default terminal names: 'claude', 'goose', 'aider')
+      -- Claude Keymaps
       {
-        "<leader>ass",
+        "<leader>atc", -- Mnemonic: AI Terminal Claude
         function()
-          require("ai-terminals").claude_toggle()
-          -- Note: claude_toggle() returns the terminal instance.
+          require("ai-terminals").toggle("claude")
+          -- Note: toggle() returns the terminal instance.
           -- If you need to send data immediately after toggling,
           -- capture the return value like in the 'send selection' keymap.
         end,
         desc = "Toggle Claude terminal",
       },
       {
-        "<leader>ass", -- Same keybinding, but in visual mode
+        "<leader>atc", -- Same keybinding, but in visual mode
         function()
-          local selection = require("ai-terminals").get_visual_selection_with_header() or ""
-          -- Ensure the terminal is open and get its instance
-          local term = require("ai-terminals").claude_toggle()
-          -- Send the selection to the specific terminal instance
-          require("ai-terminals").send(selection, { term = term })
+          local selection = require("ai-terminals").get_visual_selection_with_header()
+          if selection then
+            -- Ensure the terminal is open and get its instance
+            local term = require("ai-terminals").toggle("claude")
+            -- Send the selection to the specific terminal instance
+            require("ai-terminals").send(selection, { term = term })
+          else
+            vim.notify("No text selected", vim.log.levels.WARN)
+          end
         end,
         desc = "Send selection to Claude",
         mode = { "v" },
       },
       {
-        "<leader>asd",
+        "<leader>adc", -- Mnemonic: AI Diagnostics Claude
         function()
           local diagnostics = require("ai-terminals").diagnostics()
-          local term = require("ai-terminals").claude_toggle() -- Ensure terminal is open
-          require("ai-terminals").send(diagnostics, { term = term })
+          if diagnostics then
+            local term = require("ai-terminals").toggle("claude") -- Ensure terminal is open
+            require("ai-terminals").send(diagnostics, { term = term })
+          else
+            vim.notify("No diagnostics found in buffer", vim.log.levels.INFO)
+          end
         end,
         desc = "Send diagnostics to Claude",
-        mode = { "v" },
+        mode = { "n", "v" }, -- Allow sending buffer or selection diagnostics
       },
       -- Goose Keymaps
       {
-        "<leader>agg",
+        "<leader>atg", -- Mnemonic: AI Terminal Goose
         function()
-          require("ai-terminals").goose_toggle()
+          require("ai-terminals").toggle("goose")
         end,
         desc = "Toggle Goose terminal",
       },
       {
-        "<leader>agg", -- Same keybinding, visual mode
+        "<leader>atg", -- Same keybinding, visual mode
         function()
-          local selection = require("ai-terminals").get_visual_selection_with_header() or ""
-          local term = require("ai-terminals").goose_toggle()
-          require("ai-terminals").send(selection, { term = term })
+          local selection = require("ai-terminals").get_visual_selection_with_header()
+          if selection then
+            local term = require("ai-terminals").toggle("goose")
+            require("ai-terminals").send(selection, { term = term })
+          else
+            vim.notify("No text selected", vim.log.levels.WARN)
+          end
         end,
         desc = "Send selection to Goose",
         mode = { "v" },
       },
       {
-        "<leader>agd",
+        "<leader>adg", -- Mnemonic: AI Diagnostics Goose
         function()
           local diagnostics = require("ai-terminals").diagnostics()
-          local term = require("ai-terminals").goose_toggle()
-          require("ai-terminals").send(diagnostics, { term = term })
+          if diagnostics then
+            local term = require("ai-terminals").toggle("goose")
+            require("ai-terminals").send(diagnostics, { term = term })
+          else
+            vim.notify("No diagnostics found in buffer", vim.log.levels.INFO)
+          end
         end,
         desc = "Send diagnostics to Goose",
-        mode = { "v" },
+        mode = { "n", "v" },
       },
       -- Aider Keymaps
       {
-        "<leader>aa",
+        "<leader>ata", -- Mnemonic: AI Terminal Aider
         function()
-          require("ai-terminals").aider_toggle()
+          require("ai-terminals").toggle("aider")
         end,
         desc = "Toggle Aider terminal",
       },
@@ -159,42 +220,53 @@ return {
         desc = "Add current file to Aider",
       },
       {
-        "<leader>aa", -- Same keybinding, visual mode
+        "<leader>ata", -- Same keybinding, visual mode
         function()
           local selection = require("ai-terminals").get_visual_selection_with_header()
-          if selection then -- Check if selection is not nil
-            local term = require("ai-terminals").aider_toggle() -- Ensure terminal is open
+          if selection then
+            local term = require("ai-terminals").toggle("aider") -- Ensure terminal is open
             require("ai-terminals").send(selection, { term = term })
           else
-            vim.notify("No text selected to send to Aider", vim.log.levels.WARN)
+            vim.notify("No text selected", vim.log.levels.WARN)
           end
         end,
         desc = "Send selection to Aider",
         mode = { "v" },
       },
       {
-        "<leader>ad",
+        "<leader>ada", -- Mnemonic: AI Diagnostics Aider
         function()
           local diagnostics = require("ai-terminals").diagnostics()
-          local term = require("ai-terminals").aider_toggle() -- Ensure terminal is open
-          require("ai-terminals").send(diagnostics, { term = term })
+          if diagnostics then
+            local term = require("ai-terminals").toggle("aider") -- Ensure terminal is open
+            require("ai-terminals").send(diagnostics, { term = term })
+          else
+            vim.notify("No diagnostics found in buffer", vim.log.levels.INFO)
+          end
         end,
         desc = "Send diagnostics to Aider",
-        mode = { "v" },
+        mode = { "n", "v" },
       },
-      -- Example: Run 'make test' and send output to active terminal
-      -- Assumes the desired AI terminal is already the active buffer
+      -- Example: Run a command and send output to a specific terminal (e.g., Aider)
       {
-        "<leader>at",
+        "<leader>ar", -- Mnemonic: AI Run command
         function()
-          -- Ensure the terminal is open
-          -- This command sends output to the *currently active* terminal buffer.
-          -- No arg will prompt the user to enter a command
-          require("ai-terminals").run_command_and_send_output()
-          -- or specify the command directly
-          -- require("ai-terminals").run_command_and_send_output("make test")
+          -- Ensure the Aider terminal is open first
+          local term = require("ai-terminals").toggle("aider")
+          if not term then
+            vim.notify("Could not open Aider terminal", vim.log.levels.ERROR)
+            return
+          end
+          -- Focus the terminal window before running the command
+          -- This ensures M.send targets the correct buffer's job ID
+          vim.api.nvim_set_current_win(term.win)
+
+          -- Prompt user or use a fixed command
+          -- require("ai-terminals").run_command_and_send_output()
+          -- Specify the command directly
+          require("ai-terminals").run_command_and_send_output("make test")
         end,
-        desc = "Run 'make test' and send output to active AI terminal",
+        desc = "Run 'make test' and send output to Aider terminal",
       },
     },
   },
@@ -222,7 +294,7 @@ local function add_files_from_picker(picker, opts)
       table.insert(files_to_add, full_path)
     end
   end
-  -- Assuming 'ai-terminals' is the name you used in lazy.nvim
+  -- Assuming 'ai-terminals' is the require path
   require("ai-terminals").add_files_to_aider(files_to_add, opts)
 end
 
