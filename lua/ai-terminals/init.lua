@@ -101,6 +101,14 @@ local function _setup_terminal_autocmds(buf_id)
 		callback = check_files,
 	})
 
+	-- Autocommand to run backup when entering the terminal window
+	vim.api.nvim_create_autocmd("BufWinEnter", {
+		group = augroup,
+		buffer = buf_id,
+		desc = "Run backup sync when entering AI terminal window",
+		callback = _run_rsync_backup,
+	})
+
 	-- Autocommand to clean up the group when the terminal closes
 	vim.api.nvim_create_autocmd("TermClose", {
 		group = augroup,
@@ -114,6 +122,59 @@ local function _setup_terminal_autocmds(buf_id)
 			check_files()
 		end,
 	})
+end
+
+------------------------------------------
+-- Backup/Diff Functions
+------------------------------------------
+---Run rsync to backup the current project directory, excluding specified patterns.
+local function _run_rsync_backup()
+	local cwd = vim.fn.getcwd()
+	local cwd_name = vim.fn.fnamemodify(cwd, ":t")
+	local backup_dir = BASE_COPY_DIR .. cwd_name
+
+	-- Ensure the base directory exists
+	vim.fn.mkdir(BASE_COPY_DIR, "p")
+
+	local rsync_args = { "rsync", "-av", "--delete" }
+	for _, pattern in ipairs(DIFF_IGNORE_PATTERNS) do
+		table.insert(rsync_args, "--exclude")
+		table.insert(rsync_args, pattern)
+	end
+	table.insert(rsync_args, cwd .. "/") -- Add trailing slash to source for rsync behavior
+	table.insert(rsync_args, backup_dir)
+
+	vim.notify("Running backup sync...", vim.log.levels.INFO)
+	local job_id = vim.fn.jobstart(rsync_args, {
+		on_exit = function(_, exit_code)
+			if exit_code == 0 then
+				vim.schedule(function()
+					vim.notify("Backup sync completed successfully.", vim.log.levels.INFO)
+				end)
+			else
+				vim.schedule(function()
+					vim.notify(
+						string.format("Backup sync failed with exit code %d.", exit_code),
+						vim.log.levels.ERROR
+					)
+				end)
+			end
+		end,
+		stdout_buffered = true, -- Capture stdout if needed for debugging
+		stderr_buffered = true, -- Capture stderr
+		on_stderr = function(_, data)
+			if data and #data > 0 and data[1] ~= "" then -- Check for actual error messages
+				local err_msg = table.concat(data, "\n")
+				vim.schedule(function()
+					vim.notify("Backup sync error: " .. err_msg, vim.log.levels.ERROR)
+				end)
+			end
+		end,
+	})
+
+	if not job_id or job_id == 0 or job_id == -1 then
+		vim.notify("Failed to start backup sync job.", vim.log.levels.ERROR)
+	end
 end
 
 ------------------------------------------
@@ -211,16 +272,7 @@ function M.toggle(terminal_name, position)
 		position = "float" -- Default to float on invalid input
 	end
 
-	-- Build rsync exclude patterns (Consider if this should be conditional or part of config)
-	local rsync_args = { "rsync", "-av", "--delete" }
-	for _, pattern in ipairs(DIFF_IGNORE_PATTERNS) do
-		table.insert(rsync_args, "--exclude")
-		table.insert(rsync_args, pattern)
-	end
-	table.insert(rsync_args, vim.fn.getcwd())
-	table.insert(rsync_args, BASE_COPY_DIR)
-
-	vim.system(rsync_args)
+	-- Rsync logic is now handled by BufWinEnter autocommand setup in _setup_terminal_autocmds
 
 	local dimensions = WINDOW_DIMENSIONS[position]
 
