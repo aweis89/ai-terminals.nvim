@@ -62,7 +62,7 @@ require("ai-terminals").setup({
 })
 ```
 
-The `cmd` field for each terminal can be a string or a function that returns a string, allowing for dynamic command generation (like the defaults which adapt to `vim.o.background`).
+The `cmd` field for each terminal can be a `string` or a `function` that returns a string. Using a function allows the command to be generated dynamically *just before* the terminal is opened (e.g., to check `vim.o.background` at invocation time).
 
 ### Example usage with lazy.nvim
 
@@ -73,24 +73,34 @@ The `cmd` field for each terminal can be a string or a function that returns a s
 return {
   {
     "aweis89/ai-terminals.nvim",
-    event = "VeryLazy", -- Load when needed
+    -- Example opts using functions for dynamic command generation (matches plugin defaults)
     opts = {
       terminals = {
         goose = {
-          cmd = string.format("GOOSE_CLI_THEME=%s goose", vim.o.background),
+          cmd = function()
+            return string.format("GOOSE_CLI_THEME=%s goose", vim.o.background)
+          end,
         },
         claude = {
-          cmd = string.format("claude config set -g theme %s && claude", vim.o.background),
+          cmd = function()
+            return string.format("claude config set -g theme %s && claude", vim.o.background)
+          end,
         },
         aider = {
-          cmd = string.format("aider --watch-files --%s-mode", vim.o.background),
+          cmd = function()
+            return string.format("aider --watch-files --%s-mode", vim.o.background)
+          end,
         },
         aichat = {
-         cmd = string.format(
-            "AICHAT_LIGHT_THEME=%s GEMINI_API_BASE=http://localhost:8080/v1beta aichat -r %%functions%% --session",
-            tostring(vim.o.background == "light") -- Convert boolean to string "true" or "false"
-         ),
+          cmd = function()
+            return string.format(
+              "AICHAT_LIGHT_THEME=%s GEMINI_API_BASE=http://localhost:8080/v1beta aichat -r %%functions%% --session",
+              tostring(vim.o.background == "light") -- Convert boolean to string "true" or "false"
+            )
+          end,
         },
+        -- Example of a simple string command
+        -- my_simple_ai = { cmd = "my_ai_tool --interactive" },
       },
     },
     keys = {
@@ -261,10 +271,10 @@ return {
           -- This ensures M.send targets the correct buffer's job ID
           vim.api.nvim_set_current_win(term.win)
 
-          -- Prompt user or use a fixed command
-          -- require("ai-terminals").run_command_and_send_output()
-          -- Specify the command directly
-          require("ai-terminals").run_command_and_send_output("make test")
+          -- Prompt user for command
+          require("ai-terminals").run_command_and_send_output()
+          -- Or specify the command directly
+          -- require("ai-terminals").run_command_and_send_output("make test")
         end,
         desc = "Run 'make test' and send output to Aider terminal",
       },

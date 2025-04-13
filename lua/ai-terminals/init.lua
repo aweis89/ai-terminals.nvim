@@ -6,19 +6,27 @@ local M = {}
 M.config = {
 	terminals = {
 		goose = {
-			cmd = string.format("GOOSE_CLI_THEME=%s goose", vim.o.background),
+			cmd = function()
+				return string.format("GOOSE_CLI_THEME=%s goose", vim.o.background)
+			end,
 		},
 		aichat = {
-			cmd = string.format(
-				"AICHAT_LIGHT_THEME=%s GEMINI_API_BASE=http://localhost:8080/v1beta aichat -r %%functions%% --session",
-				tostring(vim.o.background == "light") -- Convert boolean to string "true" or "false"
-			),
+			cmd = function()
+				return string.format(
+					"AICHAT_LIGHT_THEME=%s GEMINI_API_BASE=http://localhost:8080/v1beta aichat -r %%functions%% --session",
+					tostring(vim.o.background == "light") -- Convert boolean to string "true" or "false"
+				)
+			end,
 		},
 		claude = {
-			cmd = string.format("claude config set -g theme %s && claude", vim.o.background),
+			cmd = function()
+				return string.format("claude config set -g theme %s && claude", vim.o.background)
+			end,
 		},
 		aider = {
-			cmd = string.format("aider --watch-files --%s-mode", vim.o.background),
+			cmd = function()
+				return string.format("aider --watch-files --%s-mode", vim.o.background)
+			end,
 		},
 	},
 }
@@ -183,7 +191,17 @@ function M.toggle(terminal_name, position)
 		vim.notify("Unknown terminal name: " .. tostring(terminal_name), vim.log.levels.ERROR)
 		return nil
 	end
-	local cmd = term_config.cmd
+
+	-- Resolve command: Execute if function, otherwise use as string
+	local cmd
+	if type(term_config.cmd) == "function" then
+		cmd = term_config.cmd()
+	elseif type(term_config.cmd) == "string" then
+		cmd = term_config.cmd
+	else
+		vim.notify("Invalid 'cmd' type for terminal: " .. terminal_name, vim.log.levels.ERROR)
+		return nil
+	end
 
 	position = position or "float"
 	local valid_positions = { float = true, bottom = true, top = true, left = true, right = true }
@@ -230,7 +248,17 @@ function M.get(terminal_name, position)
 		vim.notify("Unknown terminal name: " .. tostring(terminal_name), vim.log.levels.ERROR)
 		return nil, false
 	end
-	local cmd = term_config.cmd
+
+	-- Resolve command: Execute if function, otherwise use as string
+	local cmd
+	if type(term_config.cmd) == "function" then
+		cmd = term_config.cmd()
+	elseif type(term_config.cmd) == "string" then
+		cmd = term_config.cmd
+	else
+		vim.notify("Invalid 'cmd' type for terminal: " .. terminal_name, vim.log.levels.ERROR)
+		return nil, false
+	end
 
 	position = position or "float" -- Default position if not provided
 	local dimensions = WINDOW_DIMENSIONS[position]
