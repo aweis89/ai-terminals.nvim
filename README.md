@@ -1,15 +1,15 @@
-# AI Terminals Neovim Plugin
+# 🤖 AI Terminals Neovim Plugin
 
 This plugin integrates any terminal/CLI-based AI agent into Neovim, providing a seamless workflow for interacting with AI assistants directly within your editor.
 
-## Features
+## ✨ Features
 
-### Generic Features (Works with any terminal-based AI agent)
+### ⚙️ Generic Features (Works with any terminal-based AI agent)
 
-* **Configurable Terminal Integration:** Define and manage terminals for various
+* **🔌 Configurable Terminal Integration:** Define and manage terminals for various
   AI CLI tools (e.g., Claude, Goose, Aider, custom scripts) through a simple
   configuration table. Uses `Snacks` for terminal window management.
-* **Diff View:** Compare the changes made by the AI agent in the last session
+* **🔄 Diff View:** Compare the changes made by the AI agent in the last session
   with the current state of your project files. A performant backup (using
   `rsync`) of your project is created when you first open an AI terminal in a
   session. This backup persists even after closing Neovim. The *next* time you
@@ -21,26 +21,26 @@ This plugin integrates any terminal/CLI-based AI agent into Neovim, providing a 
   manage changes (see `:help diff`). The `close_diff()` command closes these
   diff tabs and removes the buffers associated with the temporary backup files
   (i.e., non-local files) from Neovim's buffer list.
-* **Automatic File Reloading:** When you switch focus away from the AI terminal
+* **🔃 Automatic File Reloading:** When you switch focus away from the AI terminal
   window, all listed buffers in Neovim are checked for modifications and
   reloaded if necessary, ensuring you see the latest changes made by the AI.
-* **Send Visual Selection:** Send the currently selected text (visual mode) to the AI terminal, automatically wrapped in a markdown code block with the file path and language type included.
-* **Send Diagnostics:** Send diagnostics (errors, warnings, etc.) for the current buffer or visual selection to the AI terminal, formatted with severity, line/column numbers, messages, and the corresponding source code lines.
-* **Run Command and Send Output:** Execute an arbitrary shell command and send its standard output along with the exit code to the active AI terminal. This is useful for running tests, linters, or other tools and feeding the results directly to the AI.
+* **📋 Send Visual Selection:** Send the currently selected text (visual mode) to the AI terminal, automatically wrapped in a markdown code block with the file path and language type included.
+* **🩺 Send Diagnostics:** Send diagnostics (errors, warnings, etc.) for the current buffer or visual selection to the AI terminal, formatted with severity, line/column numbers, messages, and the corresponding source code lines.
+* **🚀 Run Command and Send Output:** Execute an arbitrary shell command and send its standard output along with the exit code to the active AI terminal. This is useful for running tests, linters, or other tools and feeding the results directly to the AI.
 
-### Aider Specific Features
+### 🔥 Aider Specific Features
 
 While the generic features work well with Aider, this plugin includes additional helpers specifically for Aider:
 
-* **Add Files:** Quickly add the current file or a list of files to the Aider chat context using `/add` or `/read-only`.
-* **Add Comments:** Insert comments above the current line with a custom prefix (e.g., `AI!`, `AI?`). This action automatically saves the file and can optionally start the Aider terminal if it's not already running.
-* **Multiline Input Handling:** Automatically wraps text (like visual selections or diagnostics) containing newlines using terminal bracketed paste mode (`ESC[200~...ESC[201~`). This ensures reliable multiline input for most modern terminal applications.
+* **➕ Add Files:** Quickly add the current file or a list of files to the Aider chat context using `/add` or `/read-only`.
+* **💬 Add Comments:** Insert comments above the current line with a custom prefix (e.g., `AI!`, `AI?`). This action automatically saves the file and can optionally start the Aider terminal if it's not already running.
+* **📜 Multiline Input Handling:** Automatically wraps text (like visual selections or diagnostics) containing newlines using terminal bracketed paste mode (`ESC[200~...ESC[201~`). This ensures reliable multiline input for most modern terminal applications.
 
-## Dependencies
+## 🔗 Dependencies
 
-* [Snacks.nvim](https://github.com/folke/snacks.nvim): Required for terminal window management.
+* [Snacks.nvim](https://github.com/folke/snacks.nvim): Required for terminal window management. 🍬
 
-## Configuration
+## 🔧 Configuration
 
 You can configure the plugin using the `setup` function. This allows you to define your own terminals or override the default commands.
 
@@ -64,9 +64,9 @@ require("ai-terminals").setup({
 
 The `cmd` field for each terminal can be a `string` or a `function` that returns a string. Using a function allows the command to be generated dynamically *just before* the terminal is opened (e.g., to check `vim.o.background` at invocation time).
 
-### Example usage with lazy.nvim
+### 🚀 Example usage with lazy.nvim
 
-#### Basic Keymaps
+#### ⌨️ Basic Keymaps
 
 ```lua
 -- lazy.nvim plugin specification
@@ -283,7 +283,7 @@ return {
 }
 ```
 
-#### Integrating with a File Picker (e.g., snacks.nvim)
+#### 🤝 Integrating with a File Picker (e.g., snacks.nvim)
 
 You can integrate the `add_files_to_aider` function with file pickers like `snacks.nvim` to easily add selected files to the Aider context.
 
