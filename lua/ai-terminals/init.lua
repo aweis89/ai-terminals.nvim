@@ -7,7 +7,7 @@ local DiffLib = require("ai-terminals.diff")
 local ConfigLib = require("ai-terminals.config")
 local SelectionLib = require("ai-terminals.selection")
 
-local function check_files()
+local function reload_changes()
 	vim.schedule(function() -- Defer execution slightly
 		vim.notify("Checking files for changes...", vim.log.levels.INFO)
 		for _, bufinfo in ipairs(vim.fn.getbufinfo({ buflisted = 1 })) do
@@ -35,7 +35,7 @@ function M.setup(user_config)
 		group = augroup,
 		pattern = pattern,
 		desc = "Reload buffers when AI terminal loses focus",
-		callback = check_files,
+		callback = reload_changes,
 	})
 
 	-- Autocommand to run backup when entering the terminal window
