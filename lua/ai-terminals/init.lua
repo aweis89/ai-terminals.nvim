@@ -4,59 +4,19 @@ local AiderLib = require("ai-terminals.aider")
 local DiagnosticsLib = require("ai-terminals.diagnostics")
 local TerminalLib = require("ai-terminals.terminal")
 local DiffLib = require("ai-terminals.diff")
-
-------------------------------------------
--- Configuration
-------------------------------------------
-M.config = {
-	terminals = {
-		goose = {
-			cmd = function()
-				return string.format("GOOSE_CLI_THEME=%s goose", vim.o.background)
-			end,
-		},
-		aichat = {
-			cmd = function()
-				return string.format(
-					"AICHAT_LIGHT_THEME=%s GEMINI_API_BASE=http://localhost:8080/v1beta aichat -r %%functions%% --session",
-					tostring(vim.o.background == "light") -- Convert boolean to string "true" or "false"
-				)
-			end,
-		},
-		claude = {
-			cmd = function()
-				return string.format("claude config set -g theme %s && claude", vim.o.background)
-			end,
-		},
-		aider = {
-			cmd = function()
-				return string.format("aider --watch-files --%s-mode", vim.o.background)
-			end,
-		},
-	},
-}
+local ConfigLib = require("ai-terminals.config")
+local SelectionLib = require("ai-terminals.selection")
 
 ---Setup function to merge user configuration with defaults.
 ---@param user_config table User-provided configuration table.
 function M.setup(user_config)
-	M.config = vim.tbl_deep_extend("force", M.config, user_config or {})
+	ConfigLib.config = vim.tbl_deep_extend("force", ConfigLib.config, user_config or {})
 	_setup_terminal_autocmds() -- Setup autocommands for the aider terminal
 end
 
-------------------------------------------
--- Constants (kept here as they relate to config interpretation)
-------------------------------------------
-local WINDOW_DIMENSIONS = {
-	float = { width = 0.97, height = 0.97 },
-	bottom = { width = 0.5, height = 0.5 },
-	top = { width = 0.5, height = 0.5 },
-	left = { width = 0.5, height = 0.5 },
-	right = { width = 0.5, height = 0.5 },
-}
-
 ---Setup autocommands for a terminal buffer to reload files on focus loss and cleanup on close.
 ---@param buf_id number The buffer ID of the terminal.
-function _setup_terminal_autocmds()
+function _setup_terminal_autocmds(buf_id) -- Added buf_id parameter based on usage below
 	local group_name = "AiTermReload"
 	local augroup = vim.api.nvim_create_augroup(group_name, { clear = true })
 
@@ -143,74 +103,13 @@ end
 ------------------------------------------
 -- Terminal Core Functions
 ------------------------------------------
----Get the current visual selection
----@param bufnr number|nil Buffer number (defaults to current buffer)
----@return string[] lines Selected lines
----@return string filepath Filepath of the buffer
----@return number start_line Starting line number
----@return number end_line Ending line number
-function M.get_visual_selection(bufnr)
-	local api = vim.api
-	local esc_feedkey = api.nvim_replace_termcodes("<ESC>", true, false, true)
-	bufnr = bufnr or 0
-
-	api.nvim_feedkeys(esc_feedkey, "n", true)
-	api.nvim_feedkeys("gv", "x", false)
-	api.nvim_feedkeys(esc_feedkey, "n", true)
-
-	local end_line, end_col = unpack(api.nvim_buf_get_mark(bufnr, ">"))
-	local start_line, start_col = unpack(api.nvim_buf_get_mark(bufnr, "<"))
-	local lines = api.nvim_buf_get_lines(bufnr, start_line - 1, end_line, false)
-
-	-- get whole buffer if there is no current/previous visual selection
-	if start_line == 0 then
-		lines = api.nvim_buf_get_lines(bufnr, 0, -1, false)
-		start_line = 1
-		start_col = 0
-		end_line = #lines
-		end_col = #lines[#lines]
-	end
-
-	-- use 1-based indexing and handle selections made in visual line mode
-	start_col = start_col + 1
-	end_col = math.min(end_col, #lines[#lines] - 1) + 1
-
-	-- shorten first/last line according to start_col/end_col
-	lines[#lines] = lines[#lines]:sub(1, end_col)
-	lines[1] = lines[1]:sub(start_col)
-
-	local filepath = vim.fn.fnamemodify(vim.fn.expand("%"), ":~:.")
-
-	return lines, filepath, start_line, end_line
-end
-
----Format visual selection with markdown code block and file path
----@param bufnr integer|nil
----@param opts table|nil Options for formatting (preserve_whitespace, etc.)
----@return string|nil
-function M.get_visual_selection_with_header(bufnr, opts)
-	opts = opts or {}
-	bufnr = bufnr or 0
-	local lines, path = M.get_visual_selection(bufnr)
-
-	if not lines or #lines == 0 then
-		vim.notify("No text selected", vim.log.levels.WARN)
-		return nil
-	end
-
-	local slines = table.concat(lines, "\n")
-
-	local filetype = vim.bo[bufnr].filetype or ""
-	slines = "```" .. filetype .. "\n" .. slines .. "\n```\n"
-	return string.format("\n# Path: %s\n%s\n", path, slines)
-end
 
 ---Create or toggle a terminal by name with specified position
----@param terminal_name string The name of the terminal (key in M.config.terminals)
+---@param terminal_name string The name of the terminal (key in ConfigLib.config.terminals)
 ---@param position "float"|"bottom"|"top"|"left"|"right"|nil
 ---@return snacks.win|nil
 function M.toggle(terminal_name, position)
-	local term_config = M.config.terminals[terminal_name]
+	local term_config = ConfigLib.config.terminals[terminal_name]
 	if not term_config then
 		vim.notify("Unknown terminal name: " .. tostring(terminal_name), vim.log.levels.ERROR)
 		return nil
@@ -235,7 +134,7 @@ function M.toggle(terminal_name, position)
 		position = "float" -- Default to float on invalid input
 	end
 
-	local dimensions = WINDOW_DIMENSIONS[position]
+	local dimensions = ConfigLib.WINDOW_DIMENSIONS[position]
 
 	return TerminalLib.toggle(cmd, position, dimensions)
 end
@@ -245,7 +144,7 @@ end
 ---@param position "float"|"bottom"|"top"|"left"|"right"|nil Optional: Specify position if needed for matching window dimensions
 ---@return snacks.win?, boolean?
 function M.get(terminal_name, position)
-	local term_config = M.config.terminals[terminal_name]
+	local term_config = ConfigLib.config.terminals[terminal_name]
 	if not term_config then
 		vim.notify("Unknown terminal name: " .. tostring(terminal_name), vim.log.levels.ERROR)
 		return nil, false
@@ -263,7 +162,7 @@ function M.get(terminal_name, position)
 	end
 
 	position = position or "float" -- Default position if not provided
-	local dimensions = WINDOW_DIMENSIONS[position]
+	local dimensions = ConfigLib.WINDOW_DIMENSIONS[position]
 	-- Delegate to TerminalLib
 	return TerminalLib.get(cmd, position, dimensions)
 end
@@ -320,6 +219,24 @@ end
 ---@return nil
 function M.run_command_and_send_output(cmd)
 	TerminalLib.run_command_and_send_output(cmd)
+end
+
+---Get the current visual selection (delegates to SelectionLib)
+---@param bufnr number|nil Buffer number (defaults to current buffer)
+---@return string[] lines Selected lines
+---@return string filepath Filepath of the buffer
+---@return number start_line Starting line number
+---@return number end_line Ending line number
+function M.get_visual_selection(bufnr)
+	return SelectionLib.get_visual_selection(bufnr)
+end
+
+---Format visual selection with markdown code block and file path (delegates to SelectionLib)
+---@param bufnr integer|nil
+---@param opts table|nil Options for formatting (preserve_whitespace, etc.)
+---@return string|nil
+function M.get_visual_selection_with_header(bufnr, opts)
+	return SelectionLib.get_visual_selection_with_header(bufnr, opts)
 end
 
 return M

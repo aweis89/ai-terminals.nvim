@@ -34,26 +34,6 @@ M.config = {
 ------------------------------------------
 -- Constants
 ------------------------------------------
-M.DIFF_IGNORE_PATTERNS = {
-	"*.log",
-	"*.swp",
-	"*.swo",
-	"*.pyc",
-	"__pycache__",
-	"node_modules",
-	".git",
-	".DS_Store",
-	"vendor",
-	"*.tmp",
-	"tmp",
-	".cache",
-	"dist",
-	"build",
-	".vscode",
-	".aider*",
-	"cache.db*",
-}
-
 M.WINDOW_DIMENSIONS = {
 	float = { width = 0.97, height = 0.97 },
 	bottom = { width = 0.5, height = 0.5 },
@@ -61,7 +41,5 @@ M.WINDOW_DIMENSIONS = {
 	left = { width = 0.5, height = 0.5 },
 	right = { width = 0.5, height = 0.5 },
 }
-
-M.BASE_COPY_DIR = vim.fn.stdpath("cache") .. "/ai_terminals_diff/"
 
 return M
