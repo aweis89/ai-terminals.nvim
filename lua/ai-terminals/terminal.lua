@@ -1,5 +1,19 @@
 local M = {}
 
+---Resolve the command string from configuration (can be string or function).
+---@param cmd_config string|function The command configuration value.
+---@return string|nil The resolved command string, or nil if the type is invalid.
+function M.resolve_command(cmd_config)
+	if type(cmd_config) == "function" then
+		return cmd_config()
+	elseif type(cmd_config) == "string" then
+		return cmd_config
+	else
+		vim.notify("Invalid 'cmd' type", vim.log.levels.ERROR)
+		return nil
+	end
+end
+
 ---Format text for bracketed paste mode.
 ---@param text string The text to format.
 ---@return string Formatted text.
@@ -51,14 +65,19 @@ function M.send(text, opts)
 end
 
 ---Create or toggle a terminal by name with specified position
----@param cmd string The command to run in the terminal.
+---@param cmd string|function The command to run in the terminal.
 ---@param position "float"|"bottom"|"top"|"left"|"right" The position of the terminal window.
 ---@param dimensions table Dimensions {width, height} for the terminal window.
 ---@return snacks.win|nil The terminal window object or nil on failure.
 function M.toggle(cmd, position, dimensions)
+	local cmd_str = M.resolve_command(cmd)
+	if not cmd_str then
+		return nil -- Error already notified by resolve_command
+	end
+
 	-- Assuming Snacks is available globally or required elsewhere
-	local term = Snacks.terminal.toggle(cmd, {
-		env = { id = cmd },
+	local term = Snacks.terminal.toggle(cmd_str, {
+		env = { id = cmd_str },
 		win = {
 			position = position,
 			height = dimensions.height,
@@ -69,14 +88,18 @@ function M.toggle(cmd, position, dimensions)
 end
 
 ---Get an existing terminal instance by command and position
----@param cmd string The command associated with the terminal.
+---@param cmd string|function The command associated with the terminal.
 ---@param position "float"|"bottom"|"top"|"left"|"right" The position of the terminal window.
 ---@param dimensions table Dimensions {width, height} for the terminal window.
 ---@return snacks.win?, boolean? The terminal window object and a boolean indicating if it was found.
 function M.get(cmd, position, dimensions)
+	local cmd_str = M.resolve_command(cmd)
+	if not cmd_str then
+		return nil -- Error already notified by resolve_command
+	end
 	-- Assuming Snacks is available globally or required elsewhere
-	return Snacks.terminal.get(cmd, {
-		env = { id = cmd }, -- Use cmd as the identifier
+	return Snacks.terminal.get(cmd_str, {
+		env = { id = cmd_str }, -- Use cmd as the identifier
 		win = {
 			position = position, -- Pass position for potential window matching/creation logic in Snacks
 			height = dimensions.height,

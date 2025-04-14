@@ -115,17 +115,6 @@ function M.toggle(terminal_name, position)
 		return nil
 	end
 
-	-- Resolve command: Execute if function, otherwise use as string
-	local cmd
-	if type(term_config.cmd) == "function" then
-		cmd = term_config.cmd()
-	elseif type(term_config.cmd) == "string" then
-		cmd = term_config.cmd
-	else
-		vim.notify("Invalid 'cmd' type for terminal: " .. terminal_name, vim.log.levels.ERROR)
-		return nil
-	end
-
 	position = position or "float"
 	local valid_positions = { float = true, bottom = true, top = true, left = true, right = true }
 
@@ -135,8 +124,7 @@ function M.toggle(terminal_name, position)
 	end
 
 	local dimensions = ConfigLib.WINDOW_DIMENSIONS[position]
-
-	return TerminalLib.toggle(cmd, position, dimensions)
+	return TerminalLib.toggle(term_config.cmd, position, dimensions)
 end
 
 ---Get an existing terminal instance by name
@@ -150,21 +138,9 @@ function M.get(terminal_name, position)
 		return nil, false
 	end
 
-	-- Resolve command: Execute if function, otherwise use as string
-	local cmd
-	if type(term_config.cmd) == "function" then
-		cmd = term_config.cmd()
-	elseif type(term_config.cmd) == "string" then
-		cmd = term_config.cmd
-	else
-		vim.notify("Invalid 'cmd' type for terminal: " .. terminal_name, vim.log.levels.ERROR)
-		return nil, false
-	end
-
 	position = position or "float" -- Default position if not provided
 	local dimensions = ConfigLib.WINDOW_DIMENSIONS[position]
-	-- Delegate to TerminalLib
-	return TerminalLib.get(cmd, position, dimensions)
+	return TerminalLib.get(term_config.cmd, position, dimensions)
 end
 
 ---Compare current directory with its backup and open differing files (delegates to DiffLib)
