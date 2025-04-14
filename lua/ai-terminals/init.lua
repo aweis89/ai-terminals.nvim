@@ -7,32 +7,26 @@ local DiffLib = require("ai-terminals.diff")
 local ConfigLib = require("ai-terminals.config")
 local SelectionLib = require("ai-terminals.selection")
 
+local function check_files()
+	vim.schedule(function() -- Defer execution slightly
+		vim.notify("Checking files for changes...", vim.log.levels.INFO)
+		for _, bufinfo in ipairs(vim.fn.getbufinfo({ buflisted = 1 })) do
+			local bnr = bufinfo.bufnr
+			-- Check if buffer is valid, loaded, modifiable, and not the terminal buffer itself
+			if vim.api.nvim_buf_is_valid(bnr) and bufinfo.loaded and vim.bo[bnr].modifiable and bnr ~= buf_id then
+				-- Use pcall to handle potential errors during checktime
+				pcall(vim.cmd, bnr .. "checktime")
+			end
+		end
+	end)
+end
+
 ---Setup function to merge user configuration with defaults.
 ---@param user_config table User-provided configuration table.
 function M.setup(user_config)
 	ConfigLib.config = vim.tbl_deep_extend("force", ConfigLib.config, user_config or {})
-	_setup_terminal_autocmds() -- Setup autocommands for the aider terminal
-end
-
----Setup autocommands for a terminal buffer to reload files on focus loss and cleanup on close.
----@param buf_id number The buffer ID of the terminal.
-function _setup_terminal_autocmds(buf_id) -- Added buf_id parameter based on usage below
 	local group_name = "AiTermReload"
 	local augroup = vim.api.nvim_create_augroup(group_name, { clear = true })
-
-	local function check_files()
-		vim.schedule(function() -- Defer execution slightly
-			vim.notify("Checking files for changes...", vim.log.levels.INFO)
-			for _, bufinfo in ipairs(vim.fn.getbufinfo({ buflisted = 1 })) do
-				local bnr = bufinfo.bufnr
-				-- Check if buffer is valid, loaded, modifiable, and not the terminal buffer itself
-				if vim.api.nvim_buf_is_valid(bnr) and bufinfo.loaded and vim.bo[bnr].modifiable and bnr ~= buf_id then
-					-- Use pcall to handle potential errors during checktime
-					pcall(vim.cmd, bnr .. "checktime")
-				end
-			end
-		end)
-	end
 
 	local pattern = "term://*ai-terminals.nvim*"
 
@@ -49,60 +43,9 @@ function _setup_terminal_autocmds(buf_id) -- Added buf_id parameter based on usa
 		group = augroup,
 		pattern = pattern,
 		desc = "Run backup sync when entering AI terminal window",
-		callback = function()
-			local cwd = vim.fn.getcwd()
-			local cwd_name = vim.fn.fnamemodify(cwd, ":t")
-			local backup_dir = DiffLib.BASE_COPY_DIR .. cwd_name
-
-			-- Ensure the base directory exists
-			vim.fn.mkdir(DiffLib.BASE_COPY_DIR, "p")
-
-			local rsync_args = { "rsync", "-av", "--delete" }
-			for _, pattern in ipairs(DiffLib.DIFF_IGNORE_PATTERNS) do
-				table.insert(rsync_args, "--exclude")
-				table.insert(rsync_args, pattern)
-			end
-			table.insert(rsync_args, cwd .. "/") -- Add trailing slash to source for rsync behavior
-			table.insert(rsync_args, backup_dir)
-
-			vim.notify("Running backup sync...", vim.log.levels.INFO)
-			local job_id = vim.fn.jobstart(rsync_args, {
-				on_exit = function(_, exit_code)
-					if exit_code == 0 then
-						vim.schedule(function()
-							vim.notify("Backup sync completed successfully.", vim.log.levels.INFO)
-						end)
-					else
-						vim.schedule(function()
-							vim.notify(
-								string.format("Backup sync failed with exit code %d.", exit_code),
-								vim.log.levels.ERROR
-							)
-						end)
-					end
-				end,
-				stdout_buffered = true, -- Capture stdout if needed for debugging
-				stderr_buffered = true, -- Capture stderr
-				on_stderr = function(_, data)
-					if data and #data > 0 and data[1] ~= "" then -- Check for actual error messages
-						local err_msg = table.concat(data, "\n")
-						vim.schedule(function()
-							vim.notify("Backup sync error: " .. err_msg, vim.log.levels.ERROR)
-						end)
-					end
-				end,
-			})
-
-			if not job_id or job_id == 0 or job_id == -1 then
-				vim.notify("Failed to start backup sync job.", vim.log.levels.ERROR)
-			end
-		end,
+		callback = DiffLib.pre_sync_code_base,
 	})
 end
-
-------------------------------------------
--- Terminal Core Functions
-------------------------------------------
 
 ---Create or toggle a terminal by name with specified position
 ---@param terminal_name string The name of the terminal (key in ConfigLib.config.terminals)
