@@ -156,12 +156,8 @@ return {
         "<leader>adc", -- Mnemonic: AI Diagnostics Claude
         function()
           local diagnostics = require("ai-terminals").diagnostics()
-          if diagnostics then
-            local term = require("ai-terminals").toggle("claude") -- Ensure terminal is open
-            require("ai-terminals").send(diagnostics, { term = term })
-          else
-            vim.notify("No diagnostics found in buffer", vim.log.levels.INFO)
-          end
+          local term = require("ai-terminals").open("claude") -- Ensure terminal is open
+          require("ai-terminals").send(diagnostics, { term = term })
         end,
         desc = "Send diagnostics to Claude",
         mode = { "n", "v" }, -- Allow sending buffer or selection diagnostics
@@ -178,12 +174,8 @@ return {
         "<leader>atg", -- Same keybinding, visual mode
         function()
           local selection = require("ai-terminals").get_visual_selection_with_header()
-          if selection then
-            local term = require("ai-terminals").toggle("goose")
-            require("ai-terminals").send(selection, { term = term })
-          else
-            vim.notify("No text selected", vim.log.levels.WARN)
-          end
+          local term = require("ai-terminals").open("goose")
+          require("ai-terminals").send(selection, { term = term })
         end,
         desc = "Send selection to Goose",
         mode = { "v" },
@@ -192,12 +184,8 @@ return {
         "<leader>adg", -- Mnemonic: AI Diagnostics Goose
         function()
           local diagnostics = require("ai-terminals").diagnostics()
-          if diagnostics then
-            local term = require("ai-terminals").toggle("goose")
-            require("ai-terminals").send(diagnostics, { term = term })
-          else
-            vim.notify("No diagnostics found in buffer", vim.log.levels.INFO)
-          end
+          local term = require("ai-terminals").open("goose")
+          require("ai-terminals").send(diagnostics, { term = term })
         end,
         desc = "Send diagnostics to Goose",
         mode = { "n", "v" },
@@ -237,12 +225,8 @@ return {
         "<leader>ata", -- Same keybinding, visual mode
         function()
           local selection = require("ai-terminals").get_visual_selection_with_header()
-          if selection then
-            local term = require("ai-terminals").toggle("aider") -- Ensure terminal is open
-            require("ai-terminals").send(selection, { term = term })
-          else
-            vim.notify("No text selected", vim.log.levels.WARN)
-          end
+          local term = require("ai-terminals").toggle("aider") -- Ensure terminal is open
+          require("ai-terminals").send(selection, { term = term })
         end,
         desc = "Send selection to Aider",
         mode = { "v" },
@@ -251,12 +235,8 @@ return {
         "<leader>ada", -- Mnemonic: AI Diagnostics Aider
         function()
           local diagnostics = require("ai-terminals").diagnostics()
-          if diagnostics then
-            local term = require("ai-terminals").toggle("aider") -- Ensure terminal is open
-            require("ai-terminals").send(diagnostics, { term = term })
-          else
-            vim.notify("No diagnostics found in buffer", vim.log.levels.INFO)
-          end
+          local term = require("ai-terminals").open("aider") -- Ensure terminal is open
+          require("ai-terminals").send(diagnostics, { term = term })
         end,
         desc = "Send diagnostics to Aider",
         mode = { "n", "v" },
@@ -266,12 +246,11 @@ return {
         "<leader>ar", -- Mnemonic: AI Run command
         function()
           -- Ensure the Aider terminal is open first
-          local term = require("ai-terminals").toggle("aider")
-
-          -- Prompt user for command
-          require("ai-terminals").run_command_and_send_output()
+          local term = require("ai-terminals").open("aider")
+          -- Prompt for command
+          require("ai-terminals").run_command_and_send_output(nil, { term = term })
           -- Or specify the command directly
-          -- require("ai-terminals").run_command_and_send_output("make test")
+          -- require("ai-terminals").run_command_and_send_output("make test", { term = term })
         end,
         desc = "Run 'make test' and send output to Aider terminal",
       },
