@@ -44,6 +44,8 @@ While the generic features work well with Aider, this plugin includes additional
 
 You can configure the plugin using the `setup` function. This allows you to define your own terminals or override the default commands.
 
+**Important:** You *must* call the `setup()` function for the plugin to work correctly. This function registers necessary autocommands, such as those that automatically reload files when you leave the AI terminal (`BufLeave`) and create project backups for the diff feature when you enter the terminal (`BufWinEnter`).
+
 ```lua
 -- In your Neovim configuration (e.g., lua/plugins/ai-terminals.lua)
 require("ai-terminals").setup({
@@ -64,9 +66,11 @@ require("ai-terminals").setup({
 
 The `cmd` field for each terminal can be a `string` or a `function` that returns a string. Using a function allows the command to be generated dynamically *just before* the terminal is opened (e.g., to check `vim.o.background` at invocation time).
 
-### 🚀 Example usage with lazy.nvim
+### 🚀 Example Usage
 
-#### ⌨️ Basic Keymaps
+#### Using `lazy.nvim`
+
+##### ⌨️ Basic Keymaps
 
 ```lua
 -- lazy.nvim plugin specification
@@ -281,6 +285,42 @@ return {
     },
   },
 }
+```
+
+#### Using `packer.nvim`
+
+If you are using `packer.nvim`, you need to explicitly call the `setup` function in your configuration.
+
+```lua
+-- In your Neovim configuration (e.g., lua/plugins.lua or similar)
+use({
+  "aweis89/ai-terminals.nvim",
+  requires = { "folke/snacks.nvim" }, -- Make sure dependencies are loaded
+  config = function()
+    require("ai-terminals").setup({
+      -- Your custom configuration goes here (optional)
+      terminals = {
+        aider = {
+          cmd = "aider --dark-mode --no-auto-commits", -- Example override
+        },
+        -- Add other terminals or keep defaults
+      },
+    })
+
+    -- Define your keymaps here or in a separate keymap file
+    vim.keymap.set("n", "<leader>atc", function() require("ai-terminals").toggle("claude") end, { desc = "Toggle Claude terminal" })
+    vim.keymap.set("v", "<leader>atc", function()
+        local selection = require("ai-terminals").get_visual_selection_with_header()
+        if selection then
+            local term = require("ai-terminals").toggle("claude")
+            require("ai-terminals").send(selection, { term = term })
+        else
+            vim.notify("No text selected", vim.log.levels.WARN)
+        end
+    end, { desc = "Send selection to Claude" })
+    -- Add other keymaps as needed...
+  end,
+})
 ```
 
 #### 🤝 Integrating with a File Picker (e.g., snacks.nvim)
