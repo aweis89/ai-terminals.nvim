@@ -98,7 +98,7 @@ return {
         aichat = {
           cmd = function()
             return string.format(
-              "AICHAT_LIGHT_THEME=%s GEMINI_API_BASE=http://localhost:8080/v1beta aichat -r %%functions%% --session",
+              "AICHAT_LIGHT_THEME=%s aichat -r %%functions%% --session",
               tostring(vim.o.background == "light") -- Convert boolean to string "true" or "false"
             )
           end,
