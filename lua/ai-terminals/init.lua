@@ -13,7 +13,7 @@ local function reload_changes()
 		for _, bufinfo in ipairs(vim.fn.getbufinfo({ buflisted = 1 })) do
 			local bnr = bufinfo.bufnr
 			-- Check if buffer is valid, loaded, modifiable, and not the terminal buffer itself
-			if vim.api.nvim_buf_is_valid(bnr) and bufinfo.loaded and vim.bo[bnr].modifiable and bnr ~= buf_id then
+			if vim.api.nvim_buf_is_valid(bnr) and bufinfo.loaded and vim.bo[bnr].modifiable then
 				-- Use pcall to handle potential errors during checktime
 				pcall(vim.cmd, bnr .. "checktime")
 			end
