@@ -216,8 +216,8 @@ return {
         "<leader>al",
         function()
           local current_file = vim.fn.expand("%:p")
-          -- add_files_to_aider handles toggling the terminal if needed
-          require("ai-terminals").add_files_to_aider({ current_file })
+          -- aider_add_files handles toggling the terminal if needed
+          require("ai-terminals").aider_add_files({ current_file })
         end,
         desc = "Add current file to Aider",
       },
@@ -297,7 +297,7 @@ use({
 
 #### 🤝 Integrating with a File Picker (e.g., snacks.nvim)
 
-You can integrate the `add_files_to_aider` function with file pickers like `snacks.nvim` to easily add selected files to the Aider context.
+You can integrate the `aider_add_files` function with file pickers like `snacks.nvim` to easily add selected files to the Aider context.
 
 Here's an example of how you might configure `snacks.nvim` to add actions for sending files to Aider:
 
@@ -317,7 +317,7 @@ local function add_files_from_picker(picker, opts)
     end
   end
   -- Assuming 'ai-terminals' is the require path
-  require("ai-terminals").add_files_to_aider(files_to_add, opts)
+  require("ai-terminals").aider_add_files(files_to_add, opts)
 end
 
 -- Inside the snacks opts function:
@@ -368,4 +368,4 @@ local overrides = {
 
 ```
 
-This setup defines two actions, `aider_add` and `aider_read_only`, which use the helper function `add_files_from_picker` to collect selected file paths from the picker and pass them to `require("ai-terminals").add_files_to_aider`. Keymaps are then added to specific picker sources (like `files` and `git_status`) to trigger these actions.
+This setup defines two actions, `aider_add` and `aider_read_only`, which use the helper function `add_files_from_picker` to collect selected file paths from the picker and pass them to `require("ai-terminals").aider_add_files`. Keymaps are then added to specific picker sources (like `files` and `git_status`) to trigger these actions.

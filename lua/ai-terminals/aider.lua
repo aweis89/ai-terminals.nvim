@@ -49,7 +49,7 @@ function Aider.add_files(M, files, opts)
 	local files_str = table.concat(files, " ")
 
 	-- Ensure the aider terminal is open and get its instance
-	local term = M.get("aider")
+	local term = M.open("aider")
 	M.send(command .. " " .. files_str .. "\n", { term = term, submit = true })
 end
 

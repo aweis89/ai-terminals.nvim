@@ -146,7 +146,7 @@ end
 -- Helper function to send commands to the aider terminal (delegates to AiderLib)
 ---@param files string[] List of file paths to add to aider
 ---@param opts? { read_only?: boolean } Options for the command
-function M.add_files_to_aider(files, opts)
+function M.aider_add_files(files, opts)
 	AiderLib.add_files(M, files, opts)
 end
 
