@@ -237,15 +237,6 @@ function M.toggle(terminal_name, position)
 
 	local dimensions = WINDOW_DIMENSIONS[position]
 
-	local term = Snacks.terminal.toggle(cmd, {
-		env = { id = cmd },
-		win = {
-			position = position,
-			height = dimensions.height,
-			width = dimensions.width,
-		},
-	})
-
 	return TerminalLib.toggle(cmd, position, dimensions)
 end
 
