@@ -57,7 +57,6 @@ function M.send(text, opts)
 		local ok_nl, err_nl = pcall(vim.fn.chansend, job_id, "\n")
 		if not ok_nl then
 			vim.notify("Failed to send newline: " .. tostring(err_nl), vim.log.levels.ERROR)
-			-- Don't return here, the main text was sent successfully
 		end
 	else
 		vim.api.nvim_feedkeys("i", "n", false) -- Enter insert mode in the terminal window
@@ -108,10 +107,28 @@ function M.get(cmd, position, dimensions)
 	})
 end
 
+---Get an existing terminal instance by command and position
+---@param cmd string|function The command associated with the terminal.
+---@param position "float"|"bottom"|"top"|"left"|"right" The position of the terminal window.
+---@param dimensions table Dimensions {width, height} for the terminal window.
+---@return snacks.win?, boolean? The terminal window object and a boolean indicating if it was found.
+function M.open(cmd, position, dimensions)
+	local term, created = M.get(cmd, position, dimensions)
+	if not term then
+		vim.notify("No terminal found", vim.log.levels.ERROR)
+		return
+	end
+	if not created then
+		M.toggle(cmd, position, dimensions)
+	end
+	return term, created
+end
+
 ---Execute a shell command and send its stdout to the active terminal buffer.
+---@param opts {term?: snacks.win?, submit?: boolean}|nil Options: `term` specifies the target terminal, `submit` sends a newline after the text if true.
 ---@param cmd string|nil The shell command to execute.
 ---@return nil
-function M.run_command_and_send_output(cmd)
+function M.run_command_and_send_output(cmd, opts)
 	if cmd == "" or cmd == nil then
 		cmd = vim.fn.input("Enter command to run: ")
 	end
@@ -136,7 +153,7 @@ function M.run_command_and_send_output(cmd)
 	-- Check if the current buffer is a terminal buffer managed by this plugin
 	-- M.send relies on vim.b.terminal_job_id being set in the current buffer
 	if vim.b.terminal_job_id then
-		M.send(message_to_send) -- Use M.send from this module
+		M.send(message_to_send, opts) -- Use M.send from this module
 		vim.notify("Command exit code and output sent to terminal.", vim.log.levels.INFO)
 	else
 		vim.notify(

@@ -87,6 +87,22 @@ function M.get(terminal_name, position)
 	return TerminalLib.get(term_config.cmd, position, dimensions)
 end
 
+---Get an existing terminal instance by name
+---@param terminal_name string The name of the terminal (key in M.config.terminals)
+---@param position "float"|"bottom"|"top"|"left"|"right"|nil Optional: Specify position if needed for matching window dimensions
+---@return snacks.win?, boolean?
+function M.open(terminal_name, position)
+	local term_config = ConfigLib.config.terminals[terminal_name]
+	if not term_config then
+		vim.notify("Unknown terminal name: " .. tostring(terminal_name), vim.log.levels.ERROR)
+		return nil, false
+	end
+
+	position = position or "float" -- Default position if not provided
+	local dimensions = ConfigLib.WINDOW_DIMENSIONS[position]
+	return TerminalLib.open(term_config.cmd, position, dimensions)
+end
+
 ---Compare current directory with its backup and open differing files (delegates to DiffLib)
 ---@return nil
 function M.diff_changes()
@@ -136,9 +152,10 @@ end
 
 ---Execute a shell command and send its stdout to the active terminal buffer.
 ---@param cmd string|nil The shell command to execute.
+---@param opts {term?: snacks.win?, submit?: boolean}|nil Options: `term` specifies the target terminal, `submit` sends a newline after the text if true.
 ---@return nil
-function M.run_command_and_send_output(cmd)
-	TerminalLib.run_command_and_send_output(cmd)
+function M.run_command_and_send_output(cmd, opts)
+	TerminalLib.run_command_and_send_output(cmd, opts)
 end
 
 ---Get the current visual selection (delegates to SelectionLib)
