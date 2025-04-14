@@ -9,15 +9,17 @@ This plugin integrates any terminal/CLI-based AI agent into Neovim, providing a 
 * **🔌 Configurable Terminal Integration:** Define and manage terminals for various
   AI CLI tools (e.g., Claude, Goose, Aider, custom scripts) through a simple
   configuration table. Uses `Snacks` for terminal window management.
-* **🔄 Diff View:** Compare the changes made by the AI agent in the last session
-  with the current state of your project files. A performant backup (using
-  `rsync`) of your project is created when you first open an AI terminal in a
-  session. This backup persists even after closing Neovim. The *next* time you
-  open an AI terminal (e.g., using `aider_terminal()`), a *new* backup is
-  created, resetting the diff base. The `diff_changes()` command finds differing
-  files between the current project state and the *most recent* backup. These
-  differing files are then opened in Neovim's standard diff view across multiple
-  tabs. You can use standard diff commands like `:diffget` and `:diffput` to
+* **🔄 Diff View:** Compare the changes made by the AI agent since the last sync
+  with the current state of your project files. A performant backup directory
+  is created (using `rsync`) when you first open an AI terminal in a session.
+  This backup persists even after closing Neovim. The *next* time you open an
+  AI terminal (e.g., using `aider_terminal()`), the backup directory is *synced*
+  with the current project state using `rsync`, effectively resetting the diff
+  base to the state *before* the sync. The `diff_changes()` command finds
+  differing files between the current project state and the *most recently
+  synced* backup. These differing files are then opened in Neovim's standard
+  diff view across multiple tabs. You can use standard diff commands like
+  `:diffget` and `:diffput` to
   manage changes (see `:help diff`). The `close_diff()` command closes these
   diff tabs and removes the buffers associated with the temporary backup files
   (i.e., non-local files) from Neovim's buffer list.
