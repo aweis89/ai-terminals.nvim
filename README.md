@@ -267,13 +267,6 @@ return {
         function()
           -- Ensure the Aider terminal is open first
           local term = require("ai-terminals").toggle("aider")
-          if not term then
-            vim.notify("Could not open Aider terminal", vim.log.levels.ERROR)
-            return
-          end
-          -- Focus the terminal window before running the command
-          -- This ensures M.send targets the correct buffer's job ID
-          vim.api.nvim_set_current_win(term.win)
 
           -- Prompt user for command
           require("ai-terminals").run_command_and_send_output()
