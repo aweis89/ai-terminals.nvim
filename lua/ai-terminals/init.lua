@@ -61,14 +61,19 @@ function M.toggle(terminal_name, position)
 
 	position = position or "float"
 	local valid_positions = { float = true, bottom = true, top = true, left = true, right = true }
-
 	if not valid_positions[position] then
 		vim.notify("Invalid terminal position: " .. tostring(position), vim.log.levels.ERROR)
 		position = "float" -- Default to float on invalid input
 	end
 
+	local selection = M.get_visual_selection_with_header(0)
+
 	local dimensions = ConfigLib.WINDOW_DIMENSIONS[position]
-	return TerminalLib.toggle(term_config.cmd, position, dimensions)
+	local term = TerminalLib.toggle(term_config.cmd, position, dimensions)
+	if selection then
+		M.send(selection, { term = term })
+	end
+	return term
 end
 
 ---Get an existing terminal instance by name
@@ -123,6 +128,21 @@ function M.send(text, opts)
 	TerminalLib.send(text, opts)
 end
 
+---Send diagnostics to a terminal
+---@param name string Terminal name (key in M.config.terminals)
+---@param opts {term?: snacks.win?, submit?: boolean}|nil Options: `term` specifies the target terminal, `submit` sends a newline after the text if true.
+function M.send_diagnostics(name, opts)
+	local diagnostics = M.diagnostics()
+	if not diagnostics then
+		vim.notify("No diagnostics found", vim.log.levels.ERROR)
+		return
+	end
+	local term = M.open(name)
+	opts = opts or {}
+	opts.term = opts.term or term
+	M.send(diagnostics, opts)
+end
+
 ---Get formatted diagnostics (delegates to DiagnosticsLib)
 ---@return string|nil
 function M.diagnostics()
@@ -154,7 +174,7 @@ end
 ---@param cmd string|nil The shell command to execute.
 ---@param opts {term?: snacks.win?, submit?: boolean}|nil Options: `term` specifies the target terminal, `submit` sends a newline after the text if true.
 ---@return nil
-function M.run_command_and_send_output(cmd, opts)
+function M.send_command_output(cmd, opts)
 	TerminalLib.run_command_and_send_output(cmd, opts)
 end
 

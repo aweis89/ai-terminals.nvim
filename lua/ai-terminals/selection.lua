@@ -43,15 +43,12 @@ end
 
 ---Format visual selection with markdown code block and file path
 ---@param bufnr integer|nil
----@param opts table|nil Options for formatting (preserve_whitespace, etc.)
 ---@return string|nil
-function M.get_visual_selection_with_header(bufnr, opts)
-	opts = opts or {}
+function M.get_visual_selection_with_header(bufnr)
 	bufnr = bufnr or 0
 	local lines, path = M.get_visual_selection(bufnr)
 
 	if not lines or #lines == 0 then
-		vim.notify("No text selected", vim.log.levels.WARN)
 		return nil
 	end
 

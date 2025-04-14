@@ -87,7 +87,7 @@ function M.toggle(cmd, position, dimensions)
 end
 
 ---Get an existing terminal instance by command and position
----@param cmd string|function The command associated with the terminal.
+---@param cmd string|function CMD for terminal
 ---@param position "float"|"bottom"|"top"|"left"|"right" The position of the terminal window.
 ---@param dimensions table Dimensions {width, height} for the terminal window.
 ---@return snacks.win?, boolean? The terminal window object and a boolean indicating if it was found.
@@ -108,7 +108,7 @@ function M.get(cmd, position, dimensions)
 end
 
 ---Get an existing terminal instance by command and position
----@param cmd string|function The command associated with the terminal.
+---@param cmd string|function CMD for terminal
 ---@param position "float"|"bottom"|"top"|"left"|"right" The position of the terminal window.
 ---@param dimensions table Dimensions {width, height} for the terminal window.
 ---@return snacks.win?, boolean? The terminal window object and a boolean indicating if it was found.
