@@ -49,26 +49,8 @@ function Aider.add_files(M, files, opts)
 	local files_str = table.concat(files, " ")
 
 	-- Ensure the aider terminal is open and get its instance
-	local term, is_open = M.get("aider")
-	if not is_open then
-		term = M.toggle("aider") -- Open it if not already open
-		if not term then
-			vim.notify("Failed to open aider terminal.", vim.log.levels.ERROR)
-			return
-		end
-		-- Need a slight delay or check to ensure the terminal is ready after toggling
-		-- This might require adjustments based on how Snacks handles terminal readiness
-		vim.defer_fn(function()
-			local term_after_toggle = M.get("aider")
-			if term_after_toggle then
-				M.send(command .. " " .. files_str .. "\n", { term = term_after_toggle, submit = true })
-			else
-				vim.notify("Aider terminal not found after toggle.", vim.log.levels.ERROR)
-			end
-		end, 100) -- Adjust delay as needed
-	else
-		M.send(command .. " " .. files_str .. "\n", { term = term, submit = true })
-	end
+	local term = M.get("aider")
+	M.send(command .. " " .. files_str .. "\n", { term = term, submit = true })
 end
 
 return Aider
