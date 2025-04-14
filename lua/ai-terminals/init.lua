@@ -15,6 +15,7 @@ local function reload_changes()
 			-- Check if buffer is valid, loaded, modifiable, and not the terminal buffer itself
 			if vim.api.nvim_buf_is_valid(bnr) and bufinfo.loaded and vim.bo[bnr].modifiable then
 				-- Use pcall to handle potential errors during checktime
+				---@diagnostic disable-next-line
 				pcall(vim.cmd, bnr .. "checktime")
 			end
 		end
