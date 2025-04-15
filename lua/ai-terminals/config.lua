@@ -36,6 +36,7 @@ Config.config = {
 		left = { width = 0.5, height = 0.5 },
 		right = { width = 0.5, height = 0.5 },
 	},
+	default_position = "float", -- Default position if none is specified in toggle/open/get
 }
 
 return Config
