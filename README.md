@@ -1,6 +1,6 @@
 # 🤖 AI Terminals Neovim Plugin
 
-This plugin integrates any terminal/CLI-based AI agent into Neovim, providing a seamless workflow for interacting with AI assistants directly within your editor.
+This plugin integrates any terminal/CLI-based AI agent into Neovim, providing a seamless workflow for interacting with AI assistants directly within your editor for any CLI based AI agent.
 
 ## ✨ Features
 
