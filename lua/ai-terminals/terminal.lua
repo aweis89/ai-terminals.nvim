@@ -118,9 +118,7 @@ function Term.open(cmd, position, dimensions)
 		vim.notify("No terminal found", vim.log.levels.ERROR)
 		return
 	end
-	if not created then
-		Term.toggle(cmd, position, dimensions)
-	end
+	term:focus()
 	return term, created
 end
 
