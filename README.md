@@ -80,6 +80,8 @@ require("ai-terminals").setup({
     bottom = { width = 1.0, height = 0.4 }, -- Make bottom windows wider and shorter
     -- Keep other position defaults ('top', 'left', 'right')
   },
+  -- Set the default window position if none is specified (default: "float")
+  default_position = "bottom", -- Example: Make terminals open at the bottom by default
 })
 ```
 

@@ -59,11 +59,14 @@ function M.toggle(terminal_name, position)
 		return nil
 	end
 
-	position = position or "float"
+	position = position or ConfigLib.config.default_position
 	local valid_positions = { float = true, bottom = true, top = true, left = true, right = true }
 	if not valid_positions[position] then
-		vim.notify("Invalid terminal position: " .. tostring(position), vim.log.levels.ERROR)
-		position = "float" -- Default to float on invalid input
+		vim.notify(
+			"Invalid terminal position: " .. tostring(position) .. ". Falling back to default: " .. ConfigLib.config.default_position,
+			vim.log.levels.WARN
+		)
+		position = ConfigLib.config.default_position -- Fallback to configured default on invalid input
 	end
 
 	local selection = nil
@@ -91,7 +94,7 @@ function M.get(terminal_name, position)
 		return nil, false
 	end
 
-	position = position or "float" -- Default position if not provided
+	position = position or ConfigLib.config.default_position -- Use configured default if not provided
 	local dimensions = ConfigLib.config.window_dimensions[position]
 	return TerminalLib.get(term_config.cmd, position, dimensions)
 end
@@ -107,7 +110,7 @@ function M.open(terminal_name, position)
 		return nil, false
 	end
 
-	position = position or "float" -- Default position if not provided
+	position = position or ConfigLib.config.default_position -- Use configured default if not provided
 	local dimensions = ConfigLib.config.window_dimensions[position]
 	return TerminalLib.open(term_config.cmd, position, dimensions)
 end
