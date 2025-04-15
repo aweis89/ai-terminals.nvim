@@ -141,9 +141,10 @@ function M.send_diagnostics(name, opts)
 		vim.notify("No diagnostics found", vim.log.levels.ERROR)
 		return
 	end
-	local term = M.open(name)
 	opts = opts or {}
-	opts.term = opts.term or term
+	if not opts.term then
+		opts.term = M.open(name)
+	end
 	M.send(diagnostics, opts)
 end
 
