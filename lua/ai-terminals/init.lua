@@ -180,7 +180,7 @@ end
 ---@param opts {term?: snacks.win?, submit?: boolean}|nil Options: `term` specifies the target terminal, `submit` sends a newline after the text if true.
 ---@return nil
 function M.send_command_output(term_name, cmd, opts)
-	local term = M.open(term)
+	local term = M.open(term_name)
 	opts = opts or {}
 	opts.term = opts.term or term
 	TerminalLib.run_command_and_send_output(cmd, opts)
@@ -188,20 +188,19 @@ end
 
 ---Get the current visual selection (delegates to SelectionLib)
 ---@param bufnr number|nil Buffer number (defaults to current buffer)
----@return string[] lines Selected lines
----@return string filepath Filepath of the buffer
----@return number start_line Starting line number
----@return number end_line Ending line number
+---@return string[]|nil lines Selected lines (nil if no selection)
+---@return string|nil filepath Filepath of the buffer (nil if no selection)
+---@return number start_line Starting line number (0 if no selection)
+---@return number end_line Ending line number (0 if no selection)
 function M.get_visual_selection(bufnr)
 	return SelectionLib.get_visual_selection(bufnr)
 end
 
 ---Format visual selection with markdown code block and file path (delegates to SelectionLib)
 ---@param bufnr integer|nil
----@param opts table|nil Options for formatting (preserve_whitespace, etc.)
 ---@return string|nil
-function M.get_visual_selection_with_header(bufnr, opts)
-	return SelectionLib.get_visual_selection_with_header(bufnr, opts)
+function M.get_visual_selection_with_header(bufnr)
+	return SelectionLib.get_visual_selection_with_header(bufnr)
 end
 
 return M
