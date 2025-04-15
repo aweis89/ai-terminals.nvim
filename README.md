@@ -152,8 +152,8 @@ return {
         function()
           require("ai-terminals").toggle("claude")
         end,
-        desc = "Toggle Claude terminal",
-        mode = { "n", "v" }, -- Sends code selection in visual mode
+        desc = "Toggle Claude terminal (sends selection in visual mode)",
+        mode = { "n", "v" },
       },
       {
         "<leader>adc", -- Mnemonic: AI Diagnostics Claude
@@ -169,7 +169,7 @@ return {
         function()
           require("ai-terminals").toggle("goose")
         end,
-        desc = "Toggle Goose terminal",
+        desc = "Toggle Goose terminal (sends selection in visual mode)",
         mode = { "n", "v" },
       },
       {
@@ -186,7 +186,7 @@ return {
         function()
           require("ai-terminals").toggle("aider")
         end,
-        desc = "Toggle Aider terminal",
+        desc = "Toggle Aider terminal (sends selection in visual mode)",
         mode = { "n", "v" },
       },
       {
@@ -256,10 +256,8 @@ use({
     })
 
     -- Define your keymaps here or in a separate keymap file
-    -- Normal mode: Toggle the terminal
-    vim.keymap.set("n", "<leader>atc", function() require("ai-terminals").toggle("claude") end, { desc = "Toggle Claude terminal" })
-    -- Visual mode: Toggle the terminal and automatically send the selection
-    vim.keymap.set("v", "<leader>atc", function() require("ai-terminals").toggle("claude") end, { desc = "Send selection to Claude" })
+    -- Normal & Visual mode: Toggle the terminal (sends selection in visual mode)
+    vim.keymap.set({"n", "v"}, "<leader>atc", function() require("ai-terminals").toggle("claude") end, { desc = "Toggle Claude terminal (sends selection in visual mode)" })
     -- Add other keymaps as needed...
   end,
 })
