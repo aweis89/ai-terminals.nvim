@@ -139,7 +139,6 @@ function Diff.pre_sync_code_base()
 	table.insert(rsync_args, cwd .. "/") -- Add trailing slash to source for rsync behavior
 	table.insert(rsync_args, backup_dir)
 
-	vim.notify("Running backup sync...", vim.log.levels.INFO)
 	local job_id = vim.fn.jobstart(rsync_args, {
 		on_exit = function(_, exit_code)
 			if exit_code == 0 then
