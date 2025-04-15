@@ -26,11 +26,17 @@ Diff.DIFF_IGNORE_PATTERNS = {
 Diff.BASE_COPY_DIR = vim.fn.stdpath("cache") .. "/ai_terminals_diff/"
 
 ---Compare current directory with its backup in ~/tmp and open differing files
+---@param diff_func function|nil The diff function to use
 ---@return nil
-function Diff.diff_changes()
+function Diff.diff_changes(diff_func)
 	local cwd = vim.fn.getcwd()
 	local cwd_name = vim.fn.fnamemodify(cwd, ":t")
 	local tmp_dir = Diff.BASE_COPY_DIR .. cwd_name
+
+	if diff_func then
+		diff_func(cwd, tmp_dir)
+		return
+	end
 
 	-- Build exclude patterns for diff command
 	local exclude_patterns = {}
