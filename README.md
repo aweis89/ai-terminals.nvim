@@ -39,6 +39,18 @@ While the generic features work well with Aider, this plugin includes additional
 * **💬 Add Comments:** Insert comments above the current line with a custom prefix (e.g., `AI!`, `AI?`). This action automatically saves the file and can optionally start the Aider terminal if it's not already running.
 * **📜 Multiline Input Handling:** Automatically wraps text (like visual selections or diagnostics) containing newlines using terminal bracketed paste mode (`ESC[200~...ESC[201~`). This ensures reliable multiline input for most modern terminal applications.
 
+## ⚠️ Prerequisites
+
+This plugin integrates with existing command-line AI tools. You need to install the specific tools you want to use *before* configuring them in this plugin.
+
+Here are links to some of the tools mentioned in the default configuration:
+
+* **Aider:** [Aider](https://github.com/paul-gauthier/aider)
+* **Claude CLI:** [Claude Code](https://github.com/anthropics/claude-code)
+* **Goose CLI:** [Goose](https://github.com/pressly/goose)
+
+Make sure these (or your chosen alternatives) are installed and accessible in your system's `PATH`.
+
 ## 🔗 Dependencies
 
 * [Snacks.nvim](https://github.com/folke/snacks.nvim): Required for terminal window management. 🍬
