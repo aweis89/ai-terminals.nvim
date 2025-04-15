@@ -46,7 +46,7 @@ This plugin integrates with existing command-line AI tools. You need to install 
 Here are links to some of the tools mentioned in the default configuration:
 
 * **Aider:** [Aider](https://github.com/paul-gauthier/aider)
-* **Claude CLI:** [Claude Code](https://github.com/anthropics/claude-code)
+* **Claude Code:** [Claude Code](https://github.com/anthropics/claude-code)
 * **Goose CLI:** [Goose](https://github.com/pressly/goose)
 
 Make sure these (or your chosen alternatives) are installed and accessible in your system's `PATH`.
