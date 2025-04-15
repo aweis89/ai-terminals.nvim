@@ -140,7 +140,9 @@ function Term.open(cmd, position, dimensions)
 
 	if term then
 		Term.register_autocmds(term)
-		vim.api.nvim_set_current_win(term.win)
+		if term.win then
+			vim.api.nvim_set_current_win(term.win)
+		end
 	end
 
 	return term, false
