@@ -1,9 +1,9 @@
-local M = {}
+local Term = {}
 
 ---Resolve the command string from configuration (can be string or function).
 ---@param cmd_config string|function The command configuration value.
 ---@return string|nil The resolved command string, or nil if the type is invalid.
-function M.resolve_command(cmd_config)
+function Term.resolve_command(cmd_config)
 	if type(cmd_config) == "function" then
 		return cmd_config()
 	elseif type(cmd_config) == "string" then
@@ -29,7 +29,7 @@ end
 ---@param text string The text to send
 ---@param opts {term?: snacks.win?, submit?: boolean}|nil Options: `term` specifies the target terminal, `submit` sends a newline after the text if true.
 ---@return nil
-function M.send(text, opts)
+function Term.send(text, opts)
 	opts = opts or {} -- Ensure opts is a table
 	local job_id = vim.b.terminal_job_id
 	if opts.term then
@@ -68,8 +68,8 @@ end
 ---@param position "float"|"bottom"|"top"|"left"|"right" The position of the terminal window.
 ---@param dimensions table Dimensions {width, height} for the terminal window.
 ---@return snacks.win|nil The terminal window object or nil on failure.
-function M.toggle(cmd, position, dimensions)
-	local cmd_str = M.resolve_command(cmd)
+function Term.toggle(cmd, position, dimensions)
+	local cmd_str = Term.resolve_command(cmd)
 	if not cmd_str then
 		return nil -- Error already notified by resolve_command
 	end
@@ -91,8 +91,8 @@ end
 ---@param position "float"|"bottom"|"top"|"left"|"right" The position of the terminal window.
 ---@param dimensions table Dimensions {width, height} for the terminal window.
 ---@return snacks.win?, boolean? The terminal window object and a boolean indicating if it was found.
-function M.get(cmd, position, dimensions)
-	local cmd_str = M.resolve_command(cmd)
+function Term.get(cmd, position, dimensions)
+	local cmd_str = Term.resolve_command(cmd)
 	if not cmd_str then
 		return nil -- Error already notified by resolve_command
 	end
@@ -112,14 +112,14 @@ end
 ---@param position "float"|"bottom"|"top"|"left"|"right" The position of the terminal window.
 ---@param dimensions table Dimensions {width, height} for the terminal window.
 ---@return snacks.win?, boolean? The terminal window object and a boolean indicating if it was found.
-function M.open(cmd, position, dimensions)
-	local term, created = M.get(cmd, position, dimensions)
+function Term.open(cmd, position, dimensions)
+	local term, created = Term.get(cmd, position, dimensions)
 	if not term then
 		vim.notify("No terminal found", vim.log.levels.ERROR)
 		return
 	end
 	if not created then
-		M.toggle(cmd, position, dimensions)
+		Term.toggle(cmd, position, dimensions)
 	end
 	return term, created
 end
@@ -128,7 +128,7 @@ end
 ---@param opts {term?: snacks.win?, submit?: boolean}|nil Options: `term` specifies the target terminal, `submit` sends a newline after the text if true.
 ---@param cmd string|nil The shell command to execute.
 ---@return nil
-function M.run_command_and_send_output(cmd, opts)
+function Term.run_command_and_send_output(cmd, opts)
 	if cmd == "" or cmd == nil then
 		cmd = vim.fn.input("Enter command to run: ")
 	end
@@ -153,7 +153,7 @@ function M.run_command_and_send_output(cmd, opts)
 	-- Check if the current buffer is a terminal buffer managed by this plugin
 	-- M.send relies on vim.b.terminal_job_id being set in the current buffer
 	if vim.b.terminal_job_id then
-		M.send(message_to_send, opts) -- Use M.send from this module
+		Term.send(message_to_send, opts) -- Use M.send from this module
 		vim.notify("Command exit code and output sent to terminal.", vim.log.levels.INFO)
 	else
 		vim.notify(
@@ -163,4 +163,4 @@ function M.run_command_and_send_output(cmd, opts)
 	end
 end
 
-return M
+return Term

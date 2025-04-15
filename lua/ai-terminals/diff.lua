@@ -1,9 +1,9 @@
-local M = {}
+local Diff = {}
 
 ------------------------------------------
 -- Ignore Patterns for Diff
 ------------------------------------------
-M.DIFF_IGNORE_PATTERNS = {
+Diff.DIFF_IGNORE_PATTERNS = {
 	"*.log",
 	"*.swp",
 	"*.swo",
@@ -23,18 +23,18 @@ M.DIFF_IGNORE_PATTERNS = {
 	"cache.db*",
 }
 
-M.BASE_COPY_DIR = vim.fn.stdpath("cache") .. "/ai_terminals_diff/"
+Diff.BASE_COPY_DIR = vim.fn.stdpath("cache") .. "/ai_terminals_diff/"
 
 ---Compare current directory with its backup in ~/tmp and open differing files
 ---@return nil
-function M.diff_changes()
+function Diff.diff_changes()
 	local cwd = vim.fn.getcwd()
 	local cwd_name = vim.fn.fnamemodify(cwd, ":t")
-	local tmp_dir = M.BASE_COPY_DIR .. cwd_name
+	local tmp_dir = Diff.BASE_COPY_DIR .. cwd_name
 
 	-- Build exclude patterns for diff command
 	local exclude_patterns = {}
-	for _, pattern in ipairs(M.DIFF_IGNORE_PATTERNS) do
+	for _, pattern in ipairs(Diff.DIFF_IGNORE_PATTERNS) do
 		table.insert(exclude_patterns, string.format("--exclude='%s'", pattern))
 	end
 	local exclude_str = table.concat(exclude_patterns, " ")
@@ -90,8 +90,8 @@ end
 
 ---Close and wipe out any buffers whose file path is inside the BASE_COPY_DIR.
 ---@return nil
-function M.close_diff()
-	local base_copy_dir_abs = vim.fn.fnamemodify(M.BASE_COPY_DIR, ":p") -- Get absolute path
+function Diff.close_diff()
+	local base_copy_dir_abs = vim.fn.fnamemodify(Diff.BASE_COPY_DIR, ":p") -- Get absolute path
 	local buffers_to_wipe = {}
 
 	for _, bufinfo in ipairs(vim.fn.getbufinfo({ buflisted = 1 })) do
@@ -123,16 +123,16 @@ end
 ---Run rsync to create/update a backup of the current project directory.
 ---This is typically called when an AI terminal window is opened.
 ---@return nil
-function M.pre_sync_code_base()
+function Diff.pre_sync_code_base()
 	local cwd = vim.fn.getcwd()
 	local cwd_name = vim.fn.fnamemodify(cwd, ":t")
-	local backup_dir = M.BASE_COPY_DIR .. cwd_name
+	local backup_dir = Diff.BASE_COPY_DIR .. cwd_name
 
 	-- Ensure the base directory exists
-	vim.fn.mkdir(M.BASE_COPY_DIR, "p")
+	vim.fn.mkdir(Diff.BASE_COPY_DIR, "p")
 
 	local rsync_args = { "rsync", "-av", "--delete" }
-	for _, pattern in ipairs(M.DIFF_IGNORE_PATTERNS) do
+	for _, pattern in ipairs(Diff.DIFF_IGNORE_PATTERNS) do
 		table.insert(rsync_args, "--exclude")
 		table.insert(rsync_args, pattern)
 	end
@@ -169,4 +169,4 @@ function M.pre_sync_code_base()
 	end
 end
 
-return M
+return Diff

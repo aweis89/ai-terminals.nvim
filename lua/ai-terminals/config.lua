@@ -1,9 +1,9 @@
-local M = {}
+local Config = {}
 
 ------------------------------------------
 -- Configuration
 ------------------------------------------
-M.config = {
+Config.config = {
 	terminals = {
 		goose = {
 			cmd = function()
@@ -34,7 +34,7 @@ M.config = {
 ------------------------------------------
 -- Constants
 ------------------------------------------
-M.WINDOW_DIMENSIONS = {
+Config.WINDOW_DIMENSIONS = {
 	float = { width = 0.97, height = 0.97 },
 	bottom = { width = 0.5, height = 0.5 },
 	top = { width = 0.5, height = 0.5 },
@@ -42,4 +42,4 @@ M.WINDOW_DIMENSIONS = {
 	right = { width = 0.5, height = 0.5 },
 }
 
-return M
+return Config

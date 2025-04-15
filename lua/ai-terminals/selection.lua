@@ -1,4 +1,4 @@
-local M = {}
+local Selection = {}
 
 ---Get the current visual selection
 ---@param bufnr number|nil Buffer number (defaults to current buffer)
@@ -6,7 +6,7 @@ local M = {}
 ---@return string|nil filepath Filepath of the buffer (nil if no selection)
 ---@return number start_line Starting line number (0 if no selection)
 ---@return number end_line Ending line number (0 if no selection)
-function M.get_visual_selection(bufnr)
+function Selection.get_visual_selection(bufnr)
 	local api = vim.api
 	local esc_feedkey = api.nvim_replace_termcodes("<ESC>", true, false, true)
 	bufnr = bufnr or 0
@@ -42,9 +42,9 @@ end
 ---Returns nil if no visual selection is found.
 ---@param bufnr integer|nil
 ---@return string|nil
-function M.get_visual_selection_with_header(bufnr)
+function Selection.get_visual_selection_with_header(bufnr)
 	bufnr = bufnr or 0
-	local lines, path = M.get_visual_selection(bufnr)
+	local lines, path = Selection.get_visual_selection(bufnr)
 
 	-- If get_visual_selection returned nil lines, it means no selection was found.
 	if not lines then
@@ -58,4 +58,4 @@ function M.get_visual_selection_with_header(bufnr)
 	return string.format("\n# Path: %s\n%s\n", path, slines)
 end
 
-return M
+return Selection
