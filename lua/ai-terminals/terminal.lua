@@ -114,13 +114,19 @@ end
 ---@param dimensions table Dimensions {width, height} for the terminal window.
 ---@return snacks.win?, boolean? The terminal window object and a boolean indicating if it was found.
 function Term.open(cmd, position, dimensions)
-	local term, created = Term.get(cmd, position, dimensions)
-	if not term then
-		vim.notify("No terminal found", vim.log.levels.ERROR)
-		return
+	local cmd_str = Term.resolve_command(cmd)
+	if not cmd_str then
+		return nil -- Error already notified by resolve_command
 	end
-	term:focus()
-	return term, created
+	-- Assuming Snacks is available globally or required elsewhere
+	return Snacks.terminal.open(cmd_str, {
+		env = { id = cmd_str }, -- Use cmd as the identifier
+		win = {
+			position = position, -- Pass position for potential window matching/creation logic in Snacks
+			height = dimensions.height,
+			width = dimensions.width,
+		},
+	})
 end
 
 ---Execute a shell command and send its stdout to the active terminal buffer.
