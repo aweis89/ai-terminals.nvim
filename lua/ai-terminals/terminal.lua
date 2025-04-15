@@ -58,7 +58,8 @@ function Term.send(text, opts)
 		if not ok_nl then
 			vim.notify("Failed to send newline: " .. tostring(err_nl), vim.log.levels.ERROR)
 		end
-	else
+	end
+	if opts.insert_mode then
 		vim.api.nvim_feedkeys("i", "n", false) -- Enter insert mode in the terminal window
 	end
 end
