@@ -263,10 +263,7 @@ local function add_files_from_picker(picker, opts)
   local selected = picker:selected({ fallback = true })
   local files_to_add = {}
   for _, item in pairs(selected) do
-    if item.file then
-      local full_path = vim.fn.fnamemodify(item.file, ":p")
-      table.insert(files_to_add, full_path)
-    end
+    table.insert(files_to_add, item.file)
   end
   -- Assuming 'ai-terminals' is the require path
   require("ai-terminals").aider_add_files(files_to_add, opts)

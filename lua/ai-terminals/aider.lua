@@ -46,7 +46,12 @@ function Aider.add_files(M, files, opts)
 		return
 	end
 
-	local files_str = table.concat(files, " ")
+	-- Convert file paths to full paths
+	local full_files = {}
+	for _, file in ipairs(files) do
+		table.insert(full_files, vim.fn.fnamemodify(file, ":p"))
+	end
+	local files_str = table.concat(full_files, " ")
 
 	-- Ensure the aider terminal is open and get its instance
 	local term = M.open("aider")
