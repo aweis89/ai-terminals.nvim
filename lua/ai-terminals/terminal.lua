@@ -211,7 +211,6 @@ function Term.register_autocmds(term)
 
 	local bufnr = term.buf
 	if registered_buffers[bufnr] then
-		vim.notify("Already registered for this buffer: " .. bufnr)
 		return -- Already registered for this buffer
 	end
 
