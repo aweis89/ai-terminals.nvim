@@ -11,10 +11,11 @@ This plugin integrates any terminal/CLI-based AI agent into Neovim, providing a 
   configuration table. Uses `Snacks` for terminal window management.
 * **🔄 Diff View:** Compare the changes made by the AI agent since the last sync
   with the current state of your project files. A performant backup directory
-  is created (using `rsync`) when you first open an AI terminal in a session.
-  This backup persists even after closing Neovim. The *next* time you open an
-  AI terminal (e.g., using `aider_terminal()`), the backup directory is *synced*
-  with the current project state using `rsync`, effectively resetting the diff
+  is created (using `rsync` for efficient and reliable synchronization) when you
+  first open an AI terminal in a session. This backup persists even after
+  closing Neovim. The *next* time you open an AI terminal (e.g., using
+  `aider_terminal()`), the backup directory is *synced* with the current project
+  state using `rsync`, effectively resetting the diff
   base to the state *before* the sync. The `diff_changes()` command finds
   differing files between the current project state and the *most recently
   synced* backup. These differing files are then opened in Neovim's standard
@@ -204,12 +205,12 @@ return {
       {
         "<leader>ar", -- Mnemonic: AI Run command
         function()
-          -- Ensure the Aider terminal is open first
-          local term = require("ai-terminals").open("aider")
-          -- Prompt user or use a fixed command
-          require("ai-terminals").send_command_output(nil, { term = term })
+          -- Prompt user for command
+          require("ai-terminals").send_command_output("aider")
+          -- Or use a fixed command like:
+          -- require("ai-terminals").send_command_output("aider", "make test")
         end,
-        desc = "Run 'make test' and send output to Aider terminal",
+        desc = "Run command (prompts) and send output to Aider terminal",
       },
     },
   },
@@ -237,16 +238,10 @@ use({
     })
 
     -- Define your keymaps here or in a separate keymap file
+    -- Normal mode: Toggle the terminal
     vim.keymap.set("n", "<leader>atc", function() require("ai-terminals").toggle("claude") end, { desc = "Toggle Claude terminal" })
-    vim.keymap.set("v", "<leader>atc", function()
-        local selection = require("ai-terminals").get_visual_selection_with_header()
-        if selection then
-            local term = require("ai-terminals").toggle("claude")
-            require("ai-terminals").send(selection, { term = term })
-        else
-            vim.notify("No text selected", vim.log.levels.WARN)
-        end
-    end, { desc = "Send selection to Claude" })
+    -- Visual mode: Toggle the terminal and automatically send the selection
+    vim.keymap.set("v", "<leader>atc", function() require("ai-terminals").toggle("claude") end, { desc = "Send selection to Claude" })
     -- Add other keymaps as needed...
   end,
 })

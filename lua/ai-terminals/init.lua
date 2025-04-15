@@ -171,10 +171,14 @@ function M.aider_add_files(files, opts)
 end
 
 ---Execute a shell command and send its stdout to the active terminal buffer.
+---@param term_name string
 ---@param cmd string|nil The shell command to execute.
 ---@param opts {term?: snacks.win?, submit?: boolean}|nil Options: `term` specifies the target terminal, `submit` sends a newline after the text if true.
 ---@return nil
-function M.send_command_output(cmd, opts)
+function M.send_command_output(term_name, cmd, opts)
+	local term = M.open(term)
+	opts = opts or {}
+	opts.term = opts.term or term
 	TerminalLib.run_command_and_send_output(cmd, opts)
 end
 
