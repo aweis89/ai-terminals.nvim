@@ -140,7 +140,7 @@ function Term.open(cmd, position, dimensions)
 
 	if term then
 		Term.register_autocmds(term)
-		term:focus()
+		vim.api.nvim_set_current_win(term.win)
 	end
 
 	return term, false
