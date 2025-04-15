@@ -84,9 +84,10 @@ function M.open(terminal_name, position)
 end
 
 ---Compare current directory with its backup and open differing files (delegates to DiffLib)
+---@param diff_func function|nil A function to be called for diffing instead of using neovim's built-in
 ---@return nil
-function M.diff_changes()
-	DiffLib.diff_changes()
+function M.diff_changes(diff_func)
+	DiffLib.diff_changes(diff_func)
 end
 
 ---Close and wipe out any buffers from the diff directory (delegates to DiffLib)
