@@ -58,22 +58,24 @@ function Diff.diff_changes()
 		end
 	end
 
-	-- Close all current windows
-	vim.cmd("tabonly")
-	vim.cmd("only")
+	if #diff_files == 0 then
+		vim.notify("No differing files found to open.", vim.log.levels.INFO)
+		return
+	end
 
 	local orig_files_to_notify = {}
-	-- Open each differing file in a split view
-	for i, files in ipairs(diff_files) do
+	-- Open each differing file pair in a new tab with splits
+	for _, files in ipairs(diff_files) do
 		table.insert(orig_files_to_notify, vim.fn.fnamemodify(files.orig, ":t")) -- Add only the filename
 
-		if i > 1 then
-			-- Create a new tab for each additional file pair
-			vim.cmd("tabnew")
-		end
+		-- Create a new tab for each file pair
+		vim.cmd("tabnew")
 
+		-- Open the original file
 		vim.cmd("edit " .. vim.fn.fnameescape(files.orig))
 		vim.cmd("diffthis")
+
+		-- Open the temporary file in a vertical split
 		vim.cmd("vsplit " .. vim.fn.fnameescape(files.tmp))
 		vim.cmd("diffthis")
 	end
