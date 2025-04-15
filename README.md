@@ -56,12 +56,13 @@ Make sure these (or your chosen alternatives) are installed and accessible in yo
 
 ## 🔧 Configuration
 
-You can configure the plugin using the `setup` function. This allows you to define your own terminals or override the default commands.
+You can optionally configure the plugin using the `setup` function. This allows you to define your own terminals or override the default commands and settings.
 
-**Important:** You *must* call the `setup()` function for the plugin to work correctly. This function registers necessary autocommands, such as those that automatically reload files when you leave the AI terminal (`BufLeave`) and create project backups for the diff feature when you enter the terminal (`BufWinEnter`).
+**Note:** Calling `setup()` is only necessary if you want to customize the default configuration (e.g., change terminal commands, window dimensions, or the default position). The core functionality, including autocommands for file reloading and backup syncing, works out-of-the-box without calling `setup()`.
 
 ```lua
 -- In your Neovim configuration (e.g., lua/plugins/ai-terminals.lua)
+-- Only call setup if you need to customize defaults:
 require("ai-terminals").setup({
   terminals = {
     -- Override the default aider command
@@ -237,7 +238,7 @@ return {
 
 #### Using `packer.nvim`
 
-If you are using `packer.nvim`, you need to explicitly call the `setup` function in your configuration.
+If you are using `packer.nvim`, you only need to call the `setup` function in your configuration if you want to customize the defaults.
 
 ```lua
 -- In your Neovim configuration (e.g., lua/plugins.lua or similar)
@@ -245,6 +246,7 @@ use({
   "aweis89/ai-terminals.nvim",
   requires = { "folke/snacks.nvim" }, -- Make sure dependencies are loaded
   config = function()
+    -- Only call setup if you need to customize defaults:
     require("ai-terminals").setup({
       -- Your custom configuration goes here (optional)
       terminals = {

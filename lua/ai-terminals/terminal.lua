@@ -1,6 +1,10 @@
 local DiffLib = require("ai-terminals.diff")
 local Term = {}
 
+Term.group_name = "AiTermReload" -- Define group name once
+-- Ensure the augroup exists and clear it once when the module is loaded
+vim.api.nvim_create_augroup(Term.group_name, { clear = true })
+
 ---Resolve the command string from configuration (can be string or function).
 ---@param cmd_config string|function The command configuration value.
 ---@return string|nil The resolved command string, or nil if the type is invalid.
@@ -125,7 +129,7 @@ function Term.open(cmd, position, dimensions)
 		return nil -- Error already notified by resolve_command
 	end
 
-	local term, created = Snacks.terminal.get(cmd_str, {
+	local term = Snacks.terminal.get(cmd_str, {
 		env = { id = cmd_str }, -- Use cmd as the identifier
 		win = {
 			position = position, -- Pass position for potential window matching/creation logic in Snacks
@@ -183,7 +187,7 @@ end
 
 -- Keep track of buffers where autocommands have been registered
 local registered_buffers = {}
-Term.group_name = "AiTermReload" -- Define group name once
+-- Term.group_name is defined and the group is created at the top of the file
 
 function Term.reload_changes()
 	vim.schedule(function() -- Defer execution slightly

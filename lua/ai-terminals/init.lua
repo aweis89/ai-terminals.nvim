@@ -11,9 +11,6 @@ local SelectionLib = require("ai-terminals.selection")
 ---@param user_config table User-provided configuration table.
 function M.setup(user_config)
 	ConfigLib.config = vim.tbl_deep_extend("force", ConfigLib.config, user_config or {})
-	-- Ensure the augroup exists, clear it once during setup
-	vim.api.nvim_create_augroup(TerminalLib.group_name, { clear = true })
-	-- Autocommands are now registered dynamically per terminal
 end
 
 ---Create or toggle a terminal by name with specified position
