@@ -29,17 +29,13 @@ Config.config = {
 			end,
 		},
 	},
-}
-
-------------------------------------------
--- Constants
-------------------------------------------
-Config.WINDOW_DIMENSIONS = {
-	float = { width = 0.97, height = 0.97 },
-	bottom = { width = 0.5, height = 0.5 },
-	top = { width = 0.5, height = 0.5 },
-	left = { width = 0.5, height = 0.5 },
-	right = { width = 0.5, height = 0.5 },
+	window_dimensions = {
+		float = { width = 0.97, height = 0.97 },
+		bottom = { width = 0.5, height = 0.5 },
+		top = { width = 0.5, height = 0.5 },
+		left = { width = 0.5, height = 0.5 },
+		right = { width = 0.5, height = 0.5 },
+	},
 }
 
 return Config

@@ -75,7 +75,12 @@ require("ai-terminals").setup({
     },
     -- Keep other defaults like 'goose', 'claude', 'aichat' unless overridden
   },
-  -- You can potentially add other configuration options here in the future
+  -- Override default window dimensions (optional)
+  window_dimensions = {
+    float = { width = 0.9, height = 0.9 }, -- Make float windows slightly smaller
+    bottom = { width = 1.0, height = 0.4 }, -- Make bottom windows wider and shorter
+    -- Keep other position defaults ('top', 'left', 'right')
+  },
 })
 ```
 
