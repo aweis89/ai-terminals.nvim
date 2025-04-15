@@ -66,10 +66,14 @@ function M.toggle(terminal_name, position)
 		position = "float" -- Default to float on invalid input
 	end
 
-	local selection = M.get_visual_selection_with_header(0)
+	local selection = nil
+	if vim.fn.mode() == "v" or vim.fn.mode() == "V" then
+		selection = M.get_visual_selection_with_header(0)
+	end
 
 	local dimensions = ConfigLib.WINDOW_DIMENSIONS[position]
 	local term = TerminalLib.toggle(term_config.cmd, position, dimensions)
+	-- Check if in visual mode before sending selection
 	if selection then
 		M.send(selection, { term = term })
 	end
