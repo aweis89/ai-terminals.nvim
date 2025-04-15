@@ -35,7 +35,7 @@ end
 
 -- Helper function to send commands to the aider terminal
 ---@param M table The main ai-terminals module table
----@param files string[] List of file paths to add to aider
+---@param files string[] List of file paths to add to aider. Paths will be converted to absolute paths.
 ---@param opts? { read_only?: boolean } Options for the command
 function Aider.add_files(M, files, opts)
 	opts = opts or {}
@@ -46,12 +46,13 @@ function Aider.add_files(M, files, opts)
 		return
 	end
 
-	-- Convert file paths to full paths
-	local full_files = {}
+	-- Convert all file paths to absolute paths
+	local absolute_files = {}
 	for _, file in ipairs(files) do
-		table.insert(full_files, vim.fn.fnamemodify(file, ":p"))
+		table.insert(absolute_files, vim.fn.fnamemodify(file, ":p"))
 	end
-	local files_str = table.concat(full_files, " ")
+
+	local files_str = table.concat(absolute_files, " ")
 
 	-- Ensure the aider terminal is open and get its instance
 	local term = M.open("aider")
