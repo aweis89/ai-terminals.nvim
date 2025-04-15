@@ -141,11 +141,7 @@ function Diff.pre_sync_code_base()
 
 	local job_id = vim.fn.jobstart(rsync_args, {
 		on_exit = function(_, exit_code)
-			if exit_code == 0 then
-				vim.schedule(function()
-					vim.notify("Backup sync completed successfully.", vim.log.levels.INFO)
-				end)
-			else
+			if exit_code ~= 0 then
 				vim.schedule(function()
 					vim.notify(string.format("Backup sync failed with exit code %d.", exit_code), vim.log.levels.ERROR)
 				end)

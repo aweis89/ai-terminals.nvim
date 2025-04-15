@@ -187,8 +187,6 @@ Term.group_name = "AiTermReload" -- Define group name once
 
 function Term.reload_changes()
 	vim.schedule(function() -- Defer execution slightly
-		-- No notification needed here, it's frequent
-		-- vim.notify("Checking files for changes...", vim.log.levels.INFO)
 		for _, bufinfo in ipairs(vim.fn.getbufinfo({ buflisted = 1 })) do
 			local bnr = bufinfo.bufnr
 			-- Check if buffer is valid, loaded, modifiable, and not the terminal buffer itself
