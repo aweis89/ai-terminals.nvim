@@ -1,3 +1,4 @@
+local DiffLib = require("ai-terminals.diff")
 local Term = {}
 
 ---Resolve the command string from configuration (can be string or function).
@@ -74,8 +75,6 @@ function Term.toggle(cmd, position, dimensions)
 	if not cmd_str then
 		return nil -- Error already notified by resolve_command
 	end
-
-	-- Assuming Snacks is available globally or required elsewhere
 	local term = Snacks.terminal.toggle(cmd_str, {
 		env = { id = cmd_str },
 		win = {
@@ -84,6 +83,9 @@ function Term.toggle(cmd, position, dimensions)
 			width = dimensions.width,
 		},
 	})
+	if term then
+		Term.register_autocmds(term)
+	end
 	return term
 end
 
@@ -98,7 +100,7 @@ function Term.get(cmd, position, dimensions)
 		return nil -- Error already notified by resolve_command
 	end
 	-- Assuming Snacks is available globally or required elsewhere
-	return Snacks.terminal.get(cmd_str, {
+	local term, created = Snacks.terminal.get(cmd_str, {
 		env = { id = cmd_str }, -- Use cmd as the identifier
 		win = {
 			position = position, -- Pass position for potential window matching/creation logic in Snacks
@@ -106,6 +108,10 @@ function Term.get(cmd, position, dimensions)
 			width = dimensions.width,
 		},
 	})
+	if term then
+		Term.register_autocmds(term)
+	end
+	return term, created
 end
 
 ---Get an existing terminal instance by command and position
@@ -118,8 +124,8 @@ function Term.open(cmd, position, dimensions)
 	if not cmd_str then
 		return nil -- Error already notified by resolve_command
 	end
-	-- Assuming Snacks is available globally or required elsewhere
-	return Snacks.terminal.open(cmd_str, {
+
+	local term, created = Snacks.terminal.get(cmd_str, {
 		env = { id = cmd_str }, -- Use cmd as the identifier
 		win = {
 			position = position, -- Pass position for potential window matching/creation logic in Snacks
@@ -127,6 +133,13 @@ function Term.open(cmd, position, dimensions)
 			width = dimensions.width,
 		},
 	})
+
+	if term then
+		Term.register_autocmds(term)
+		term:focus()
+	end
+
+	return term, false
 end
 
 ---Execute a shell command and send its stdout to the active terminal buffer.
@@ -166,6 +179,64 @@ function Term.run_command_and_send_output(cmd, opts)
 			vim.log.levels.ERROR
 		)
 	end
+end
+
+-- Keep track of buffers where autocommands have been registered
+local registered_buffers = {}
+Term.group_name = "AiTermReload" -- Define group name once
+
+function Term.reload_changes()
+	vim.schedule(function() -- Defer execution slightly
+		-- No notification needed here, it's frequent
+		-- vim.notify("Checking files for changes...", vim.log.levels.INFO)
+		for _, bufinfo in ipairs(vim.fn.getbufinfo({ buflisted = 1 })) do
+			local bnr = bufinfo.bufnr
+			-- Check if buffer is valid, loaded, modifiable, and not the terminal buffer itself
+			if vim.api.nvim_buf_is_valid(bnr) and bufinfo.loaded and vim.bo[bnr].modifiable then
+				-- Use pcall to handle potential errors during checktime
+				---@diagnostic disable-next-line
+				pcall(vim.cmd, bnr .. "checktime")
+			end
+		end
+	end)
+end
+
+---Register autocommands for a specific terminal buffer if not already done.
+---@param term snacks.win The terminal window object from Snacks.
+function Term.register_autocmds(term)
+	if not term or not term.buf or not vim.api.nvim_buf_is_valid(term.buf) then
+		vim.notify("Invalid terminal or buffer provided for autocommand registration.", vim.log.levels.WARN)
+		return
+	end
+
+	local bufnr = term.buf
+	if registered_buffers[bufnr] then
+		vim.notify("Already registered for this buffer: " .. bufnr)
+		return -- Already registered for this buffer
+	end
+
+	local augroup = vim.api.nvim_create_augroup(Term.group_name, { clear = false }) -- Ensure group exists, don't clear existing unrelated autocommands
+
+	-- Call the sync function so it gets executed first time terminal is open
+	DiffLib.pre_sync_code_base()
+
+	-- Autocommand to reload buffers when focus leaves this specific terminal buffer
+	vim.api.nvim_create_autocmd("BufLeave", {
+		group = augroup,
+		buffer = bufnr,
+		desc = "Reload buffers when AI terminal " .. bufnr .. " loses focus",
+		callback = Term.reload_changes,
+	})
+
+	-- Autocommand to run backup when entering this specific terminal window
+	vim.api.nvim_create_autocmd("BufWinEnter", {
+		group = augroup,
+		buffer = bufnr,
+		desc = "Run backup sync when entering AI terminal window " .. bufnr,
+		callback = DiffLib.pre_sync_code_base,
+	})
+
+	registered_buffers[bufnr] = true -- Mark as registered
 end
 
 return Term

@@ -7,45 +7,13 @@ local DiffLib = require("ai-terminals.diff")
 local ConfigLib = require("ai-terminals.config")
 local SelectionLib = require("ai-terminals.selection")
 
-local function reload_changes()
-	vim.schedule(function() -- Defer execution slightly
-		vim.notify("Checking files for changes...", vim.log.levels.INFO)
-		for _, bufinfo in ipairs(vim.fn.getbufinfo({ buflisted = 1 })) do
-			local bnr = bufinfo.bufnr
-			-- Check if buffer is valid, loaded, modifiable, and not the terminal buffer itself
-			if vim.api.nvim_buf_is_valid(bnr) and bufinfo.loaded and vim.bo[bnr].modifiable then
-				-- Use pcall to handle potential errors during checktime
-				---@diagnostic disable-next-line
-				pcall(vim.cmd, bnr .. "checktime")
-			end
-		end
-	end)
-end
-
 ---Setup function to merge user configuration with defaults.
 ---@param user_config table User-provided configuration table.
 function M.setup(user_config)
 	ConfigLib.config = vim.tbl_deep_extend("force", ConfigLib.config, user_config or {})
-	local group_name = "AiTermReload"
-	local augroup = vim.api.nvim_create_augroup(group_name, { clear = true })
-
-	local pattern = "term://*ai-terminals.nvim*"
-
-	-- Autocommand to reload buffers when focus leaves the terminal buffer
-	vim.api.nvim_create_autocmd("BufLeave", {
-		group = augroup,
-		pattern = pattern,
-		desc = "Reload buffers when AI terminal loses focus",
-		callback = reload_changes,
-	})
-
-	-- Autocommand to run backup when entering the terminal window
-	vim.api.nvim_create_autocmd("BufWinEnter", {
-		group = augroup,
-		pattern = pattern,
-		desc = "Run backup sync when entering AI terminal window",
-		callback = DiffLib.pre_sync_code_base,
-	})
+	-- Ensure the augroup exists, clear it once during setup
+	vim.api.nvim_create_augroup(TerminalLib.group_name, { clear = true })
+	-- Autocommands are now registered dynamically per terminal
 end
 
 ---Create or toggle a terminal by name with specified position
@@ -63,7 +31,10 @@ function M.toggle(terminal_name, position)
 	local valid_positions = { float = true, bottom = true, top = true, left = true, right = true }
 	if not valid_positions[position] then
 		vim.notify(
-			"Invalid terminal position: " .. tostring(position) .. ". Falling back to default: " .. ConfigLib.config.default_position,
+			"Invalid terminal position: "
+				.. tostring(position)
+				.. ". Falling back to default: "
+				.. ConfigLib.config.default_position,
 			vim.log.levels.WARN
 		)
 		position = ConfigLib.config.default_position -- Fallback to configured default on invalid input
