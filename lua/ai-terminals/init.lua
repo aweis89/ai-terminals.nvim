@@ -71,7 +71,7 @@ function M.toggle(terminal_name, position)
 		selection = M.get_visual_selection_with_header(0)
 	end
 
-	local dimensions = ConfigLib.WINDOW_DIMENSIONS[position]
+	local dimensions = ConfigLib.config.window_dimensions[position]
 	local term = TerminalLib.toggle(term_config.cmd, position, dimensions)
 	-- Check if in visual mode before sending selection
 	if selection then
@@ -92,7 +92,7 @@ function M.get(terminal_name, position)
 	end
 
 	position = position or "float" -- Default position if not provided
-	local dimensions = ConfigLib.WINDOW_DIMENSIONS[position]
+	local dimensions = ConfigLib.config.window_dimensions[position]
 	return TerminalLib.get(term_config.cmd, position, dimensions)
 end
 
@@ -108,7 +108,7 @@ function M.open(terminal_name, position)
 	end
 
 	position = position or "float" -- Default position if not provided
-	local dimensions = ConfigLib.WINDOW_DIMENSIONS[position]
+	local dimensions = ConfigLib.config.window_dimensions[position]
 	return TerminalLib.open(term_config.cmd, position, dimensions)
 end
 
