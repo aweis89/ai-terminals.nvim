@@ -304,12 +304,11 @@ local function add_files_from_picker(picker, opts)
   for _, item in pairs(selected) do
     table.insert(files_to_add, item.file)
   end
-  -- Assuming 'ai-terminals' is the require path
   require("ai-terminals").aider_add_files(files_to_add, opts)
 end
 
--- Inside the snacks opts function:
-local overrides = {
+-- Snacks picker opts:
+{
   picker = {
     actions = {
       ["aider_add"] = function(picker)
