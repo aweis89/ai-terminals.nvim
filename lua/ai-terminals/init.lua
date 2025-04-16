@@ -106,6 +106,16 @@ end
 
 ---Send diagnostics to a terminal
 ---@param name string Terminal name (key in M.config.terminals)
+---@param text string text to send
+---@param opts {submit?: boolean}|nil Options: `term` specifies the target terminal, `submit` sends a newline after the text if true.
+function M.send_term(name, text, opts)
+	local term = M.open(name)
+	TerminalLib.send(text, { term = term, submit = opts.submit })
+	M.send(diagnostics, opts)
+end
+
+---Send diagnostics to a terminal
+---@param name string Terminal name (key in M.config.terminals)
 ---@param opts {term?: snacks.win?, submit?: boolean}|nil Options: `term` specifies the target terminal, `submit` sends a newline after the text if true.
 function M.send_diagnostics(name, opts)
 	local diagnostics = M.diagnostics()
