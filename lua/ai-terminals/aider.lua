@@ -15,7 +15,10 @@ function Aider.comment(M, prefix)
 		return -- Do nothing if the user entered nothing
 	end
 	local current_line = vim.api.nvim_win_get_cursor(0)[1]
-	local comment_string = vim.bo.commentstring or "# %s" -- Default to '#' if not set
+
+	local cs = vim.bo.commentstring
+	local comment_string = (cs and #cs > 0) and cs or "# %s"
+
 	-- Format the comment string
 	local formatted_prefix = " " .. prefix .. " " -- Add spaces around the prefix
 	local formatted_comment
