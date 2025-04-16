@@ -110,8 +110,14 @@ end
 ---@param opts {submit?: boolean}|nil Options: `term` specifies the target terminal, `submit` sends a newline after the text if true.
 function M.send_term(name, text, opts)
 	local term = M.open(name)
-	TerminalLib.send(text, { term = term, submit = opts.submit })
-	M.send(diagnostics, opts)
+	if not term then
+		vim.notify("Terminal not found", vim.log.levels.ERROR)
+	end
+	TerminalLib.send(text, {
+		term = term,
+		submit = opts and opts.submit or false,
+	})
+	M.send(text, opts)
 end
 
 ---Send diagnostics to a terminal
