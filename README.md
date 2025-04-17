@@ -9,26 +9,12 @@ This plugin **seamlessly integrates any command-line (CLI) AI coding agents** in
 * **🔌 Configurable Terminal Integration:** Define and manage terminals for various
   AI CLI tools (e.g., Claude, Goose, Aider, custom scripts) through a simple
   configuration table. Uses `Snacks` for terminal window management.
-* **🔄 Diff View:** Compare the changes made by the AI agent since the last sync
-  with the current state of your project files. A performant backup directory
-  is created (using `rsync` for efficient and reliable synchronization) when you
-  first open an AI terminal in a session. This backup persists even after
-  closing Neovim. The *next* time you open an AI terminal (e.g., using
-  `toggle("aider")`), the backup directory is *synced* with the current project
-  state using `rsync`, effectively resetting the diff
-  base to the state *before* the sync. **Note:** This backup sync behavior and
-  the associated diff commands (`diff_changes`, `close_diff`) are controlled by
-  the `enable_diffing` configuration option (enabled by default). If you disable
-  it (`enable_diffing = false`), the backup sync will not run, and the diff
-  commands will not function as expected. The `diff_changes()` command finds
-  differing files between the current project state and the *most recently
-  synced* backup. These differing files are then
-  opened in Neovim's standard
-  diff view across multiple tabs. You can use standard diff commands like
-  `:diffget` and `:diffput` to
-  manage changes (see `:help diff`). The `close_diff()` command closes these
-  diff tabs and removes the buffers associated with the temporary backup files
-  (i.e., non-local files) from Neovim's buffer list.
+* **🔄 Diff View:**
+    *   **Track AI Changes:** Compare the current state of your project files against the state they were in the last time you opened an AI terminal.
+    *   **How it Works:** The plugin maintains a persistent backup of your project (using `rsync` for efficiency). This backup is created the *first* time you open an AI terminal and *updated* (synced) each subsequent time you open one, setting a new comparison point.
+    *   **View Differences:** Use the `diff_changes()` command to open all modified files in Neovim's standard diff view. You can manage changes using standard commands like `:diffget` and `:diffput`.
+    *   **Close Diffs:** Use the `close_diff()` command to close the diff tabs and clean up related buffers.
+    *   **Enable/Disable:** This feature is active by default (`enable_diffing = true` in the setup configuration). Setting it to `false` disables the backup/sync process and the diff commands.
 * **🔃 Automatic File Reloading:** When you switch focus away from the AI terminal
   window, all listed buffers in Neovim are checked for modifications and
   reloaded if necessary, ensuring you see the latest changes made by the AI.
