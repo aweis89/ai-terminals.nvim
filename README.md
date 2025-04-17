@@ -356,3 +356,61 @@ end
 ```
 
 This setup defines two actions, `aider_add` and `aider_read_only`, which use the helper function `add_files_from_picker` to collect selected file paths from the picker and pass them to `require("ai-terminals").aider_add_files`. Keymaps are then added to specific picker sources (like `files` and `git_status`) to trigger these actions.
+
+##### 🔍 Sending Grep Results to Aider
+
+Similarly, you can configure Snacks to send selected lines from a grep search directly to the Aider terminal.
+
+```lua
+-- In your snacks.nvim configuration (e.g., lua/plugins/snacks.lua)
+
+--- Helper function to extract search results and send them to aider
+---@param picker snacks.Picker
+local function send_search(picker)
+  local selected = picker:selected({ fallback = true })
+  local items = {}
+  for _, item in pairs(selected) do
+    table.insert(items, item.text) -- Send the full line text from grep
+  end
+  -- Get the aider terminal instance (assuming it's named 'aider')
+  local term = require("ai-terminals").get("aider")
+  -- Send the concatenated lines to the terminal
+  require("ai-terminals").send(table.concat(items, "\n"), { term = term })
+end
+
+-- Snacks picker opts:
+{
+  picker = {
+    actions = {
+      -- ... other actions like aider_add, aider_read_only ...
+      ["aider_search"] = function(picker)
+        picker:close()
+        send_search(picker)
+      end,
+    },
+    sources = {
+      -- ... other sources like files, git_status ...
+      grep = { -- Apply to the grep picker
+        win = {
+          input = {
+            keys = {
+              -- Add a keymap to send selected grep lines
+              ["<leader><space>s"] = { "aider_search", mode = { "n", "i" } },
+              -- You might also want the file adding keys here too
+              ["<leader><space>a"] = { "aider_add", mode = { "n", "i" } },
+              ["<leader><space>A"] = { "aider_read_only", mode = { "n", "i" } },
+            },
+          },
+        },
+      },
+    },
+  },
+}
+
+-- Make sure to merge these overrides with your existing snacks options
+-- return vim.tbl_deep_extend("force", opts or {}, overrides)
+```
+
+This adds a `send_search` helper function that extracts the text lines from the selected items in the picker (typically grep results) and sends them concatenated together to the Aider terminal using `require("ai-terminals").send`. An `aider_search` action is defined to use this helper, and a keymap (`<leader><space>s`) is added to the `grep` source to trigger this action.
+
+💡 **Tip:** You can use `<Tab>` in the Snacks picker to select multiple items (files or grep lines) one by one, or `<C-a>` (Control-A) to select *all* visible items. When you then use the `aider_add` or `aider_search` keymaps, all selected items will be sent to Aider at once!
