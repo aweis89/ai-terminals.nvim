@@ -127,7 +127,8 @@ end
 function Term.open(cmd, position, dimensions)
 	local cmd_str = Term.resolve_command(cmd)
 	if not cmd_str then
-		return nil -- Error already notified by resolve_command
+		vim.notify("Invalid terminal command", vim.log.levels.ERROR)
+		return nil
 	end
 
 	local term = Snacks.terminal.get(cmd_str, {
@@ -138,13 +139,13 @@ function Term.open(cmd, position, dimensions)
 			width = dimensions.width,
 		},
 	})
-
-	if term then
-		Term.register_autocmds(term)
-		if term.win then
-			vim.api.nvim_set_current_win(term.win)
-		end
+	if not term then
+		vim.notify("terminal is nil", vim.log.levels.ERROR)
+		return
 	end
+
+	Term.register_autocmds(term)
+	term:show()
 
 	return term, false
 end
