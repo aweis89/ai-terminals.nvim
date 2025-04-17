@@ -9,8 +9,8 @@ This plugin **seamlessly integrates any command-line (CLI) AI coding agents** in
 * **🔌 Configurable Terminal Integration:** Define and manage terminals for various
   AI CLI tools (e.g., Claude, Goose, Aider, custom scripts) through a simple
   configuration table. Uses `Snacks` for terminal window management.
-* **🔄 Diff View:** Compare the changes made by the AI agent since the last sync
-  with the current state of your project files. A performant backup directory
+* **🔄 Diff View:** Compare the changes made by the AI agent in the last terminal session
+* (resets when re-entering the terminal after closing). A performant backup directory
   is created (using `rsync` for efficient and reliable synchronization) when you
   first open an AI terminal in a session. This backup persists even after
   closing Neovim. The *next* time you open an AI terminal (e.g., using
