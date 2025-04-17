@@ -14,7 +14,7 @@ This plugin **seamlessly integrates any command-line (CLI) AI coding agents** in
   is created (using `rsync` for efficient and reliable synchronization) when you
   first open an AI terminal in a session. This backup persists even after
   closing Neovim. The *next* time you open an AI terminal (e.g., using
-  `aider_terminal()`), the backup directory is *synced* with the current project
+  `toggle("aider")`), the backup directory is *synced* with the current project
   state using `rsync`, effectively resetting the diff
   base to the state *before* the sync. The `diff_changes()` command finds
   differing files between the current project state and the *most recently
