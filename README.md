@@ -157,6 +157,14 @@ return {
         mode = { "n", "v" },
       },
       {
+        "<leader>asc", -- Mnemonic: AI Send Claude
+        function()
+          require("ai-terminals").send_selection("claude")
+        end,
+        desc = "Send selection to Claude",
+        mode = "v",
+      },
+      {
         "<leader>adc", -- Mnemonic: AI Diagnostics Claude
         function()
           require("ai-terminals").send_diagnostics("claude")
@@ -174,6 +182,14 @@ return {
         mode = { "n", "v" },
       },
       {
+        "<leader>asg", -- Mnemonic: AI Send Goose
+        function()
+          require("ai-terminals").send_selection("goose")
+        end,
+        desc = "Send selection to Goose",
+        mode = "v",
+      },
+      {
         "<leader>adg", -- Mnemonic: AI Diagnostics Goose
         function()
           require("ai-terminals").send_diagnostics("goose")
@@ -189,6 +205,14 @@ return {
         end,
         desc = "Toggle Aider terminal (sends selection in visual mode)",
         mode = { "n", "v" },
+      },
+      {
+        "<leader>asa", -- Mnemonic: AI Send Aider
+        function()
+          require("ai-terminals").send_selection("aider")
+        end,
+        desc = "Send selection to Aider",
+        mode = "v",
       },
       {
         "<leader>ac",
@@ -265,14 +289,17 @@ use({
 
     -- Claude Keymaps
     vim.keymap.set({"n", "v"}, "<leader>atc", function() require("ai-terminals").toggle("claude") end, { desc = "Toggle Claude terminal (sends selection in visual mode)" })
+    vim.keymap.set("v", "<leader>asc", function() require("ai-terminals").send_selection("claude") end, { desc = "Send selection to Claude" })
     vim.keymap.set({"n", "v"}, "<leader>adc", function() require("ai-terminals").send_diagnostics("claude") end, { desc = "Send diagnostics to Claude" })
 
     -- Goose Keymaps
     vim.keymap.set({"n", "v"}, "<leader>atg", function() require("ai-terminals").toggle("goose") end, { desc = "Toggle Goose terminal (sends selection in visual mode)" })
+    vim.keymap.set("v", "<leader>asg", function() require("ai-terminals").send_selection("goose") end, { desc = "Send selection to Goose" })
     vim.keymap.set({"n", "v"}, "<leader>adg", function() require("ai-terminals").send_diagnostics("goose") end, { desc = "Send diagnostics to Goose" })
 
     -- Aider Keymaps
     vim.keymap.set({"n", "v"}, "<leader>ata", function() require("ai-terminals").toggle("aider") end, { desc = "Toggle Aider terminal (sends selection in visual mode)" })
+    vim.keymap.set("v", "<leader>asa", function() require("ai-terminals").send_selection("aider") end, { desc = "Send selection to Aider" })
     vim.keymap.set("n", "<leader>ac", function() require("ai-terminals").aider_comment("AI!") end, { desc = "Add 'AI!' comment above line" })
     vim.keymap.set("n", "<leader>aC", function() require("ai-terminals").aider_comment("AI?") end, { desc = "Add 'AI?' comment above line" })
     vim.keymap.set("n", "<leader>al", function() require("ai-terminals").aider_add_files({ vim.fn.expand("%:p") }) end, { desc = "Add current file to Aider" })

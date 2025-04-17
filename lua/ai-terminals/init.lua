@@ -104,7 +104,7 @@ function M.send(text, opts)
 	TerminalLib.send(text, opts)
 end
 
----Send diagnostics to a terminal
+---Send text to a terminal
 ---@param name string Terminal name (key in M.config.terminals)
 ---@param text string text to send
 ---@param opts {submit?: boolean}|nil Options: `term` specifies the target terminal, `submit` sends a newline after the text if true.
@@ -112,12 +112,45 @@ function M.send_term(name, text, opts)
 	local term = M.open(name)
 	if not term then
 		vim.notify("Terminal not found", vim.log.levels.ERROR)
+		return
 	end
 	TerminalLib.send(text, {
 		term = term,
 		submit = opts and opts.submit or false,
 	})
-	M.send(text, opts)
+end
+
+---Send the current selection to a terminal without toggling it
+---@param terminal_name string The name of the terminal (key in ConfigLib.config.terminals)
+---@param position "float"|"bottom"|"top"|"left"|"right"|nil Optional: Specify position if needed for matching window dimensions
+---@return nil
+function M.send_selection(terminal_name, position)
+	local term_config = ConfigLib.config.terminals[terminal_name]
+	if not term_config then
+		vim.notify("Unknown terminal name: " .. tostring(terminal_name), vim.log.levels.ERROR)
+		return nil
+	end
+
+	-- Check if in visual mode
+	if vim.fn.mode() ~= "v" and vim.fn.mode() ~= "V" then
+		vim.notify("No selection found. Select text in visual mode first.", vim.log.levels.WARN)
+		return nil
+	end
+
+	-- Get the current selection with header
+	local selection = M.get_visual_selection_with_header(0)
+	if not selection then
+		vim.notify("Failed to get selection.", vim.log.levels.ERROR)
+		return nil
+	end
+
+	-- Get or open terminal without toggling
+	position = position or ConfigLib.config.default_position
+	local dimensions = ConfigLib.config.window_dimensions[position]
+	local term = M.open(terminal_name, position)
+
+	-- Send selection to terminal
+	M.send(selection, { term = term })
 end
 
 ---Send diagnostics to a terminal
