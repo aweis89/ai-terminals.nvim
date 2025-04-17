@@ -16,9 +16,14 @@ This plugin **seamlessly integrates any command-line (CLI) AI coding agents** in
   closing Neovim. The *next* time you open an AI terminal (e.g., using
   `toggle("aider")`), the backup directory is *synced* with the current project
   state using `rsync`, effectively resetting the diff
-  base to the state *before* the sync. The `diff_changes()` command finds
+  base to the state *before* the sync. **Note:** This backup sync behavior and
+  the associated diff commands (`diff_changes`, `close_diff`) are controlled by
+  the `enable_diffing` configuration option (enabled by default). If you disable
+  it (`enable_diffing = false`), the backup sync will not run, and the diff
+  commands will not function as expected. The `diff_changes()` command finds
   differing files between the current project state and the *most recently
-  synced* backup. These differing files are then opened in Neovim's standard
+  synced* backup. These differing files are then
+  opened in Neovim's standard
   diff view across multiple tabs. You can use standard diff commands like
   `:diffget` and `:diffput` to
   manage changes (see `:help diff`). The `close_diff()` command closes these
@@ -83,6 +88,10 @@ require("ai-terminals").setup({
   },
   -- Set the default window position if none is specified (default: "float")
   default_position = "bottom", -- Example: Make terminals open at the bottom by default
+  -- Enable/disable the diffing feature (default: true)
+  -- When enabled, a backup sync runs on terminal entry, allowing `diff_changes` and `close_diff` to work.
+  -- Disabling this (`false`) skips the backup sync and prevents diff commands from functioning.
+  enable_diffing = false,
 })
 ```
 
