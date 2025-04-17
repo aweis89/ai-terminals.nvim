@@ -1,6 +1,6 @@
 # 🤖 AI Terminals Neovim Plugin
 
-This plugin **seamlessly integrates any widespread and state-of-the-art command-line (CLI) AI coding agents** into Neovim. It provides a unified workflow for interacting with AI assistants directly within your editor, **eliminating the need for proprietary tools or separate applications**.
+This plugin **seamlessly integrates any command-line (CLI) AI coding agents** into Neovim. It provides a unified workflow for interacting with AI assistants directly within your editor, eliminating the need for exlusively dedicated Neovim AI plugins.
 
 ## ✨ Features
 
@@ -14,7 +14,7 @@ This plugin **seamlessly integrates any widespread and state-of-the-art command-
   is created (using `rsync` for efficient and reliable synchronization) when you
   first open an AI terminal in a session. This backup persists even after
   closing Neovim. The *next* time you open an AI terminal (e.g., using
-  `aider_terminal()`), the backup directory is *synced* with the current project
+  `toggle("aider")`), the backup directory is *synced* with the current project
   state using `rsync`, effectively resetting the diff
   base to the state *before* the sync. The `diff_changes()` command finds
   differing files between the current project state and the *most recently
@@ -36,7 +36,7 @@ This plugin **seamlessly integrates any widespread and state-of-the-art command-
 While the generic features work well with Aider, this plugin includes additional helpers specifically for Aider:
 
 * **➕ Add Files:** Quickly add the current file or a list of files to the Aider chat context using `/add` or `/read-only`.
-* **💬 Add Comments:** Insert comments above the current line with a custom prefix (e.g., `AI!`, `AI?`). This action automatically saves the file and can optionally start the Aider terminal if it's not already running.
+* **💬 Add Comments:** Insert comments above the current line with a custom prefix (e.g., `AI!`, `AI?`). This action automatically saves the file and starts the Aider terminal if it's not already running.
 
 ## ⚠️ Prerequisites
 
