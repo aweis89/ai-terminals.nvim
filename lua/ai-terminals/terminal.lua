@@ -140,7 +140,7 @@ function Term.open(cmd, position, dimensions)
 		},
 	})
 	if not term then
-		vim.notify("terminal is nil", vim.log.levels.ERROR)
+		vim.notify("Unable to get or create terminal", vim.log.levels.ERROR)
 		return
 	end
 
