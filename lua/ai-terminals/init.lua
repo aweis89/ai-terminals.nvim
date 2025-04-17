@@ -131,7 +131,7 @@ function M.send_diagnostics(name, opts)
 	end
 	opts = opts or {}
 	if not opts.term then
-		opts.term = M.open(name)
+		opts.term = M.toggle(name)
 	end
 	M.send(diagnostics, opts)
 end
