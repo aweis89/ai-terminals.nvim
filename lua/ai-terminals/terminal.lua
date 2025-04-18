@@ -117,13 +117,12 @@ end
 function Term.get(cmd, position, dimensions)
 	local cmd_str = Term.resolve_command(cmd)
 	if not cmd_str then
-		return nil -- Error already notified by resolve_command
+		return nil
 	end
-	-- Assuming Snacks is available globally or required elsewhere
 	local term, created = Snacks.terminal.get(cmd_str, {
-		env = { id = cmd_str }, -- Use cmd as the identifier
+		env = { id = cmd_str },
 		win = {
-			position = position, -- Pass position for potential window matching/creation logic in Snacks
+			position = position,
 			height = dimensions.height,
 			width = dimensions.width,
 		},
