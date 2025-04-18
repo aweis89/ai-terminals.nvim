@@ -73,7 +73,7 @@ end
 ---Helper to resolve term config, position, and dimensions
 ---@param terminal_name string The name of the terminal (key in ConfigLib.config.terminals)
 ---@param position "float"|"bottom"|"top"|"left"|"right"|nil Optional override position.
----@return table?, string?, table? term_config, resolved_position, dimensions (nil on error)
+---@return table?, string?, table?
 local function resolve_term_details(terminal_name, position)
 	local term_config = ConfigLib.config.terminals[terminal_name]
 	if not term_config then
