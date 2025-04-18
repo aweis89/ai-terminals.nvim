@@ -104,6 +104,7 @@ function Term.focus()
 	for _, term in ipairs(terms) do
 		if term:is_floating() then
 			term:focus()
+			return
 		end
 	end
 end
