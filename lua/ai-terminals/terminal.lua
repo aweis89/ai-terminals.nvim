@@ -233,11 +233,14 @@ end
 ---@param term snacks.win The terminal window object from Snacks.
 function Term.register_autocmds(term)
 	if not term or not term.buf or not vim.api.nvim_buf_is_valid(term.buf) then
-		vim.notify("Invalid terminal or buffer provided for autocommand registration.", vim.log.levels.WARN)
+		vim.notify("Invalid terminal or buffer provided for autocommand registration.", vim.log.levels.ERROR)
 		return
 	end
 
 	local bufnr = term.buf
+	if not bufnr then
+		vim.notify("Invalid terminal or buffer provided for autocommand registration.", vim.log.levels.ERROR)
+	end
 	if registered_buffers[bufnr] then
 		return -- Already registered for this buffer
 	end
