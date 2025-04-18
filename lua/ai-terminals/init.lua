@@ -13,78 +13,42 @@ function M.setup(user_config)
 	ConfigLib.config = vim.tbl_deep_extend("force", ConfigLib.config, user_config or {})
 end
 
----Create or toggle a terminal by name with specified position
+---Create or toggle a terminal by name with specified position (delegates to TerminalLib)
 ---@param terminal_name string The name of the terminal (key in ConfigLib.config.terminals)
 ---@param position "float"|"bottom"|"top"|"left"|"right"|nil
 ---@return snacks.win|nil
 function M.toggle(terminal_name, position)
-	local term_config = ConfigLib.config.terminals[terminal_name]
-	if not term_config then
-		vim.notify("Unknown terminal name: " .. tostring(terminal_name), vim.log.levels.ERROR)
-		return nil
-	end
+	local term = TerminalLib.toggle(terminal_name, position)
 
-	position = position or ConfigLib.config.default_position
-	local valid_positions = { float = true, bottom = true, top = true, left = true, right = true }
-	if not valid_positions[position] then
-		vim.notify(
-			"Invalid terminal position: "
-				.. tostring(position)
-				.. ". Falling back to default: "
-				.. ConfigLib.config.default_position,
-			vim.log.levels.WARN
-		)
-		position = ConfigLib.config.default_position -- Fallback to configured default on invalid input
-	end
-
-	local selection = nil
+	-- Send selection if in visual mode (moved from original M.toggle)
 	if vim.fn.mode() == "v" or vim.fn.mode() == "V" then
-		selection = M.get_visual_selection_with_header(0)
+		local selection = M.get_visual_selection_with_header(0)
+		if selection and term then
+			M.send(selection, { term = term })
+		end
 	end
 
-	local dimensions = ConfigLib.config.window_dimensions[position]
-	local term = TerminalLib.toggle(term_config.cmd, position, dimensions)
-	-- Check if in visual mode before sending selection
-	if selection then
-		M.send(selection, { term = term })
-	end
 	return term
 end
 
----Get an existing terminal instance by name
+---Get an existing terminal instance by name (delegates to TerminalLib)
 ---@param terminal_name string The name of the terminal (key in M.config.terminals)
 ---@param position "float"|"bottom"|"top"|"left"|"right"|nil Optional: Specify position if needed for matching window dimensions
 ---@return snacks.win?, boolean?
 function M.get(terminal_name, position)
-	local term_config = ConfigLib.config.terminals[terminal_name]
-	if not term_config then
-		vim.notify("Unknown terminal name: " .. tostring(terminal_name), vim.log.levels.ERROR)
-		return nil, false
-	end
-
-	position = position or ConfigLib.config.default_position -- Use configured default if not provided
-	local dimensions = ConfigLib.config.window_dimensions[position]
-	return TerminalLib.get(term_config.cmd, position, dimensions)
+	return TerminalLib.get(terminal_name, position)
 end
 
 function M.focus()
 	TerminalLib.focus()
 end
 
----Get an existing terminal instance by name
+---Open a terminal by name, creating if necessary (delegates to TerminalLib)
 ---@param terminal_name string The name of the terminal (key in M.config.terminals)
 ---@param position "float"|"bottom"|"top"|"left"|"right"|nil Optional: Specify position if needed for matching window dimensions
----@return snacks.win?, boolean?
+---@return snacks.win?
 function M.open(terminal_name, position)
-	local term_config = ConfigLib.config.terminals[terminal_name]
-	if not term_config then
-		vim.notify("Unknown terminal name: " .. tostring(terminal_name), vim.log.levels.ERROR)
-		return nil, false
-	end
-
-	position = position or ConfigLib.config.default_position -- Use configured default if not provided
-	local dimensions = ConfigLib.config.window_dimensions[position]
-	return TerminalLib.open(term_config.cmd, position, dimensions)
+	return TerminalLib.open(terminal_name, position)
 end
 
 ---Compare current directory with its backup and open differing files (delegates to DiffLib)
@@ -100,7 +64,7 @@ function M.close_diff()
 	DiffLib.close_diff()
 end
 
----Send text to a terminal
+---Send text to a terminal (delegates to TerminalLib)
 ---@param text string The text to send
 ---@param opts {term?: snacks.win?, submit?: boolean}|nil Options: `term` specifies the target terminal, `submit` sends a newline after the text if true.
 ---@return nil
@@ -108,36 +72,39 @@ function M.send(text, opts)
 	TerminalLib.send(text, opts)
 end
 
----Send diagnostics to a terminal
+---Send text to a specific named terminal
 ---@param name string Terminal name (key in M.config.terminals)
 ---@param text string text to send
----@param opts {submit?: boolean}|nil Options: `term` specifies the target terminal, `submit` sends a newline after the text if true.
+---@param opts {submit?: boolean}|nil Options: `submit` sends a newline after the text if true.
 function M.send_term(name, text, opts)
-	local term = M.open(name)
+	local term = M.open(name) -- Use M.open which delegates to TerminalLib.open
 	if not term then
-		vim.notify("Terminal not found", vim.log.levels.ERROR)
+		vim.notify("Terminal '" .. name .. "' not found or could not be opened", vim.log.levels.ERROR)
+		return
 	end
-	TerminalLib.send(text, {
+	opts = opts or {}
+	M.send(text, {
 		term = term,
-		submit = opts and opts.submit or false,
+		submit = opts.submit or false,
 	})
-	M.send(text, opts)
 end
 
----Send diagnostics to a terminal
+---Send diagnostics to a specific named terminal
 ---@param name string Terminal name (key in M.config.terminals)
 ---@param opts {term?: snacks.win?, submit?: boolean}|nil Options: `term` specifies the target terminal, `submit` sends a newline after the text if true.
 function M.send_diagnostics(name, opts)
 	local diagnostics = M.diagnostics()
-	if not diagnostics then
-		vim.notify("No diagnostics found", vim.log.levels.ERROR)
+	if not diagnostics or #diagnostics == 0 then
+		vim.notify("No diagnostics found", vim.log.levels.WARN)
 		return
 	end
 	opts = opts or {}
-	if not opts.term then
-		opts.term = M.toggle(name)
+	local term = opts.term or M.toggle(name)
+	if not term then
+		vim.notify("Terminal '" .. name .. "' not found or could not be toggled", vim.log.levels.ERROR)
+		return
 	end
-	M.send(diagnostics, opts)
+	M.send(diagnostics, { term = term, submit = opts.submit or false })
 end
 
 ---Get formatted diagnostics (delegates to DiagnosticsLib)
@@ -157,19 +124,19 @@ end
 ---@param prefix string The prefix to add before the user's comment text
 ---@return nil
 function M.aider_comment(prefix)
-	AiderLib.comment(M, prefix)
+	AiderLib.comment(prefix)
 end
 
 -- Helper function to send commands to the aider terminal (delegates to AiderLib)
 ---@param files string[] List of file paths to add to aider
 ---@param opts? { read_only?: boolean } Options for the command
 function M.aider_add_files(files, opts)
-	AiderLib.add_files(M, files, opts)
+	AiderLib.add_files(files, opts)
 end
 
 -- Add all buffers to aider (delegates to AiderLib)
 function M.aider_add_buffers()
-	AiderLib.add_buffers(M)
+	AiderLib.add_buffers()
 end
 
 ---Destroy all active AI terminals (closes windows and stops processes).
@@ -184,10 +151,17 @@ end
 ---@param opts {term?: snacks.win?, submit?: boolean}|nil Options: `term` specifies the target terminal, `submit` sends a newline after the text if true.
 ---@return nil
 function M.send_command_output(term_name, cmd, opts)
-	local term = M.open(term_name)
+	local term = M.open(term_name) -- Use M.open which delegates
+	if not term then
+		vim.notify(
+			"Terminal '" .. term_name .. "' not found or could not be opened for command output",
+			vim.log.levels.ERROR
+		)
+		return
+	end
 	opts = opts or {}
 	opts.term = opts.term or term
-	TerminalLib.run_command_and_send_output(cmd, opts)
+	TerminalLib.run_command_and_send_output(cmd, opts) -- Call TerminalLib directly
 end
 
 ---Get the current visual selection (delegates to SelectionLib)

@@ -1,4 +1,4 @@
-local Config = require("ai-terminals.config")
+local ConfigLib = require("ai-terminals.config")
 local DiffLib = require("ai-terminals.diff")
 local Term = {}
 
@@ -70,20 +70,53 @@ function Term.send(text, opts)
 	end
 end
 
+---Helper to resolve term config, position, and dimensions
+---@param terminal_name string The name of the terminal (key in ConfigLib.config.terminals)
+---@param position "float"|"bottom"|"top"|"left"|"right"|nil Optional override position.
+---@return table?, string?, table? term_config, resolved_position, dimensions (nil on error)
+local function resolve_term_details(terminal_name, position)
+	local term_config = ConfigLib.config.terminals[terminal_name]
+	if not term_config then
+		vim.notify("Unknown terminal name: " .. tostring(terminal_name), vim.log.levels.ERROR)
+		return nil, nil, nil
+	end
+
+	local resolved_position = position or ConfigLib.config.default_position
+	local valid_positions = { float = true, bottom = true, top = true, left = true, right = true }
+	if not valid_positions[resolved_position] then
+		vim.notify(
+			"Invalid terminal position: "
+				.. tostring(resolved_position)
+				.. ". Falling back to default: "
+				.. ConfigLib.config.default_position,
+			vim.log.levels.WARN
+		)
+		resolved_position = ConfigLib.config.default_position -- Fallback
+	end
+
+	local dimensions = ConfigLib.config.window_dimensions[resolved_position]
+	return term_config, resolved_position, dimensions
+end
+
 ---Create or toggle a terminal by name with specified position
----@param cmd string|function The command to run in the terminal.
----@param position "float"|"bottom"|"top"|"left"|"right" The position of the terminal window.
----@param dimensions table Dimensions {width, height} for the terminal window.
+---@param terminal_name string The name of the terminal (key in ConfigLib.config.terminals)
+---@param position "float"|"bottom"|"top"|"left"|"right"|nil Optional override position.
 ---@return snacks.win|nil The terminal window object or nil on failure.
-function Term.toggle(cmd, position, dimensions)
-	local cmd_str = Term.resolve_command(cmd)
+function Term.toggle(terminal_name, position)
+	local term_config, resolved_position, dimensions = resolve_term_details(terminal_name, position)
+	if not term_config then
+		return nil
+	end
+
+	local cmd_str = Term.resolve_command(term_config.cmd)
 	if not cmd_str then
 		return nil -- Error already notified by resolve_command
 	end
+
 	local term = Snacks.terminal.toggle(cmd_str, {
 		env = { id = cmd_str },
 		win = {
-			position = position,
+			position = resolved_position,
 			height = dimensions.height,
 			width = dimensions.width,
 		},
@@ -110,20 +143,25 @@ function Term.focus()
 	vim.notify("No open terminal windows found to focus", vim.log.levels.ERROR)
 end
 
----Get an existing terminal instance by command and position
----@param cmd string|function CMD for terminal
----@param position "float"|"bottom"|"top"|"left"|"right" The position of the terminal window.
----@param dimensions table Dimensions {width, height} for the terminal window.
+---Get an existing terminal instance by name
+---@param terminal_name string The name of the terminal (key in ConfigLib.config.terminals)
+---@param position "float"|"bottom"|"top"|"left"|"right"|nil Optional override position.
 ---@return snacks.win?, boolean? The terminal window object and a boolean indicating if it was found.
-function Term.get(cmd, position, dimensions)
-	local cmd_str = Term.resolve_command(cmd)
-	if not cmd_str then
-		return nil
+function Term.get(terminal_name, position)
+	local term_config, resolved_position, dimensions = resolve_term_details(terminal_name, position)
+	if not term_config then
+		return nil, false
 	end
+
+	local cmd_str = Term.resolve_command(term_config.cmd)
+	if not cmd_str then
+		return nil, false
+	end
+
 	local term, created = Snacks.terminal.get(cmd_str, {
 		env = { id = cmd_str },
 		win = {
-			position = position,
+			position = resolved_position,
 			height = dimensions.height,
 			width = dimensions.width,
 		},
@@ -142,35 +180,39 @@ function Term.destroy_all()
 	end
 end
 
----Get an existing terminal instance by command and position
----@param cmd string|function CMD for terminal
----@param position "float"|"bottom"|"top"|"left"|"right" The position of the terminal window.
----@param dimensions table Dimensions {width, height} for the terminal window.
----@return snacks.win?, boolean? The terminal window object and a boolean indicating if it was found.
-function Term.open(cmd, position, dimensions)
-	local cmd_str = Term.resolve_command(cmd)
+---Open a terminal by name, creating it if it doesn't exist.
+---@param terminal_name string The name of the terminal (key in ConfigLib.config.terminals)
+---@param position "float"|"bottom"|"top"|"left"|"right"|nil Optional override position.
+---@return snacks.win? The terminal window object or nil on failure.
+function Term.open(terminal_name, position)
+	local term_config, resolved_position, dimensions = resolve_term_details(terminal_name, position)
+	if not term_config then
+		return nil
+	end
+
+	local cmd_str = Term.resolve_command(term_config.cmd)
 	if not cmd_str then
-		vim.notify("Invalid terminal command", vim.log.levels.ERROR)
+		vim.notify("Invalid terminal command for name: " .. terminal_name, vim.log.levels.ERROR)
 		return nil
 	end
 
 	local term = Snacks.terminal.get(cmd_str, {
 		env = { id = cmd_str }, -- Use cmd as the identifier
 		win = {
-			position = position, -- Pass position for potential window matching/creation logic in Snacks
+			position = resolved_position,
 			height = dimensions.height,
 			width = dimensions.width,
 		},
 	})
 	if not term then
-		vim.notify("Unable to get or create terminal", vim.log.levels.ERROR)
-		return
+		vim.notify("Unable to get or create terminal: " .. terminal_name, vim.log.levels.ERROR)
+		return nil
 	end
 
 	Term.register_autocmds(term)
 	term:show()
 
-	return term, false
+	return term
 end
 
 ---Execute a shell command and send its stdout to the active terminal buffer.
@@ -248,7 +290,7 @@ function Term.register_autocmds(term)
 
 	local augroup = vim.api.nvim_create_augroup(Term.group_name, { clear = false }) -- Ensure group exists, don't clear existing unrelated autocommands
 
-	if Config.config.enable_diffing then
+	if ConfigLib.config.enable_diffing then -- Use ConfigLib here
 		-- Call the sync function so it gets executed first time terminal is open
 		DiffLib.pre_sync_code_base()
 	end
@@ -262,7 +304,7 @@ function Term.register_autocmds(term)
 	})
 
 	-- Autocommand to run backup when entering this specific terminal window (required for diffing)
-	if Config.config.enable_diffing then
+	if ConfigLib.config.enable_diffing then -- Use ConfigLib here
 		vim.api.nvim_create_autocmd("BufWinEnter", {
 			group = augroup,
 			buffer = bufnr,
