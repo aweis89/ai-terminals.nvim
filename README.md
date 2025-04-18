@@ -235,11 +235,11 @@ return {
         desc = "Run command (prompts) and send output to Aider terminal",
       },
       {
-        "<leader>ax", -- Mnemonic: AI Close (X) all terminals
+        "<leader>ax", -- Mnemonic: AI Terminate (X) all terminals
         function()
-          require("ai-terminals").close_all()
+          require("ai-terminals").terminate_all()
         end,
-        desc = "Close all AI terminals",
+        desc = "Terminate all AI terminals (closes windows, stops processes)",
       },
     },
   },
@@ -294,11 +294,13 @@ use({
     -- Or use a fixed command like:
     -- vim.keymap.set("n", "<leader>ar", function() require("ai-terminals").send_command_output("aider", "make test") end, { desc = "Run 'make test' and send output to Aider terminal" })
 
-   -- Close All Terminals
-   vim.keymap.set("n", "<leader>ax", function() require("ai-terminals").close_all() end, { desc = "Close all AI terminals" })
+   -- Terminate All Terminals
+   vim.keymap.set("n", "<leader>ax", function() require("ai-terminals").terminate_all() end, { desc = "Terminate all AI terminals (closes windows, stops processes)" })
   end,
 })
 ```
+
+**Note on `terminate_all`:** This function stops the underlying processes associated with the AI terminals and closes their windows/buffers. The next time you use `toggle` or `open` for a specific AI tool, a completely new instance of that tool will be started.
 
 #### 🤝 Integrating with a File Picker (e.g., snacks.nvim)
 
