@@ -27,6 +27,7 @@ This plugin **seamlessly integrates any command-line (CLI) AI coding agents** in
 While the generic features work well with Aider, this plugin includes additional helpers specifically for Aider:
 
 * **➕ Add Files:** Quickly add the current file or a list of files to the Aider chat context using `/add` or `/read-only`.
+* **➕ Add Buffers:** Add all currently listed buffers to the Aider chat context.
 * **💬 Add Comments:** Insert comments above the current line with a custom prefix (e.g., `AI!`, `AI?`). This action automatically saves the file and starts the Aider terminal if it's not already running.
 
 ## ⚠️ Prerequisites
@@ -208,6 +209,13 @@ return {
         desc = "Add current file to Aider",
       },
       {
+        "<leader>aL", -- Mnemonic: AI add Listed buffers
+        function()
+          require("ai-terminals").aider_add_buffers()
+        end,
+        desc = "Add all listed buffers to Aider",
+      },
+      {
         "<leader>ada", -- Mnemonic: AI Diagnostics Aider
         function()
           require("ai-terminals").send_diagnostics("aider")
@@ -271,6 +279,7 @@ use({
     vim.keymap.set("n", "<leader>ac", function() require("ai-terminals").aider_comment("AI!") end, { desc = "Add 'AI!' comment above line" })
     vim.keymap.set("n", "<leader>aC", function() require("ai-terminals").aider_comment("AI?") end, { desc = "Add 'AI?' comment above line" })
     vim.keymap.set("n", "<leader>al", function() require("ai-terminals").aider_add_files({ vim.fn.expand("%:p") }) end, { desc = "Add current file to Aider" })
+    vim.keymap.set("n", "<leader>aL", function() require("ai-terminals").aider_add_buffers() end, { desc = "Add all listed buffers to Aider" })
     vim.keymap.set({"n", "v"}, "<leader>ada", function() require("ai-terminals").send_diagnostics("aider") end, { desc = "Send diagnostics to Aider" })
 
     -- Example: Run a command and send output to a specific terminal (e.g., Aider)
