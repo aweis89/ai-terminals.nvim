@@ -107,6 +107,7 @@ function Term.focus()
 			return
 		end
 	end
+	vim.notify("No open terminal windows found to focus", vim.log.levels.ERROR)
 end
 
 ---Get an existing terminal instance by command and position
