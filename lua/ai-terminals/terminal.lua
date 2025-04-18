@@ -119,11 +119,11 @@ function Term.get(cmd, position, dimensions)
 	return term, created
 end
 
----Close existing terminals
-function Term.close_all()
+---Terminate existing terminals (closes windows and stops processes)
+function Term.terminate_all()
 	local terms = Snacks.terminal.list()
 	for _, term in ipairs(terms) do
-		term:close()
+		term:close() -- Snacks.nvim term:close() handles process termination
 	end
 end
 
