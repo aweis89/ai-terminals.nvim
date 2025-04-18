@@ -241,6 +241,13 @@ return {
         end,
         desc = "Destroy all AI terminals (closes windows, stops processes)",
       },
+      {
+        "<leader>af", -- Mnemonic: AI Focus
+        function()
+          require("ai-terminals").focus()
+        end,
+        desc = "Focus the last used AI terminal window",
+      },
     },
   },
 }
@@ -296,6 +303,9 @@ use({
 
    -- Destroy All Terminals
    vim.keymap.set("n", "<leader>ax", function() require("ai-terminals").destroy_all() end, { desc = "Destroy all AI terminals (closes windows, stops processes)" })
+
+   -- Focus Terminal
+   vim.keymap.set("n", "<leader>af", function() require("ai-terminals").focus() end, { desc = "Focus the last used AI terminal window" })
   end,
 })
 ```

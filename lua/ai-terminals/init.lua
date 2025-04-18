@@ -67,6 +67,10 @@ function M.get(terminal_name, position)
 	return TerminalLib.get(term_config.cmd, position, dimensions)
 end
 
+function M.focus()
+	TerminalLib.focus()
+end
+
 ---Get an existing terminal instance by name
 ---@param terminal_name string The name of the terminal (key in M.config.terminals)
 ---@param position "float"|"bottom"|"top"|"left"|"right"|nil Optional: Specify position if needed for matching window dimensions
