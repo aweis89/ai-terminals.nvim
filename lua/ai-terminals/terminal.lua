@@ -94,6 +94,20 @@ function Term.toggle(cmd, position, dimensions)
 	return term
 end
 
+---Focus an existing terminal instance by command and position
+function Term.focus()
+	local terms = Snacks.terminal.list()
+	if #terms == 1 then
+		terms[1]:focus()
+		return
+	end
+	for _, term in ipairs(terms) do
+		if term:is_floating() then
+			term:focus()
+		end
+	end
+end
+
 ---Get an existing terminal instance by command and position
 ---@param cmd string|function CMD for terminal
 ---@param position "float"|"bottom"|"top"|"left"|"right" The position of the terminal window.
