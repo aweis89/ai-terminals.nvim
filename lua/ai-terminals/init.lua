@@ -168,10 +168,10 @@ function M.aider_add_buffers()
 	AiderLib.add_buffers(M)
 end
 
----Terminate all active AI terminals (closes windows and stops processes).
+---Destroy all active AI terminals (closes windows and stops processes).
 ---The next toggle/open will create new instances.
-function M.terminate_all()
-	TerminalLib.terminate_all()
+function M.destroy_all()
+	TerminalLib.destroy_all()
 end
 
 ---Execute a shell command and send its stdout to the active terminal buffer.
