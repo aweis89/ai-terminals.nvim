@@ -123,7 +123,7 @@ end
 function Term.destroy_all()
 	local terms = Snacks.terminal.list()
 	for _, term in ipairs(terms) do
-		term:destroy() -- Snacks uses :destroy() to close and kill the terminal
+		require("snacks.bufdelete").delete({ buf = term.buf, wipe = true })
 	end
 end
 
