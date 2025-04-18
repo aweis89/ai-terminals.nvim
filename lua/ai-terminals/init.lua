@@ -168,6 +168,10 @@ function M.aider_add_buffers()
 	AiderLib.add_buffers(M)
 end
 
+function M.close_all()
+	TerminalLib.close_all()
+end
+
 ---Execute a shell command and send its stdout to the active terminal buffer.
 ---@param term_name string
 ---@param cmd string|nil The shell command to execute.

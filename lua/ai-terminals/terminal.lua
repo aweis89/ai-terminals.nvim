@@ -119,6 +119,14 @@ function Term.get(cmd, position, dimensions)
 	return term, created
 end
 
+---Close existing terminals
+function Term.close_all()
+	local terms = Snacks.terminal.list()
+	for _, term in ipairs(terms) do
+		term:close()
+	end
+end
+
 ---Get an existing terminal instance by command and position
 ---@param cmd string|function CMD for terminal
 ---@param position "float"|"bottom"|"top"|"left"|"right" The position of the terminal window.
