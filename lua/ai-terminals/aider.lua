@@ -62,4 +62,21 @@ function Aider.add_files(M, files, opts)
 	M.send(command .. " " .. files_str .. "\n", { term = term, submit = true })
 end
 
+-- Helper function to send commands to the aider terminal
+---@param M table The main ai-terminals module table
+function Aider.add_buffers(M)
+	vim.schedule(function() -- Defer execution slightly
+		local files = {}
+		for _, bufinfo in ipairs(vim.fn.getbufinfo({ buflisted = 1 })) do
+			local bnr = bufinfo.bufnr
+			-- Check if buffer is valid, loaded, modifiable, and not the terminal buffer itself
+			if vim.api.nvim_buf_is_valid(bnr) and bufinfo.loaded and vim.bo[bnr].modifiable then
+				local filename = vim.api.nvim_buf_get_name(bnr)
+				table.insert(files, filename)
+			end
+		end
+		Aider.add_files(M, files)
+	end)
+end
+
 return Aider

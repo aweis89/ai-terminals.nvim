@@ -163,6 +163,11 @@ function M.aider_add_files(files, opts)
 	AiderLib.add_files(M, files, opts)
 end
 
+-- Add all buffers to aider (delegates to AiderLib)
+function M.aider_add_buffers()
+	AiderLib.add_buffers(M)
+end
+
 ---Execute a shell command and send its stdout to the active terminal buffer.
 ---@param term_name string
 ---@param cmd string|nil The shell command to execute.
