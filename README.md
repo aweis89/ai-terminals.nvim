@@ -234,6 +234,13 @@ return {
         end,
         desc = "Run command (prompts) and send output to Aider terminal",
       },
+      {
+        "<leader>ax", -- Mnemonic: AI Close (X) all terminals
+        function()
+          require("ai-terminals").close_all()
+        end,
+        desc = "Close all AI terminals",
+      },
     },
   },
 }
@@ -286,6 +293,9 @@ use({
     vim.keymap.set("n", "<leader>ar", function() require("ai-terminals").send_command_output("aider") end, { desc = "Run command (prompts) and send output to Aider terminal" })
     -- Or use a fixed command like:
     -- vim.keymap.set("n", "<leader>ar", function() require("ai-terminals").send_command_output("aider", "make test") end, { desc = "Run 'make test' and send output to Aider terminal" })
+
+   -- Close All Terminals
+   vim.keymap.set("n", "<leader>ax", function() require("ai-terminals").close_all() end, { desc = "Close all AI terminals" })
   end,
 })
 ```
