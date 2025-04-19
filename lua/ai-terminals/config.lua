@@ -20,6 +20,11 @@ Config.config = {
 				return string.format("claude config set -g theme %s && claude", vim.o.background)
 			end,
 		},
+		kode = {
+			cmd = function()
+				return string.format("kode config set -g theme %s && kode", vim.o.background)
+			end,
+		},
 		aider = {
 			cmd = function()
 				return string.format("aider --watch-files --%s-mode", vim.o.background)
