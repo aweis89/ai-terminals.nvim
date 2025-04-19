@@ -18,16 +18,16 @@ end
 ---@param position "float"|"bottom"|"top"|"left"|"right"|nil
 ---@return snacks.win|nil
 function M.toggle(terminal_name, position)
-	local term = TerminalLib.toggle(terminal_name, position)
-
 	-- Send selection if in visual mode (moved from original M.toggle)
+	local selection = nil
 	if vim.fn.mode() == "v" or vim.fn.mode() == "V" then
-		local selection = M.get_visual_selection_with_header(0)
-		if selection and term then
-			M.send(selection, { term = term })
-		end
+		selection = M.get_visual_selection_with_header(0)
 	end
 
+	local term = TerminalLib.toggle(terminal_name, position)
+	if selection and term then
+		M.send(selection, { term = term })
+	end
 	return term
 end
 
@@ -36,7 +36,16 @@ end
 ---@param position "float"|"bottom"|"top"|"left"|"right"|nil Optional: Specify position if needed for matching window dimensions
 ---@return snacks.win?, boolean?
 function M.get(terminal_name, position)
-	return TerminalLib.get(terminal_name, position)
+	-- Send selection if in visual mode (moved from original M.toggle)
+	local selection = nil
+	if vim.fn.mode() == "v" or vim.fn.mode() == "V" then
+		selection = M.get_visual_selection_with_header(0)
+	end
+	local term, created = TerminalLib.get(terminal_name, position)
+	if selection and term then
+		M.send(selection, { term = term })
+	end
+	return term, created
 end
 
 function M.focus()
