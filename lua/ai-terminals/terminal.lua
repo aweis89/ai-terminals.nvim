@@ -33,7 +33,7 @@ end
 
 ---Send text to a terminal
 ---@param text string The text to send
----@param opts {term?: snacks.win?, submit?: boolean}|nil Options: `term` specifies the target terminal, `submit` sends a newline after the text if true.
+---@param opts {term?: snacks.win?, submit?: boolean, insert_mode?: boolean}|nil Options: `term` specifies the target terminal, `submit` sends a newline after the text if true, `insert_mode` enters insert mode after sending if true.
 ---@return nil
 function Term.send(text, opts)
 	opts = opts or {} -- Ensure opts is a table
@@ -66,7 +66,7 @@ function Term.send(text, opts)
 		end
 	end
 	if opts.insert_mode then
-		vim.api.nvim_feedkeys("i", "n", false) -- Enter insert mode in the terminal window
+		vim.api.nvim_feedkeys("i", "n", false)
 	end
 end
 
@@ -105,7 +105,7 @@ end
 function Term.toggle(terminal_name, position)
 	local term_config, resolved_position, dimensions = resolve_term_details(terminal_name, position)
 	if not term_config then
-		return nil
+		return nil -- Error already notified by resolve_term_details
 	end
 
 	local cmd_str = Term.resolve_command(term_config.cmd)
@@ -121,9 +121,12 @@ function Term.toggle(terminal_name, position)
 			width = dimensions.width,
 		},
 	})
-	if term then
-		Term.register_autocmds(term)
+	if not term then
+		vim.notify("Unable to get or create terminal: " .. terminal_name, vim.log.levels.ERROR)
+		return nil
 	end
+	vim.b[term.buf].term_title = terminal_name
+	Term.register_autocmds(term)
 	return term
 end
 
@@ -166,9 +169,12 @@ function Term.get(terminal_name, position)
 			width = dimensions.width,
 		},
 	})
-	if term then
-		Term.register_autocmds(term)
+	if not term then
+		vim.notify("Unable to get or create terminal: " .. terminal_name, vim.log.levels.ERROR)
+		return nil
 	end
+	vim.b[term.buf].term_title = terminal_name
+	Term.register_autocmds(term)
 	return term, created
 end
 
@@ -209,6 +215,7 @@ function Term.open(terminal_name, position)
 		return nil
 	end
 
+	vim.b[term.buf].term_title = terminal_name
 	Term.register_autocmds(term)
 	term:show()
 
