@@ -30,7 +30,7 @@ Config.config = {
 		},
 	},
 	window_dimensions = {
-		float = { width = 0.97, height = 0.97 },
+		float = { width = 0.95, height = 0.95 },
 		bottom = { width = 0.5, height = 0.5 },
 		top = { width = 0.5, height = 0.5 },
 		left = { width = 0.5, height = 0.5 },
