@@ -233,6 +233,23 @@ return {
         desc = "Send diagnostics to Aider",
         mode = { "n", "v" },
       },
+      -- aichat Keymaps
+      {
+        "<leader>ati", -- Mnemonic: AI Terminal AI Chat
+        function()
+          require("ai-terminals").toggle("aichat")
+        end,
+        desc = "Toggle AI Chat terminal (sends selection in visual mode)",
+        mode = { "n", "v" },
+      },
+      {
+        "<leader>adi", -- Mnemonic: AI Diagnostics AI Chat
+        function()
+          require("ai-terminals").send_diagnostics("aichat")
+        end,
+        desc = "Send diagnostics to AI Chat",
+        mode = { "n", "v" },
+      },
       -- Example: Run a command and send output to a specific terminal (e.g., Aider)
       {
         "<leader>ar", -- Mnemonic: AI Run command
@@ -451,3 +468,4 @@ end
 This adds a `send_search` helper function that extracts the text lines from the selected items in the picker (typically grep results) and sends them concatenated together to the Aider terminal using `require("ai-terminals").send`. An `aider_search` action is defined to use this helper, and a keymap (`<leader><space>s`) is added to the `grep` source to trigger this action.
 
 💡 **Tip:** You can use `<Tab>` in the Snacks picker to select multiple items (files or grep lines) one by one, or `<C-a>` (Control-A) to select *all* visible items. When you then use the `aider_add` or `aider_search` keymaps, all selected items will be sent to Aider at once!
+
