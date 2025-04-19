@@ -113,8 +113,8 @@ function Term.toggle(terminal_name, position)
 		env = { id = cmd_str },
 		win = {
 			position = resolved_position,
-			height = dimensions.height,
-			width = dimensions.width,
+			height = dimensions and dimensions.height,
+			width = dimensions and dimensions.width,
 		},
 	})
 	if not term then
@@ -161,8 +161,8 @@ function Term.get(terminal_name, position)
 		env = { id = cmd_str },
 		win = {
 			position = resolved_position,
-			height = dimensions.height,
-			width = dimensions.width,
+			height = dimensions and dimensions.height,
+			width = dimensions and dimensions.width,
 		},
 	})
 	if not term then
@@ -202,8 +202,8 @@ function Term.open(terminal_name, position)
 		env = { id = cmd_str }, -- Use cmd as the identifier
 		win = {
 			position = resolved_position,
-			height = dimensions.height,
-			width = dimensions.width,
+			height = dimensions and dimensions.height,
+			width = dimensions and dimensions.width,
 		},
 	})
 	if not term then
@@ -303,7 +303,9 @@ function Term.register_autocmds(term)
 		term:on("BufWinEnter", DiffLib.pre_sync_code_base, { buf = true })
 	end
 
-	registered_buffers[bufnr] = true -- Mark as registered
+	if bufnr then
+		registered_buffers[bufnr] = true -- Mark as registered
+	end
 end
 
 return Term
