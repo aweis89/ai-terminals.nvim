@@ -28,7 +28,7 @@ While the generic features work well with Aider, this plugin includes additional
 
 * **➕ Add Files:** Quickly add the current file or a list of files to the Aider chat context using `/add` or `/read-only`.
 * **➕ Add Buffers:** Add all currently listed buffers to the Aider chat context.
-* **💬 Add Comments:** Insert comments above the current line with a custom prefix (e.g., `AI!`, `AI?`). This action automatically saves the file and starts the Aider terminal if it's not already running.
+* **💬 Add Comments:** Insert comments above the current line with a custom prefix (e.g., `AI!`, `AI?`). This automatically starts the Aider terminal, if it's not already running, and brings it to the forefront.
 
 ## ⚠️ Prerequisites
 
