@@ -69,7 +69,7 @@ require("ai-terminals").setup({
   },
   -- Override default window dimensions (optional)
   window_dimensions = {
-    float = { width = 0.9, height = 0.9 }, -- Make float windows slightly smaller
+    float = { width = 0.85, height = 0.85 }, -- Make float windows slightly smaller
     bottom = { width = 1.0, height = 0.4 }, -- Make bottom windows wider and shorter
     -- Keep other position defaults ('top', 'left', 'right')
   },
@@ -208,7 +208,15 @@ return {
           -- add current file
           require("ai-terminals").aider_add_files({ vim.fn.expand("%:p") })
         end,
-        desc = "Add current file to Aider",
+        desc = "Add current file to Aider (/add)",
+      },
+      {
+        "<leader>aR", -- Mnemonic: AI add Read-only
+        function()
+          -- add current file as read-only
+          require("ai-terminals").aider_add_files({ vim.fn.expand("%:p") }, { read_only = true })
+        end,
+        desc = "Add current file to Aider (read-only)",
       },
       {
         "<leader>aL", -- Mnemonic: AI add Listed buffers
@@ -294,7 +302,8 @@ use({
     vim.keymap.set({"n", "v"}, "<leader>ata", function() require("ai-terminals").toggle("aider") end, { desc = "Toggle Aider terminal (sends selection in visual mode)" })
     vim.keymap.set("n", "<leader>ac", function() require("ai-terminals").aider_comment("AI!") end, { desc = "Add 'AI!' comment above line" })
     vim.keymap.set("n", "<leader>aC", function() require("ai-terminals").aider_comment("AI?") end, { desc = "Add 'AI?' comment above line" })
-    vim.keymap.set("n", "<leader>al", function() require("ai-terminals").aider_add_files({ vim.fn.expand("%:p") }) end, { desc = "Add current file to Aider" })
+    vim.keymap.set("n", "<leader>al", function() require("ai-terminals").aider_add_files({ vim.fn.expand("%:p") }) end, { desc = "Add current file to Aider (/add)" })
+    vim.keymap.set("n", "<leader>aR", function() require("ai-terminals").aider_add_files({ vim.fn.expand("%:p") }, { read_only = true }) end, { desc = "Add current file to Aider (read-only)" })
     vim.keymap.set("n", "<leader>aL", function() require("ai-terminals").aider_add_buffers() end, { desc = "Add all listed buffers to Aider" })
     vim.keymap.set({"n", "v"}, "<leader>ada", function() require("ai-terminals").send_diagnostics("aider") end, { desc = "Send diagnostics to Aider" })
 

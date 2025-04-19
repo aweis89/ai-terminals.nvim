@@ -2,10 +2,6 @@ local ConfigLib = require("ai-terminals.config")
 local DiffLib = require("ai-terminals.diff")
 local Term = {}
 
-Term.group_name = "AiTermReload" -- Define group name once
--- Ensure the augroup exists and clear it once when the module is loaded
-vim.api.nvim_create_augroup(Term.group_name, { clear = true })
-
 ---Resolve the command string from configuration (can be string or function).
 ---@param cmd_config string|function The command configuration value.
 ---@return string|nil The resolved command string, or nil if the type is invalid.
@@ -263,9 +259,9 @@ end
 
 -- Keep track of buffers where autocommands have been registered
 local registered_buffers = {}
--- Term.group_name is defined and the group is created at the top of the file
 
 function Term.reload_changes()
+	vim.notify("Reloading changes in all buffers", vim.log.levels.INFO)
 	vim.schedule(function() -- Defer execution slightly
 		for _, bufinfo in ipairs(vim.fn.getbufinfo({ buflisted = 1 })) do
 			local bnr = bufinfo.bufnr
@@ -295,29 +291,16 @@ function Term.register_autocmds(term)
 		return -- Already registered for this buffer
 	end
 
-	local augroup = vim.api.nvim_create_augroup(Term.group_name, { clear = false }) -- Ensure group exists, don't clear existing unrelated autocommands
+	-- Autocommand to reload buffers when focus leaves this specific terminal buffer
+	term:on("BufLeave", Term.reload_changes, { buf = true })
 
 	if ConfigLib.config.enable_diffing then -- Use ConfigLib here
 		-- Call the sync function so it gets executed first time terminal is open
 		DiffLib.pre_sync_code_base()
 	end
-
-	-- Autocommand to reload buffers when focus leaves this specific terminal buffer
-	vim.api.nvim_create_autocmd("BufLeave", {
-		group = augroup,
-		buffer = bufnr,
-		desc = "Reload buffers when AI terminal " .. bufnr .. " loses focus",
-		callback = Term.reload_changes,
-	})
-
 	-- Autocommand to run backup when entering this specific terminal window (required for diffing)
 	if ConfigLib.config.enable_diffing then -- Use ConfigLib here
-		vim.api.nvim_create_autocmd("BufWinEnter", {
-			group = augroup,
-			buffer = bufnr,
-			desc = "Run backup sync when entering AI terminal window " .. bufnr,
-			callback = DiffLib.pre_sync_code_base,
-		})
+		term:on("BufWinEnter", DiffLib.pre_sync_code_base, { buf = true })
 	end
 
 	registered_buffers[bufnr] = true -- Mark as registered
