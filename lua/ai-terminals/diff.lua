@@ -130,6 +130,7 @@ end
 ---This is typically called when an AI terminal window is opened.
 ---@return nil
 function Diff.pre_sync_code_base()
+	vim.notify("Syncing code-base", vim.log.levels.DEBUG)
 	local cwd = vim.fn.getcwd()
 	local cwd_name = vim.fn.fnamemodify(cwd, ":t")
 	local backup_dir = Diff.BASE_COPY_DIR .. cwd_name
