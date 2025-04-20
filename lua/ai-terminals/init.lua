@@ -137,10 +137,14 @@ function M.aider_comment(prefix)
 end
 
 -- Helper function to send commands to the aider terminal (delegates to AiderLib)
----@param files string[] List of file paths to add to aider
+---@param files string[]|string List of file paths or a single file path to add to aider
 ---@param opts? { read_only?: boolean } Options for the command
 function M.aider_add_files(files, opts)
-	AiderLib.add_files(files, opts)
+	local files_to_add = files
+	if type(files) == "string" then
+		files_to_add = { files }
+	end
+	AiderLib.add_files(files_to_add, opts)
 end
 
 -- Add all buffers to aider (delegates to AiderLib)
