@@ -40,6 +40,8 @@ Config.config = {
 	},
 	default_position = "float", -- Default position if none is specified in toggle/open/get
 	enable_diffing = true, -- Enable backup sync and diff commands. Disabling this prevents `diff_changes` and `close_diff` from working.
+	-- auto show diffs (if present) when leaving terminal (set to false or nil to disable)
+	show_diffs_on_leave = { delta = false },
 }
 
 return Config
