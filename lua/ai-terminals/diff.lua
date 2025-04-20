@@ -374,4 +374,85 @@ function Diff.pre_sync_code_base()
 	end
 end
 
-return Diff
+---Revert the current working directory to the state stored in the backup directory.
+---Uses rsync to overwrite local changes with the backup content.
+---Prompts the user for confirmation before proceeding.
+---@return nil
+function Diff.revert_changes()
+	local cwd = vim.fn.getcwd()
+	local cwd_name = vim.fn.fnamemodify(cwd, ":t")
+	local backup_dir = Diff.BASE_COPY_DIR .. cwd_name
+
+	-- Check if the backup directory exists
+	if vim.fn.isdirectory(backup_dir) == 0 then
+		vim.notify("Backup directory not found: " .. backup_dir, vim.log.levels.ERROR)
+		vim.notify("Cannot revert changes. Run an AI terminal first to create a backup.", vim.log.levels.WARN)
+		return
+	end
+
+	-- *** Confirmation Step ***
+	local confirmation_message = string.format(
+		"Revert all changes in '%s' back to the state backed up in '%s'?\nThis will overwrite local modifications.",
+		cwd,
+		backup_dir
+	)
+	local choice = vim.fn.confirm(confirmation_message, "&Yes\n&No", 2, "Warning")
+
+	if choice ~= 1 then
+		vim.notify("Revert cancelled by user.", vim.log.levels.INFO)
+		return
+	end
+
+	vim.notify("Reverting changes from backup...", vim.log.levels.INFO)
+
+	-- Build rsync command arguments
+	local rsync_args = { "rsync", "-av", "--delete" } -- -a: archive, -v: verbose, --delete: delete files in dest not in src
+	for _, pattern in ipairs(Diff.DIFF_IGNORE_PATTERNS) do
+		table.insert(rsync_args, "--exclude")
+		table.insert(rsync_args, pattern)
+	end
+	-- Source: backup directory (contents)
+	table.insert(rsync_args, backup_dir .. "/") -- Trailing slash is important!
+	-- Destination: current working directory
+	table.insert(rsync_args, cwd)
+
+	local job_id = vim.fn.jobstart(rsync_args, {
+		on_exit = function(_, exit_code)
+			vim.schedule(function() -- Ensure notification runs on the main thread
+				if exit_code == 0 then
+					vim.notify("Successfully reverted changes from backup.", vim.log.levels.INFO)
+					-- Optional: Reload buffers or notify user to do so if needed
+					vim.cmd("checktime") -- Force Neovim to check for file changes on disk
+				else
+					vim.notify(
+						string.format("Revert failed with exit code %d. Check rsync output/errors.", exit_code),
+						vim.log.levels.ERROR
+					)
+				end
+			end)
+		end,
+		stdout_buffered = true, -- Capture stdout for potential debugging
+		stderr_buffered = true, -- Capture stderr for errors
+		on_stderr = function(_, data)
+			if data and #data > 0 and data[1] ~= "" then -- Check for actual error messages
+				local err_msg = table.concat(data, "\n")
+				vim.schedule(function()
+					vim.notify("Revert error (rsync stderr): " .. err_msg, vim.log.levels.ERROR)
+				end)
+			end
+		end,
+	})
+
+	if not job_id or job_id == 0 or job_id == -1 then
+		vim.notify("Failed to start revert job (rsync).", vim.log.levels.ERROR)
+	end
+end
+
+return {
+	DIFF_IGNORE_PATTERNS = Diff.DIFF_IGNORE_PATTERNS,
+	BASE_COPY_DIR = Diff.BASE_COPY_DIR,
+	diff_changes = Diff.diff_changes,
+	close_diff = Diff.close_diff,
+	pre_sync_code_base = Diff.pre_sync_code_base,
+	revert_changes = Diff.revert_changes, -- Add the new function here
+}
