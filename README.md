@@ -19,6 +19,7 @@ This plugin **seamlessly integrates any command-line (CLI) AI coding agents** in
   window, all listed buffers in Neovim are checked for modifications and
   reloaded if necessary, ensuring you see the latest changes made by the AI.
 * **📋 Send Visual Selection:** Send the currently selected text (visual mode) to the AI terminal, automatically wrapped in a markdown code block with the file path and language type included.
+
   *Tip:* After sending the selection, ai-terminal doesn't send the enter key so you can add custom prompts to the selection.
   This is a goto way of sending prompts with context so the LLM knows which code it pertains to (when not using Aider and the add comment command).
 * **🩺 Send Diagnostics:** Send diagnostics (errors, warnings, etc.) for the current buffer or visual selection to the AI terminal, formatted with severity, line/column numbers, messages, and the corresponding source code lines.
