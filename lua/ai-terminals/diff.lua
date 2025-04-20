@@ -58,7 +58,6 @@ function Diff.diff_changes(opts)
 		end
 		-- First, run diff without delta to check if there are changes
 		local check_diff_cmd = string.format("diff -ur %s %s %s", exclude_str, tmp_dir, cwd)
-		vim.notify("Checking for differences: " .. check_diff_cmd, vim.log.levels.DEBUG)
 		local diff_output = vim.fn.systemlist(check_diff_cmd) -- Use systemlist to capture output lines
 		local exit_code = vim.v.shell_error
 
