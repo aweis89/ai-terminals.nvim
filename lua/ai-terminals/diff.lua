@@ -81,11 +81,20 @@ function Diff.diff_changes(opts)
 		vim.cmd("tabnew")
 		vim.cmd("terminal " .. delta_cmd)
 
-		-- *** Mark the buffer ***
+		-- *** Mark the buffer and add mapping ***
 		local term_bufnr = vim.api.nvim_get_current_buf()
 		if term_bufnr and term_bufnr ~= 0 then
 			vim.b[term_bufnr].is_ai_terminals_delta_diff = true -- Set a unique marker variable
 			vim.notify("Marked buffer " .. term_bufnr .. " as delta diff terminal", vim.log.levels.DEBUG)
+			-- Add buffer-local mapping for 'q' to close the diff
+			vim.api.nvim_buf_set_keymap(
+				term_bufnr,
+				"n",
+				"q",
+				"<Cmd>lua require('ai-terminals.diff').close_diff()<CR>",
+				{ noremap = true, silent = true, desc = "Close AI Terminals Diff" }
+			)
+			vim.notify("Added 'q' mapping to delta diff buffer " .. term_bufnr, vim.log.levels.DEBUG)
 		else
 			vim.notify("Could not get buffer number for delta terminal to mark it.", vim.log.levels.WARN)
 		end
@@ -161,8 +170,24 @@ function Diff.diff_changes(opts)
 
 		-- Enable wrap in both diff windows
 		vim.cmd("setlocal wrap") -- Set wrap for the current window (tmp file)
+		local tmp_bufnr = vim.api.nvim_get_current_buf() -- Get buffer number for tmp file
+
 		vim.cmd("wincmd p") -- Move cursor to the previous window (original file)
 		vim.cmd("setlocal wrap") -- Set wrap for the original file window
+		local orig_bufnr = vim.api.nvim_get_current_buf() -- Get buffer number for original file
+
+		-- Add buffer-local mapping for 'q' to close the diff for both buffers
+		local map_opts = { noremap = true, silent = true, desc = "Close AI Terminals Diff" }
+		local map_cmd = "<Cmd>lua require('ai-terminals.diff').close_diff()<CR>"
+
+		if vim.api.nvim_buf_is_valid(orig_bufnr) then
+			vim.api.nvim_buf_set_keymap(orig_bufnr, "n", "q", map_cmd, map_opts)
+			vim.notify("Added 'q' mapping to original diff buffer " .. orig_bufnr, vim.log.levels.DEBUG)
+		end
+		if vim.api.nvim_buf_is_valid(tmp_bufnr) then
+			vim.api.nvim_buf_set_keymap(tmp_bufnr, "n", "q", map_cmd, map_opts)
+			vim.notify("Added 'q' mapping to temp diff buffer " .. tmp_bufnr, vim.log.levels.DEBUG)
+		end
 		-- Optional: Move back if needed: vim.cmd("wincmd p")
 	end
 
@@ -246,8 +271,26 @@ function Diff.close_diff()
 		end
 	end
 
-	local closed_tab_count = 0
+	local closed_tab_count = #delta_tabs_to_close -- Count how many tabs we intend to close
 	local wiped_buffer_count = 0
+
+	-- 3. Close the delta diff tabs first
+	for _, tabid in ipairs(delta_tabs_to_close) do
+		if vim.api.nvim_tabpage_is_valid(tabid) then
+			-- Avoid closing the last tab if it's the one we're targeting
+			if #vim.api.nvim_list_tabpages() > 1 or tabid ~= current_tab then
+				vim.api.nvim_command("tabclose " .. tabid)
+				vim.notify("Closed delta diff tab " .. tabid, vim.log.levels.DEBUG)
+			else
+				-- If it's the last tab, just try to close the window/buffer
+				vim.notify(
+					"Delta diff is in the last tab (" .. tabid .. "), attempting buffer wipe instead of tab close.",
+					vim.log.levels.DEBUG
+				)
+				-- The buffer wipe logic below will handle this buffer
+			end
+		end
+	end
 
 	-- 4. Wipe out all identified buffers (combine file and delta buffers)
 	local all_buffers_to_wipe = {}
