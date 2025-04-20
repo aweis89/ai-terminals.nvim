@@ -300,7 +300,7 @@ function Term.register_autocmds(term)
 	end
 	-- Autocommand to run backup when entering this specific terminal window (required for diffing)
 	if ConfigLib.config.enable_diffing then -- Use ConfigLib here
-		term:on("BufWinEnter", DiffLib.pre_sync_code_base, { buf = true })
+		term:on("BufWinEnter", DiffLib.pre_sync_code_base)
 	end
 
 	if bufnr then
@@ -309,3 +309,4 @@ function Term.register_autocmds(term)
 end
 
 return Term
+
