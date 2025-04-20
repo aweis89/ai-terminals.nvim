@@ -57,11 +57,29 @@ function Diff.diff_changes(diff_func)
 	-- Process diff output and extract file paths
 	local diff_files = {}
 	for line in vim.gsplit(diff_output, "\n") do
+		-- Match only text file differences, ignore binary file differences
 		if line:match("^Files .* and .* differ$") then
-			local orig_file = line:match("Files (.-) and")
-			local tmp_file = line:match("and (.-) differ")
-			table.insert(diff_files, { orig = orig_file, tmp = tmp_file })
+			local orig_file = line:match("^Files (.-) and")
+			local tmp_file = line:match(" and (.-) differ$")
+			-- Ensure we captured both file paths correctly
+			if orig_file and tmp_file then
+				table.insert(diff_files, { orig = orig_file, tmp = tmp_file })
+			else
+				vim.notify("Could not parse diff line: " .. line, vim.log.levels.WARN)
+			end
+		elseif line:match("^Binary files .* and .* differ$") then
+			-- Explicitly ignore binary file differences
+			local binary_file1 = line:match("^Binary files (.-) and")
+			vim.notify(
+				"Ignoring binary file difference: " .. vim.fn.fnamemodify(binary_file1, ":t"),
+				vim.log.levels.DEBUG
+			)
 		end
+	end
+
+	if #diff_files == 0 then
+		vim.notify("No text file differences found.", vim.log.levels.INFO)
+		return
 	end
 
 	-- Close all current windows
