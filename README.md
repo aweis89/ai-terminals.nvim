@@ -39,7 +39,7 @@ Here are links to some of the tools mentioned in the default configuration:
 * **Aider:** [Aider](https://github.com/paul-gauthier/aider)
 * **Claude Code:** [Claude Code](https://github.com/anthropics/claude-code)
 * **Goose CLI:** [Goose](https://github.com/pressly/goose)
-* **Kode:** [Kode](https://github.com/dnakov/anon-kode) - Ensure Kode is installed and configured.
+* **Kode:** [Kode](https://github.com/dnakov/anon-kode)
 
 Make sure these (or your chosen alternatives) are installed and accessible in your system's `PATH`.
 
