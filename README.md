@@ -159,13 +159,6 @@ return {
         end,
         desc = "Show diff (delta)",
       },
-      {
-        "<leader>dvc", -- Mnemonic: Diff View Close
-        function()
-          require("ai-terminals").close_diff()
-        end,
-        desc = "Close all diff views (and wipeout buffers)",
-      },
       -- Example Keymaps (using default terminal names: 'claude', 'goose', 'aider', 'aichat', 'kode')
       -- Claude Keymaps
       {
@@ -345,7 +338,8 @@ use({
     -- Diff Tools
     vim.keymap.set("n", "<leader>dvo", function() require("ai-terminals").diff_changes() end, { desc = "Show diff (vimdiff)" })
     vim.keymap.set("n", "<leader>dvD", function() require("ai-terminals").diff_changes({ delta = true }) end, { desc = "Show diff (delta)" })
-    vim.keymap.set("n", "<leader>dvc", function() require("ai-terminals").close_diff() end, { desc = "Close all diff views (and wipeout buffers)" })
+    -- Note: 'q' closes diff views automatically, so a dedicated close mapping might be redundant.
+    -- vim.keymap.set("n", "<leader>dvc", function() require("ai-terminals").close_diff() end, { desc = "Close all diff views (and wipeout buffers)" })
 
     -- Claude Keymaps
     vim.keymap.set({"n", "v"}, "<leader>atc", function() require("ai-terminals").toggle("claude") end, { desc = "Toggle Claude terminal (sends selection in visual mode)" })
