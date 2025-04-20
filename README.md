@@ -22,6 +22,9 @@ This plugin **seamlessly integrates any command-line (CLI) AI coding agents** in
 
   *Tip:* After sending the selection, ai-terminal doesn't send the enter key so you can add custom prompts to the selection.
   This is a goto way of sending prompts with context so the LLM knows which code the prompt pertains to (when not using Aider and the add comment command).
+
+  The format of the visual selection in the terminal will look a bit strange (e.g. shows ^I in-place of tabs).
+  This is becuase it's using bracketed paste mode which is a unform way of sending multi-line text (without "\n" submitting the prompt).
 * **🩺 Send Diagnostics:** Send diagnostics (errors, warnings, etc.) for the current buffer or visual selection to the AI terminal, formatted with severity, line/column numbers, messages, and the corresponding source code lines.
 * **🚀 Run Command and Send Output:** Execute an arbitrary shell command and send its standard output along with the exit code to the active AI terminal. This is useful for running tests, linters, or other tools and feeding the results directly to the AI.
 
