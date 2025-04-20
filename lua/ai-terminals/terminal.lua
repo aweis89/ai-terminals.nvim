@@ -347,6 +347,13 @@ function Term.register_autocmds(term)
 	-- Autocommand to reload buffers when focus leaves this specific terminal buffer
 	term:on("BufLeave", Term.reload_changes, { buf = true })
 
+	-- Auto trigger diff on leave if enabled
+	if ConfigLib.config.enable_diffing and ConfigLib.config.show_diffs_on_leave then
+		term:on("BufLeave", function()
+			DiffLib.diff_changes(ConfigLib.config.show_diffs_on_leave)
+		end, { buf = true })
+	end
+
 	if ConfigLib.config.enable_diffing then -- Use ConfigLib here
 		-- Call the sync function so it gets executed first time terminal is open
 		DiffLib.pre_sync_code_base()
