@@ -7,7 +7,7 @@ This plugin **seamlessly integrates any command-line (CLI) AI coding agents** in
 ### ⚙️ Generic Features (Works with any terminal-based AI agent)
 
 * **🔌 Configurable Terminal Integration:** Define and manage terminals for various
-  AI CLI tools (e.g., Claude, Goose, Aider, custom scripts) through a simple
+  AI CLI tools (e.g., Claude, Goose, Aider, Kode, custom scripts) through a simple
   configuration table. Uses `Snacks` for terminal window management.
 * **🔄 Diff View:**
   * **Track AI Changes:** Compare the current state of your project files against the state they were in the last time you opened an AI terminal.
@@ -39,6 +39,7 @@ Here are links to some of the tools mentioned in the default configuration:
 * **Aider:** [Aider](https://github.com/paul-gauthier/aider)
 * **Claude Code:** [Claude Code](https://github.com/anthropics/claude-code)
 * **Goose CLI:** [Goose](https://github.com/pressly/goose)
+* **Kode:** [Kode](https://github.com/dnakov/anon-kode) - Ensure Kode is installed and configured.
 
 Make sure these (or your chosen alternatives) are installed and accessible in your system's `PATH`.
 
@@ -65,7 +66,7 @@ require("ai-terminals").setup({
     my_custom_ai = {
       cmd = "/path/to/my/ai/script --interactive",
     },
-    -- Keep other defaults like 'goose', 'claude', 'aichat' unless overridden
+    -- Keep other defaults like 'goose', 'claude', 'aichat', 'kode' unless overridden
   },
   -- Override default window dimensions (optional)
   window_dimensions = {
@@ -123,6 +124,11 @@ return {
             )
           end,
         },
+        kode = {
+            cmd = function()
+                return string.format("kode config set -g theme %s && kode", vim.o.background)
+            end,
+        },
         -- Example of a simple string command
         -- my_simple_ai = { cmd = "my_ai_tool --interactive" },
       },
@@ -143,8 +149,7 @@ return {
         end,
         desc = "Close all diff views (and wipeout buffers)",
       },
-      -- Claude Keymaps
-      -- Example Keymaps (using default terminal names: 'claude', 'goose', 'aider')
+      -- Example Keymaps (using default terminal names: 'claude', 'goose', 'aider', 'aichat', 'kode')
       -- Claude Keymaps
       {
         "<leader>atc", -- Mnemonic: AI Terminal Claude
@@ -250,6 +255,23 @@ return {
         desc = "Send diagnostics to AI Chat",
         mode = { "n", "v" },
       },
+      -- Kode Keymaps
+      {
+        "<leader>atk", -- Mnemonic: AI Terminal Kode
+        function()
+          require("ai-terminals").toggle("kode")
+        end,
+        desc = "Toggle Kode terminal (sends selection in visual mode)",
+        mode = { "n", "v" },
+      },
+      {
+        "<leader>adk", -- Mnemonic: AI Diagnostics Kode
+        function()
+          require("ai-terminals").send_diagnostics("kode")
+        end,
+        desc = "Send diagnostics to Kode",
+        mode = { "n", "v" },
+      },
       -- Example: Run a command and send output to a specific terminal (e.g., Aider)
       {
         "<leader>ar", -- Mnemonic: AI Run command
@@ -323,6 +345,14 @@ use({
     vim.keymap.set("n", "<leader>aR", function() require("ai-terminals").aider_add_files({ vim.fn.expand("%:p") }, { read_only = true }) end, { desc = "Add current file to Aider (read-only)" })
     vim.keymap.set("n", "<leader>aL", function() require("ai-terminals").aider_add_buffers() end, { desc = "Add all listed buffers to Aider" })
     vim.keymap.set({"n", "v"}, "<leader>ada", function() require("ai-terminals").send_diagnostics("aider") end, { desc = "Send diagnostics to Aider" })
+
+    -- aichat Keymaps
+    vim.keymap.set({"n", "v"}, "<leader>ati", function() require("ai-terminals").toggle("aichat") end, { desc = "Toggle AI Chat terminal (sends selection in visual mode)" })
+    vim.keymap.set({"n", "v"}, "<leader>adi", function() require("ai-terminals").send_diagnostics("aichat") end, { desc = "Send diagnostics to AI Chat" })
+
+    -- Kode Keymaps
+    vim.keymap.set({"n", "v"}, "<leader>atk", function() require("ai-terminals").toggle("kode") end, { desc = "Toggle Kode terminal (sends selection in visual mode)" })
+    vim.keymap.set({"n", "v"}, "<leader>adk", function() require("ai-terminals").send_diagnostics("kode") end, { desc = "Send diagnostics to Kode" })
 
     -- Example: Run a command and send output to a specific terminal (e.g., Aider)
     vim.keymap.set("n", "<leader>ar", function() require("ai-terminals").send_command_output("aider") end, { desc = "Run command (prompts) and send output to Aider terminal" })
@@ -468,4 +498,3 @@ end
 This adds a `send_search` helper function that extracts the text lines from the selected items in the picker (typically grep results) and sends them concatenated together to the Aider terminal using `require("ai-terminals").send`. An `aider_search` action is defined to use this helper, and a keymap (`<leader><space>s`) is added to the `grep` source to trigger this action.
 
 💡 **Tip:** You can use `<Tab>` in the Snacks picker to select multiple items (files or grep lines) one by one, or `<C-a>` (Control-A) to select *all* visible items. When you then use the `aider_add` or `aider_search` keymaps, all selected items will be sent to Aider at once!
-
