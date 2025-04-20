@@ -94,35 +94,61 @@ local function resolve_term_details(terminal_name, position)
 	return term_config, resolved_position, dimensions
 end
 
----Create or toggle a terminal by name with specified position
----@param terminal_name string The name of the terminal (key in ConfigLib.config.terminals)
+---Resolve terminal command and options based on name and position.
+---@param terminal_name string The name of the terminal.
 ---@param position "float"|"bottom"|"top"|"left"|"right"|nil Optional override position.
----@return snacks.win|nil The terminal window object or nil on failure.
-function Term.toggle(terminal_name, position)
+---@return string?, table? Resolved command string and options table, or nil, nil on failure.
+local function _resolve_terminal_options(terminal_name, position)
 	local term_config, resolved_position, dimensions = resolve_term_details(terminal_name, position)
 	if not term_config then
-		return nil -- Error already notified by resolve_term_details
+		return nil, nil -- Error already notified by resolve_term_details
 	end
 
 	local cmd_str = Term.resolve_command(term_config.cmd)
 	if not cmd_str then
-		return nil -- Error already notified by resolve_command
+		return nil, nil -- Error already notified by resolve_command
 	end
 
-	local term = Snacks.terminal.toggle(cmd_str, {
+	local opts = {
+		cwd = vim.fn.getcwd(),
 		env = { id = cmd_str },
 		win = {
 			position = resolved_position,
 			height = dimensions and dimensions.height,
 			width = dimensions and dimensions.width,
 		},
-	})
-	if not term then
-		vim.notify("Unable to get or create terminal: " .. terminal_name, vim.log.levels.ERROR)
-		return nil
+	}
+	return cmd_str, opts
+end
+
+---Common setup steps after a terminal is created or retrieved.
+---@param term snacks.win The terminal window object.
+---@param terminal_name string The name of the terminal.
+local function _after_terminal_creation(term, terminal_name)
+	if not term or not term.buf then
+		vim.notify("Invalid terminal object in _after_terminal_creation", vim.log.levels.WARN)
+		return
 	end
 	vim.b[term.buf].term_title = terminal_name
 	Term.register_autocmds(term)
+end
+
+---Create or toggle a terminal by name with specified position
+---@param terminal_name string The name of the terminal (key in ConfigLib.config.terminals)
+---@param position "float"|"bottom"|"top"|"left"|"right"|nil Optional override position.
+---@return snacks.win|nil The terminal window object or nil on failure.
+function Term.toggle(terminal_name, position)
+	local cmd_str, opts = _resolve_terminal_options(terminal_name, position)
+	if not cmd_str then
+		return nil -- Error handled in helper
+	end
+
+	local term = Snacks.terminal.toggle(cmd_str, opts)
+	if not term then
+		vim.notify("Unable to toggle terminal: " .. terminal_name, vim.log.levels.ERROR)
+		return nil
+	end
+	_after_terminal_creation(term, terminal_name)
 	return term
 end
 
@@ -145,32 +171,19 @@ end
 ---Get an existing terminal instance by name
 ---@param terminal_name string The name of the terminal (key in ConfigLib.config.terminals)
 ---@param position "float"|"bottom"|"top"|"left"|"right"|nil Optional override position.
----@return snacks.win?, boolean? The terminal window object and a boolean indicating if it was found.
+---@return snacks.win?, boolean? The terminal window object and a boolean indicating if it was created (true) or retrieved (false).
 function Term.get(terminal_name, position)
-	local term_config, resolved_position, dimensions = resolve_term_details(terminal_name, position)
-	if not term_config then
-		return nil, false
-	end
-
-	local cmd_str = Term.resolve_command(term_config.cmd)
+	local cmd_str, opts = _resolve_terminal_options(terminal_name, position)
 	if not cmd_str then
-		return nil, false
+		return nil, false -- Error handled in helper
 	end
 
-	local term, created = Snacks.terminal.get(cmd_str, {
-		env = { id = cmd_str },
-		win = {
-			position = resolved_position,
-			height = dimensions and dimensions.height,
-			width = dimensions and dimensions.width,
-		},
-	})
+	local term, created = Snacks.terminal.get(cmd_str, opts)
 	if not term then
-		vim.notify("Unable to get or create terminal: " .. terminal_name, vim.log.levels.ERROR)
+		vim.notify("Unable to get terminal: " .. terminal_name, vim.log.levels.ERROR)
 		return nil
 	end
-	vim.b[term.buf].term_title = terminal_name
-	Term.register_autocmds(term)
+	_after_terminal_creation(term, terminal_name)
 	return term, created
 end
 
@@ -187,33 +200,20 @@ end
 ---@param position "float"|"bottom"|"top"|"left"|"right"|nil Optional override position.
 ---@return snacks.win? The terminal window object or nil on failure.
 function Term.open(terminal_name, position)
-	local term_config, resolved_position, dimensions = resolve_term_details(terminal_name, position)
-	if not term_config then
-		return nil
-	end
-
-	local cmd_str = Term.resolve_command(term_config.cmd)
+	local cmd_str, opts = _resolve_terminal_options(terminal_name, position)
 	if not cmd_str then
-		vim.notify("Invalid terminal command for name: " .. terminal_name, vim.log.levels.ERROR)
-		return nil
+		return nil -- Error handled in helper
 	end
 
-	local term = Snacks.terminal.get(cmd_str, {
-		env = { id = cmd_str }, -- Use cmd as the identifier
-		win = {
-			position = resolved_position,
-			height = dimensions and dimensions.height,
-			width = dimensions and dimensions.width,
-		},
-	})
+	-- Use Snacks.terminal.get because 'open' should retrieve if exists, or create if not.
+	local term, _ = Snacks.terminal.get(cmd_str, opts) -- We don't need the 'created' flag here
 	if not term then
-		vim.notify("Unable to get or create terminal: " .. terminal_name, vim.log.levels.ERROR)
+		vim.notify("Unable to open terminal: " .. terminal_name, vim.log.levels.ERROR)
 		return nil
 	end
 
-	vim.b[term.buf].term_title = terminal_name
-	Term.register_autocmds(term)
-	term:show()
+	_after_terminal_creation(term, terminal_name)
+	term:show() -- Ensure the window is visible after opening/getting
 
 	return term
 end
@@ -261,7 +261,7 @@ end
 local registered_buffers = {}
 
 function Term.reload_changes()
-	vim.notify("Reloading changes in all buffers", vim.log.levels.INFO)
+	vim.notify("Reloading changes in all buffers", vim.log.levels.DEBUG)
 	vim.schedule(function() -- Defer execution slightly
 		for _, bufinfo in ipairs(vim.fn.getbufinfo({ buflisted = 1 })) do
 			local bnr = bufinfo.bufnr
@@ -309,4 +309,3 @@ function Term.register_autocmds(term)
 end
 
 return Term
-
