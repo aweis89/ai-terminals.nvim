@@ -60,11 +60,13 @@ function M.open(terminal_name, position)
 	return TerminalLib.open(terminal_name, position)
 end
 
----Compare current directory with its backup and open differing files (delegates to DiffLib)
----@param diff_func function|nil A function to be called for diffing instead of using neovim's built-in
+---Compare current directory with its backup and open differing files or show delta.
+---@param opts? { diff_func?: function, delta?: boolean } Options table:
+---  `diff_func`: A custom function to handle the diff (receives cwd, tmp_dir).
+---  `delta`: If true, use `diff -ur | delta` in a terminal instead of vimdiff.
 ---@return nil
-function M.diff_changes(diff_func)
-	DiffLib.diff_changes(diff_func)
+function M.diff_changes(opts)
+	DiffLib.diff_changes(opts)
 end
 
 ---Close and wipe out any buffers from the diff directory (delegates to DiffLib)
