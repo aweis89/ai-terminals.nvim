@@ -73,6 +73,12 @@ function M.close_diff()
 	DiffLib.close_diff()
 end
 
+---Revert changes using the backup (delegates to DiffLib)
+---@return nil
+function M.revert_changes()
+	DiffLib.revert_changes()
+end
+
 ---Send text to a terminal (delegates to TerminalLib)
 ---@param text string The text to send
 ---@param opts {term?: snacks.win?, submit?: boolean}|nil Options: `term` specifies the target terminal, `submit` sends a newline after the text if true.

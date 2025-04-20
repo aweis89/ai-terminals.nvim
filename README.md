@@ -15,9 +15,8 @@ This plugin **seamlessly integrates any command-line (CLI) AI coding agents** in
   * **View Differences:**
     * **Vimdiff (Default):** Use the `diff_changes()` command to open all modified files in Neovim's standard diff view (`vimdiff`). You can manage changes using standard commands like `:diffget` and `:diffput`.
     * **Delta (Optional):** Alternatively, pass `{ delta = true }` to `diff_changes()` (e.g., `require("ai-terminals").diff_changes({ delta = true })`) to view the diff using the [delta](https://github.com/dandavison/delta) tool in a dedicated terminal buffer. This requires `delta` to be installed and available in your `PATH`. Delta is a more advanced diff viewer offering features like side-by-side views and within-line (column) change highlighting. This mode shows a unified diff for all changes, but standard Neovim diff commands like `:diffget` or `:diffput` are not available as it runs in a terminal buffer.
-  * **Close Diffs:** Use the `close_diff()` command to close the diff tabs (vimdiff) or the dedicated delta terminal buffer, and clean up related temporary buffers.
+  * **↩️ Revert Changes:** Use the `revert_changes()` command to revert those diff changes made by the LLM.
   * **Quick Close:** Press `q` in any vimdiff window or the delta terminal buffer to quickly close the diff view (this mapping is added automatically).
-  * **Enable/Disable:** This feature is active by default (`enable_diffing = true` in the setup configuration). Setting it to `false` disables the backup/sync process and the diff commands.
 * **🔃 Automatic File Reloading:** When you switch focus away from the AI terminal
   window, all listed buffers in Neovim are checked for modifications and
   reloaded if necessary, ensuring you see the latest changes made by the AI.
@@ -158,6 +157,13 @@ return {
           require("ai-terminals").diff_changes({ delta = true })
         end,
         desc = "Show diff (delta)",
+      },
+      {
+        "<leader>dvr", -- Mnemonic: Diff View Revert
+        function()
+          require("ai-terminals").revert_changes()
+        end,
+        desc = "Revert changes from backup",
       },
       -- Example Keymaps (using default terminal names: 'claude', 'goose', 'aider', 'aichat', 'kode')
       -- Claude Keymaps
@@ -338,9 +344,10 @@ use({
     -- Diff Tools
     vim.keymap.set("n", "<leader>dvo", function() require("ai-terminals").diff_changes() end, { desc = "Show diff (vimdiff)" })
     vim.keymap.set("n", "<leader>dvD", function() require("ai-terminals").diff_changes({ delta = true }) end, { desc = "Show diff (delta)" })
+    vim.keymap.set("n", "<leader>dvr", function() require("ai-terminals").revert_changes() end, { desc = "Revert changes from backup" })
     -- Note: 'q' closes diff views automatically, so a dedicated close mapping might be redundant.
     -- vim.keymap.set("n", "<leader>dvc", function() require("ai-terminals").close_diff() end, { desc = "Close all diff views (and wipeout buffers)" })
-
+ 
     -- Claude Keymaps
     vim.keymap.set({"n", "v"}, "<leader>atc", function() require("ai-terminals").toggle("claude") end, { desc = "Toggle Claude terminal (sends selection in visual mode)" })
     vim.keymap.set({"n", "v"}, "<leader>adc", function() require("ai-terminals").send_diagnostics("claude") end, { desc = "Send diagnostics to Claude" })
