@@ -373,11 +373,7 @@ function Diff.revert_changes()
 	end
 
 	-- *** Confirmation Step ***
-	local confirmation_message = string.format(
-		"Revert all changes in '%s' back to the state backed up in '%s'?\nThis will overwrite local modifications.",
-		cwd,
-		backup_dir
-	)
+	local confirmation_message = string.format("Revert changes?", cwd, backup_dir)
 	local choice = vim.fn.confirm(confirmation_message, "&Yes\n&No", 2, "Warning")
 
 	if choice ~= 1 then
