@@ -30,7 +30,7 @@ This plugin is ideal for users who prefer terminal-based AI interaction and want
 * **📋 Send Visual Selection:** Send the currently selected text (visual mode) to the AI terminal, automatically wrapped in a markdown code block with the file path and language type included.
 
   *Tip:* After sending the selection, ai-terminal doesn't send the enter key so you can add custom prompts to the selection.
-  This is a goto way of sending prompts with context so the LLM knows which code the prompt pertains to (when not using Aider and the add comment command).
+  This is a goto way of sending prompts with context so the LLM knows which code the prompt pertains to (similar to the add comment command for Aider).
 
   The format of the visual selection in the terminal will look a bit strange (e.g. shows ^I in-place of tabs).
   This is becuase it's using bracketed paste mode which is a unform way of sending multi-line text (without "\n" submitting the prompt).
