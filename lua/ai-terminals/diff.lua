@@ -273,25 +273,7 @@ function Diff.close_diff()
 	local closed_tab_count = #delta_tabs_to_close -- Count how many tabs we intend to close
 	local wiped_buffer_count = 0
 
-	-- 3. Close the delta diff tabs first
-	for _, tabid in ipairs(delta_tabs_to_close) do
-		if vim.api.nvim_tabpage_is_valid(tabid) then
-			-- Avoid closing the last tab if it's the one we're targeting
-			if #vim.api.nvim_list_tabpages() > 1 or tabid ~= current_tab then
-				vim.api.nvim_command("tabclose " .. tabid)
-				vim.notify("Closed delta diff tab " .. tabid, vim.log.levels.DEBUG)
-			else
-				-- If it's the last tab, just try to close the window/buffer
-				vim.notify(
-					"Delta diff is in the last tab (" .. tabid .. "), attempting buffer wipe instead of tab close.",
-					vim.log.levels.DEBUG
-				)
-				-- The buffer wipe logic below will handle this buffer
-			end
-		end
-	end
-
-	-- 4. Wipe out all identified buffers (combine file and delta buffers)
+	-- 3. Wipe out all identified buffers (combine file and delta buffers)
 	local all_buffers_to_wipe = {}
 	for _, bufnr in ipairs(file_buffers_to_wipe) do
 		all_buffers_to_wipe[bufnr] = true
@@ -310,7 +292,7 @@ function Diff.close_diff()
 		end
 	end
 
-	-- 5. Provide feedback (same logic as before)
+	-- 4. Provide feedback (same logic as before)
 	local messages = {}
 	if closed_tab_count > 0 then
 		table.insert(messages, string.format("Closed %d delta diff tab(s).", closed_tab_count))
