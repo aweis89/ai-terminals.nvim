@@ -6,6 +6,7 @@ local TerminalLib = require("ai-terminals.terminal")
 local DiffLib = require("ai-terminals.diff")
 local ConfigLib = require("ai-terminals.config")
 local SelectionLib = require("ai-terminals.selection")
+require("snacks") -- Load snacks.nvim for annotations
 
 ---Setup function to merge user configuration with defaults.
 ---@param user_config table User-provided configuration table.
@@ -148,11 +149,10 @@ end
 ---@param files string[]|string List of file paths or a single file path to add to aider
 ---@param opts? { read_only?: boolean } Options for the command
 function M.aider_add_files(files, opts)
-	local files_to_add = files
 	if type(files) == "string" then
-		files_to_add = { files }
+		files = { files } -- Assign as table if input is string
 	end
-	AiderLib.add_files(files_to_add, opts)
+	AiderLib.add_files(files, opts)
 end
 
 -- Add all buffers to aider (delegates to AiderLib)
