@@ -21,10 +21,10 @@ end
 ---@return string Formatted text.
 local function multiline(text)
 	local esc = "\27"
-	local aider_prefix = esc .. "[200~" -- Start sequence: ESC [ 200 ~
-	local aider_postfix = esc .. "[201~" -- End sequence:   ESC [ 201 ~
+	local prefix = esc .. "[200~" -- Start sequence: ESC [ 200 ~
+	local postfix = esc .. "[201~" -- End sequence:   ESC [ 201 ~
 	-- Concatenate prefix, text, and postfix
-	return aider_prefix .. text .. aider_postfix
+	return prefix .. text .. postfix
 end
 
 ---Send text to a terminal
