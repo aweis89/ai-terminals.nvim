@@ -25,12 +25,13 @@ function Selection.get_visual_selection(bufnr)
 
 	local lines = api.nvim_buf_get_lines(bufnr, start_line - 1, end_line, false)
 
-	-- use 1-based indexing and handle selections made in visual line mode
-	start_col = start_col + 1
-	end_col = math.min(end_col, #lines[#lines] - 1) + 1
+	-- use 1-based indexing
+	start_col = start_col + 1 -- Convert 0-based start col to 1-based for sub
+	end_col = end_col + 1 -- Convert 0-based end col to 1-based for sub
 
 	-- shorten first/last line according to start_col/end_col
-	lines[#lines] = lines[#lines]:sub(1, end_col)
+	-- Clamp end_col to the actual length of the last line before slicing
+	lines[#lines] = lines[#lines]:sub(1, math.min(end_col, #lines[#lines]))
 	lines[1] = lines[1]:sub(start_col)
 
 	local filepath = vim.fn.fnamemodify(vim.fn.expand("%"), ":~:.")
@@ -54,7 +55,7 @@ function Selection.get_visual_selection_with_header(bufnr)
 	local slines = table.concat(lines, "\n")
 
 	local filetype = vim.bo[bufnr].filetype or ""
-	slines = "```" .. filetype .. "\n" .. slines .. "\n```\n"
+	slines = "```" .. filetype .. "\n" .. slines .. "\n```"
 	return string.format("\n# Path: %s\n%s\n", path, slines)
 end
 
