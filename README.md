@@ -1,25 +1,32 @@
 # 🤖 AI Terminals Neovim Plugin
 
-This plugin **seamlessly integrates any command-line (CLI) AI coding agents** into Neovim. It provides a unified workflow for interacting with AI assistants directly within your editor, eliminating the need for exlusively dedicated Neovim AI plugins.
+This plugin **seamlessly integrates any command-line (CLI) AI coding agents** into Neovim. It provides a unified workflow for interacting with AI assistants directly within your editor, reducing the need for specific, dedicated AI plugins for each tool.
+
+## 🤔 Motivation
+
+While many Neovim plugins offer deep integration with *specific* AI services or models, `ai-terminals.nvim` takes a different approach. It focuses on leveraging the power and flexibility of existing **command-line AI tools**. By providing a unified interface to manage and interact with these tools within Neovim terminals, it offers:
+
+*   **Flexibility:** Easily switch between or use multiple AI agents (Aider, Claude CLI, custom scripts, etc.) without needing separate plugins for each.
+*   **Future-Proofing:** As new CLI tools emerge, integrating them is often as simple as adding a new entry to your configuration.
+*   **Consistency:** Provides a consistent workflow (sending selections, diagnostics, diffing) across different tools.
+*   **Leverages Existing Tools:** Benefits from the features and updates of the underlying CLI tools themselves.
+
+This plugin is ideal for users who prefer terminal-based AI interaction and want a single, configurable way to manage them within Neovim.
 
 ## ✨ Features
 
 ### ⚙️ Generic Features (Works with any terminal-based AI agent)
 
-* **🔌 Configurable Terminal Integration:** Define and manage terminals for various
-  AI CLI tools (e.g., Claude, Goose, Aider, Kode, custom scripts) through a simple
-  configuration table. Uses `Snacks` for terminal window management.
-* **🔄 Diff View:**
-  * **Track AI Changes:** Compare the current state of your project files against the state they were in the last time you opened an AI terminal.
-  * **How it Works:** The plugin maintains a persistent backup of your project (using `rsync` for efficiency). This backup is created the *first* time you open an AI terminal and *updated* (synced) each subsequent time you open one, setting a new comparison point.
+* **🔌 Configurable Terminal Integration:** Define and manage terminals for various AI CLI tools (e.g., Claude, Goose, Aider, Kode, custom scripts) through a simple configuration table. Uses `Snacks` for terminal window management.
+* **🔄 Diff View & Revert:**
+  * **Track Changes:** See modifications made to your project files since the last time an AI terminal was opened.
+  * **How it Works:** When `enable_diffing = true` (default), the plugin maintains a persistent backup of your project using `rsync`. This backup is synced *every time* you open an AI terminal, capturing the state *before* the current AI interaction begins.
   * **View Differences:**
-    * **Vimdiff (Default):** Use the `diff_changes()` command to open all modified files in Neovim's standard diff view (`vimdiff`). You can manage changes using standard commands like `:diffget` and `:diffput`.
-    * **Delta (Optional):** Alternatively, pass `{ delta = true }` to `diff_changes()` (e.g., `require("ai-terminals").diff_changes({ delta = true })`) to view the diff using the [delta](https://github.com/dandavison/delta) tool in a dedicated terminal buffer. This requires `delta` to be installed and available in your `PATH`. Delta is a more advanced diff viewer offering features like side-by-side views and within-line (column) change highlighting. This mode shows a unified diff for all changes, but standard Neovim diff commands like `:diffget` or `:diffput` are not available as it runs in a terminal buffer.
-  * **↩️ Revert Changes:** Use the `revert_changes()` command to revert those diff changes made by the LLM.
-  * **Quick Close:** Press `q` in any vimdiff window or the delta terminal buffer to quickly close the diff view (this mapping is added automatically).
-* **🔃 Automatic File Reloading:** When you switch focus away from the AI terminal
-  window, all listed buffers in Neovim are checked for modifications and
-  reloaded if necessary, ensuring you see the latest changes made by the AI.
+    * `diff_changes()`: Opens modified files in Neovim's built-in `vimdiff`. Use standard commands like `:diffget`, `:diffput`.
+    * `diff_changes({ delta = true })`: Shows a unified diff using the [delta](https://github.com/dandavison/delta) tool in a terminal buffer (requires `delta` installed). Offers advanced highlighting but no `:diffget`/`:diffput`.
+  * **Revert Changes:** `revert_changes()` restores your project files to the state captured in the last backup (effectively undoing changes made during the current AI session).
+  * **Quick Close:** Press `q` in any vimdiff window or the delta terminal buffer to close the diff view (this mapping is added automatically).
+* **🔃 Automatic File Reloading:** When you switch focus away from the AI terminal window, all listed buffers in Neovim are checked for modifications and reloaded if necessary, ensuring you see the latest changes made by the AI.
 * **📋 Send Visual Selection:** Send the currently selected text (visual mode) to the AI terminal, automatically wrapped in a markdown code block with the file path and language type included.
 
   *Tip:* After sending the selection, ai-terminal doesn't send the enter key so you can add custom prompts to the selection.
@@ -517,3 +524,11 @@ end
 This adds a `send_search` helper function that extracts the text lines from the selected items in the picker (typically grep results) and sends them concatenated together to the Aider terminal using `require("ai-terminals").send`. An `aider_search` action is defined to use this helper, and a keymap (`<leader><space>s`) is added to the `grep` source to trigger this action.
 
 💡 **Tip:** You can use `<Tab>` in the Snacks picker to select multiple items (files or grep lines) one by one, or `<C-a>` (Control-A) to select *all* visible items. When you then use the `aider_add` or `aider_search` keymaps, all selected items will be sent to Aider at once!
+
+## 🤝 Contributing
+
+Contributions, issues, and feature requests are welcome! Please feel free to check the [issues page](https://github.com/aweis89/ai-terminals.nvim/issues).
+
+## 📜 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
