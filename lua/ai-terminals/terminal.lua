@@ -353,7 +353,11 @@ function Term.register_autocmds(term)
 			-- Schedule the diff_changes call to run soon,
 			-- after the BufLeave event processing is finished.
 			vim.schedule(function()
-				DiffLib.diff_changes()
+				local opts = {}
+				if type(ConfigLib.config.show_diffs_on_leave) == "table" then
+					opts = ConfigLib.config.show_diffs_on_leave
+				end
+				DiffLib.diff_changes(opts)
 			end)
 		end, { buf = true })
 	end
