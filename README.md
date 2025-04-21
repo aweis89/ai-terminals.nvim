@@ -24,7 +24,7 @@ This plugin is ideal for users who prefer terminal-based AI interaction and want
   * **View Differences:**
     * `diff_changes()`: Opens modified files in Neovim's built-in `vimdiff`. Use standard commands like `:diffget`, `:diffput`.
     * `diff_changes({ delta = true })`: Shows a unified diff using the [delta](https://github.com/dandavison/delta) tool in a terminal buffer (requires `delta` installed). Offers advanced highlighting but no `:diffget`/`:diffput`.
-  * **Revert Changes:** `revert_changes()` restores your project files to the state captured in the last backup (effectively undoing changes made during the current AI session).
+  * **Revert Changes:** `revert_changes()` reverses the changes in the diff view.
   * **Quick Close:** Press `q` in any vimdiff window or the delta terminal buffer to close the diff view (this mapping is added automatically).
 * **🔃 Automatic File Reloading:** When you switch focus away from the AI terminal window, all listed buffers in Neovim are checked for modifications and reloaded if necessary, ensuring you see the latest changes made by the AI.
 * **📋 Send Visual Selection:** Send the currently selected text (visual mode) to the AI terminal, automatically wrapped in a markdown code block with the file path and language type included.
