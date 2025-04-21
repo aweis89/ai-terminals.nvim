@@ -8,7 +8,7 @@ While many Neovim plugins offer deep integration with *specific* AI services or 
 
 *   **Flexibility:** Easily switch between or use multiple AI agents (Aider, Claude CLI, custom scripts, etc.) without needing separate plugins for each.
 *   **Future-Proofing:** As new CLI tools emerge, integrating them is often as simple as adding a new entry to your configuration.
-*   **Consistency:** Provides a consistent workflow (sending selections, diagnostics, diffing) across different tools.
+*   **Consistency:** Provides a consistent workflow (sending selections/diagnostics, diffing, reversing changes and creating prompts) across different tools.
 *   **Leverages Existing Tools:** Benefits from the features and updates of the underlying CLI tools themselves.
 
 This plugin is ideal for users who prefer terminal-based AI interaction and want a single, configurable way to manage them within Neovim.
