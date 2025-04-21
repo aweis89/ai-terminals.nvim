@@ -8,9 +8,10 @@ local mock_feedkeys_calls = {}
 
 -- Keep track of original functions/modules to restore them
 local original_vim_notify = vim.notify
-local original_vim_fn_chansend = vim.fn.chansend
-local original_vim_api_nvim_feedkeys = vim.api.nvim_feedkeys
+local original_vim_fn -- Store original vim.fn table (initialized in before_each)
+local original_vim_api = vim.api -- Store original vim.api table
 local original_vim_b = vim.b -- Store the original vim.b
+local original_vim_fn_feedkeys -- Store original vim.fn.feedkeys
 
 describe("ai-terminals.terminal", function()
 	before_each(function()
@@ -24,43 +25,34 @@ describe("ai-terminals.terminal", function()
 			table.insert(mock_notify, { msg = msg, level = level, opts = opts })
 		end
 
+		-- Store original vim.fn if not already stored
+		if not original_vim_fn then
+			original_vim_fn = vim.fn
+		end
+		-- Ensure vim.fn and vim.api tables exist before mocking members
+		vim.fn = vim.fn or {}
+		vim.api = vim.api or {}
+		-- Store original feedkeys if not already stored
+		if not original_vim_fn_feedkeys then
+			original_vim_fn_feedkeys = vim.fn.feedkeys
+		end
+
+
 		-- Mock vim.fn.chansend
 		vim.fn.chansend = function(job_id, data)
 			table.insert(mock_chansend_calls, { job_id = job_id, data = data })
 			return 1 -- Simulate success (chansend returns 1 on success)
 		end
 
-		-- Mock vim.api.nvim_feedkeys
-		vim.api.nvim_feedkeys = function(keys, mode, escape_ks)
-			table.insert(mock_feedkeys_calls, { keys = keys, mode = mode, escape_ks = escape_ks })
+		-- Mock vim.fn.feedkeys (used by Term.send)
+		vim.fn.feedkeys = function(keys, mode)
+			table.insert(mock_feedkeys_calls, { keys = keys, mode = mode })
 		end
 
-		-- Table to track keys explicitly set on the vim.b mock
-		local explicitly_set_keys = {}
-
-		-- Mock vim.b specifically for terminal_job_id
-		local vim_b_mt = {
-			__index = function(t, k)
-				-- If the key was explicitly set (even to nil), return its value from rawget
-				if explicitly_set_keys[k] then
-					return rawget(t, k)
-				end
-
-				-- If not explicitly set, return default ONLY for terminal_job_id
-				if k == "terminal_job_id" then
-					return 123 -- Default mock job ID
-				end
-
-				-- For other keys, return nil
-				return nil
-			end,
-			__newindex = function(t, k, v)
-				-- Mark the key as explicitly set and store the value using rawset
-				explicitly_set_keys[k] = true
-				rawset(t, k, v)
-			end,
+		-- Mock vim.b with a simple table
+		vim.b = {
+			terminal_job_id = 123, -- Default mock job ID
 		}
-		vim.b = setmetatable({}, vim_b_mt) -- Apply the metatable to a fresh table for each test
 
 		-- Mock minimal config needed for tests
 		Conf.config = {
@@ -85,8 +77,13 @@ describe("ai-terminals.terminal", function()
 	after_each(function()
 		-- Restore original functions/modules after each test
 		vim.notify = original_vim_notify
-		vim.fn.chansend = original_vim_fn_chansend
-		vim.api.nvim_feedkeys = original_vim_api_nvim_feedkeys
+		if original_vim_fn then -- Restore vim.fn only if it was stored
+			vim.fn = original_vim_fn
+		end
+		if original_vim_fn_feedkeys then -- Restore feedkeys specifically
+			vim.fn.feedkeys = original_vim_fn_feedkeys
+		end
+		vim.api = original_vim_api -- Restore original vim.api table
 		vim.b = original_vim_b -- Restore original vim.b
 		-- Clear potentially modified config
 		Conf.config = nil -- Or restore to a known default if necessary
@@ -148,18 +145,19 @@ describe("ai-terminals.terminal", function()
 		end)
 
 		it("should use opts.term job_id if provided", function()
-			-- Mock a term object with a buffer having a different job_id
-			local mock_term = { buf = 999 }
-			-- Mock vim.b for the specific buffer
-			vim.b[mock_term.buf] = { terminal_job_id = 456 }
+			-- Mock a term object with a buffer number
+			local mock_term_obj = { buf = 999 }
+			-- Mock vim.b for that specific buffer number
+			local original_b_999 = vim.b[mock_term_obj.buf] -- Store original if exists
+			vim.b[mock_term_obj.buf] = { terminal_job_id = 456 }
 
-			Term.send("hello", { term = mock_term })
+			Term.send("hello", { term = mock_term_obj })
 			assert.are.equal(1, #mock_chansend_calls)
 			assert.are.equal(456, mock_chansend_calls[1].job_id) -- Check if the correct job_id was used
 			assert.are.equal("hello", mock_chansend_calls[1].data)
 
 			-- Cleanup mock for specific buffer
-			vim.b[mock_term.buf] = nil
+			vim.b[mock_term_obj.buf] = original_b_999
 		end)
 
 		it("should notify error if no job_id found", function()
