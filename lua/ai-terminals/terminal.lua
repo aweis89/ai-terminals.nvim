@@ -350,7 +350,11 @@ function Term.register_autocmds(term)
 	-- Auto trigger diff on leave if enabled
 	if ConfigLib.config.enable_diffing and ConfigLib.config.show_diffs_on_leave then
 		term:on("BufLeave", function()
-			DiffLib.diff_changes(ConfigLib.config.show_diffs_on_leave)
+			-- Schedule the diff_changes call to run soon,
+			-- after the BufLeave event processing is finished.
+			vim.schedule(function()
+				DiffLib.diff_changes()
+			end)
 		end, { buf = true })
 	end
 
