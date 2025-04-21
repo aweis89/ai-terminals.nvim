@@ -90,12 +90,7 @@ require("ai-terminals").setup({
   -- Enable/disable the diffing feature (default: true)
   -- When enabled, a backup sync runs on terminal entry, allowing `diff_changes` and `close_diff` to work.
   -- Disabling this (`false`) skips the backup sync and prevents diff commands from functioning.
-  enable_diffing = true, -- Keep diffing enabled to use the feature below
-  -- Automatically show diffs when leaving the terminal window (default: { delta = false })
-  -- Set to a table `{ delta = true }` to use delta, or `{ delta = false }` for vimdiff.
-  -- Set to `false` or `nil` to disable automatic diff display on leave.
-  -- Requires `enable_diffing = true`.
-  show_diffs_on_leave = { delta = false }, -- Example: Use vimdiff automatically
+  enable_diffing = true,
 })
 ```
 
