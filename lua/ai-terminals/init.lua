@@ -26,7 +26,7 @@ function M.toggle(terminal_name, position)
 
 	local term = TerminalLib.toggle(terminal_name, position)
 	if selection and term then
-		M.send(selection, { term = term })
+		M.send(selection, { term = term, insert_mode = true })
 	end
 	return term
 end
@@ -43,7 +43,7 @@ function M.get(terminal_name, position)
 	end
 	local term, created = TerminalLib.get(terminal_name, position)
 	if selection and term then
-		M.send(selection, { term = term })
+		M.send(selection, { term = term, insert_mode = true })
 	end
 	return term, created
 end
@@ -83,7 +83,7 @@ end
 
 ---Send text to a terminal (delegates to TerminalLib)
 ---@param text string The text to send
----@param opts {term?: snacks.win?, submit?: boolean}|nil Options: `term` specifies the target terminal, `submit` sends a newline after the text if true.
+---@param opts {term?: snacks.win?, submit?: boolean, insert_mode?: boolean}|nil Options: `term` specifies the target terminal, `submit` sends a newline after the text if true, `insert_mode` enters insert mode after sending if true.
 ---@return nil
 function M.send(text, opts)
 	TerminalLib.send(text, opts)

@@ -1,4 +1,3 @@
-local ConfigLib = require("ai-terminals.config")
 local DiffLib = require("ai-terminals.diff")
 local Conf = require("ai-terminals.config").config
 local Term = {}
@@ -49,21 +48,23 @@ function Term.send(text, opts)
 	end
 
 	-- Send the main text
-	local ok, err = pcall(vim.fn.chansend, job_id, text_to_send)
-	if not ok then
-		vim.notify("Failed to send text: " .. tostring(err), vim.log.levels.ERROR)
+	local success = vim.fn.chansend(job_id, text_to_send)
+	if success == 0 then
+		vim.notify("Failed to send text to terminal", vim.log.levels.ERROR)
 		return -- Don't proceed if sending text failed
 	end
 
 	-- Send newline if submit is requested
 	if opts.submit then
-		local ok_nl, err_nl = pcall(vim.fn.chansend, job_id, "\n")
-		if not ok_nl then
-			vim.notify("Failed to send newline: " .. tostring(err_nl), vim.log.levels.ERROR)
+		local success_nl = vim.fn.chansend(job_id, "\n")
+		if success_nl == 0 then
+			vim.notify("Failed to send newline to terminal", vim.log.levels.ERROR)
+			return
 		end
 	end
+
 	if opts.insert_mode then
-		vim.api.nvim_feedkeys("i", "n", false)
+		vim.fn.feedkeys("i", "n")
 	end
 end
 
