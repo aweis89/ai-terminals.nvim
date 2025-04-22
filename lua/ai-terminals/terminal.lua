@@ -1,5 +1,4 @@
 local DiffLib = require("ai-terminals.diff")
--- Removed local Conf assignment to ensure dynamic access to potentially updated config
 local Term = {}
 
 ---Resolve the command string from configuration (can be string or function).
@@ -73,7 +72,8 @@ end
 ---@param position "float"|"bottom"|"top"|"left"|"right"|nil Optional override position.
 ---@return table?, string?, table?
 local function resolve_term_details(terminal_name, position)
-	local config = require("ai-terminals.config").config -- Access config dynamically
+	-- Access config dynamically inside the function
+	local config = require("ai-terminals.config").config
 	local term_config = config.terminals[terminal_name]
 	if not term_config then
 		vim.notify("Unknown terminal name: " .. tostring(terminal_name), vim.log.levels.ERROR)
@@ -94,6 +94,7 @@ local function resolve_term_details(terminal_name, position)
 	end
 
 	local dimensions = config.window_dimensions[resolved_position]
+	-- *** Removed debug notification ***
 	return term_config, resolved_position, dimensions
 end
 
@@ -347,10 +348,11 @@ function Term.register_autocmds(term)
 		return -- Already registered for this buffer
 	end
 
+	-- Access config dynamically inside the function
+	local config = require("ai-terminals.config").config
+
 	-- Autocommand to reload buffers when focus leaves this specific terminal buffer
 	term:on("BufLeave", Term.reload_changes, { buf = true })
-
-	local config = require("ai-terminals.config").config -- Access config dynamically
 
 	-- Auto trigger diff on leave if enabled
 	if config.enable_diffing and config.show_diffs_on_leave then
