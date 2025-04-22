@@ -9,7 +9,7 @@ local SelectionLib = require("ai-terminals.selection")
 require("snacks") -- Load snacks.nvim for annotations
 
 ---Setup function to merge user configuration with defaults.
----@param user_config table User-provided configuration table.
+---@param user_config ConfigType|nil
 function M.setup(user_config)
 	ConfigLib.config = vim.tbl_deep_extend("force", ConfigLib.config, user_config or {})
 end
