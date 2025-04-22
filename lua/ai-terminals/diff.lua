@@ -84,7 +84,6 @@ function Diff.diff_changes(opts)
 		local term_bufnr = vim.api.nvim_get_current_buf()
 		if term_bufnr and term_bufnr ~= 0 then
 			vim.b[term_bufnr].is_ai_terminals_delta_diff = true -- Set a unique marker variable
-			vim.notify("Marked buffer " .. term_bufnr .. " as delta diff terminal", vim.log.levels.DEBUG)
 			-- Add buffer-local mapping for 'q' to close the diff
 			vim.api.nvim_buf_set_keymap(
 				term_bufnr,
@@ -93,7 +92,6 @@ function Diff.diff_changes(opts)
 				"<Cmd>lua require('ai-terminals.diff').close_diff()<CR>",
 				{ noremap = true, silent = true, desc = "Close AI Terminals Diff" }
 			)
-			vim.notify("Added 'q' mapping to delta diff buffer " .. term_bufnr, vim.log.levels.DEBUG)
 		else
 			vim.notify("Could not get buffer number for delta terminal to mark it.", vim.log.levels.WARN)
 		end
@@ -181,11 +179,9 @@ function Diff.diff_changes(opts)
 
 		if vim.api.nvim_buf_is_valid(orig_bufnr) then
 			vim.api.nvim_buf_set_keymap(orig_bufnr, "n", "q", map_cmd, map_opts)
-			vim.notify("Added 'q' mapping to original diff buffer " .. orig_bufnr, vim.log.levels.DEBUG)
 		end
 		if vim.api.nvim_buf_is_valid(tmp_bufnr) then
 			vim.api.nvim_buf_set_keymap(tmp_bufnr, "n", "q", map_cmd, map_opts)
-			vim.notify("Added 'q' mapping to temp diff buffer " .. tmp_bufnr, vim.log.levels.DEBUG)
 		end
 		-- Optional: Move back if needed: vim.cmd("wincmd p")
 	end

@@ -157,7 +157,6 @@ require("ai-terminals").setup({
   -- Automatically show diffs (if present) when leaving the terminal.
   -- Set to `false` or `nil` to disable.
   -- Set to `{ delta = true }` to automatically use delta instead of vimdiff.
-  -- Set to `{ diff_func = function(cwd, tmp_dir) ... end }` to use a custom diff function.
   show_diffs_on_leave = true, -- Default: true (uses vimdiff)
 })
 ```
@@ -166,8 +165,6 @@ The `cmd` field for each terminal can be a `string` or a `function` that returns
 a string. Using a function allows the command to be generated dynamically *just
 before* the terminal is opened (e.g., to check `vim.o.background` at invocation
 time).
-
-### 🚀 Example Usage
 
 ### 🚀 Example Usage
 
@@ -366,7 +363,7 @@ return {
 
 #### Using `lazy.nvim`
 
-1.  Add the plugin specification to your `lazy.nvim` configuration:
+1. Add the plugin specification to your `lazy.nvim` configuration:
 
     ```lua
     -- lua/plugins/ai-terminals.lua
@@ -425,7 +422,7 @@ return {
     }
     ```
 
-2.  Restart Neovim or run `:Lazy sync`.
+2. Restart Neovim or run `:Lazy sync`.
 
 #### Using `packer.nvim`
 
