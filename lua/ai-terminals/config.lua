@@ -16,7 +16,7 @@ local Config = {}
 ---@field window_dimensions WindowDimensionsMap
 ---@field default_position string
 ---@field enable_diffing boolean
----@field show_diffs_on_leave boolean
+---@field show_diffs_on_leave boolean|table
 
 ---@type ConfigType
 Config.config = {
