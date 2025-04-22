@@ -373,8 +373,16 @@ function Term.register_autocmds(term)
 		DiffLib.pre_sync_code_base()
 	end
 	-- Autocommand to run backup when entering this specific terminal window (required for diffing)
+	-- term:on doesn't work for splits for some reason
 	if config.enable_diffing then
-		term:on("BufWinEnter", DiffLib.pre_sync_code_base)
+		local group_name = "AITerminalSync_" .. bufnr
+		vim.api.nvim_create_augroup(group_name, { clear = true })
+		vim.api.nvim_create_autocmd("BufEnter", {
+			group = group_name,
+			buffer = bufnr,
+			callback = DiffLib.pre_sync_code_base,
+			desc = "Sync code base backup on entering AI terminal window",
+		})
 	end
 
 	if bufnr then
