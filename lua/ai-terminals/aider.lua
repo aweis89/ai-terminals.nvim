@@ -45,7 +45,7 @@ function Aider.comment(prefix)
 	vim.api.nvim_buf_set_lines(bufnr, current_line - 1, current_line - 1, false, { formatted_comment })
 	vim.cmd.write() -- Save the file
 	vim.cmd.stopinsert() -- Exit insert mode
-	Term.toggle("aider") -- Ensure terminal is focused/open for potential follow-up, using name
+	Term.open("aider") -- Ensure terminal is focused/open for potential follow-up, using name
 end
 
 -- Helper function to send commands to the aider terminal
