@@ -8,7 +8,7 @@ While many Neovim plugins offer deep integration with *specific* AI services or 
 
 *   **Flexibility:** Easily switch between or use multiple AI agents (Aider, Claude CLI, custom scripts, etc.) without needing separate plugins for each.
 *   **Future-Proofing:** As new CLI tools emerge, integrating them is often as simple as adding a new entry to your configuration.
-*   **Consistency:** Provides a consistent workflow (sending selections, diagnostics, diffing) across different tools.
+*   **Consistency:** Provides a consistent workflow (sending selections/diagnostics, diffing, reversing changes and creating prompts) across different tools.
 *   **Leverages Existing Tools:** Benefits from the features and updates of the underlying CLI tools themselves.
 
 This plugin is ideal for users who prefer terminal-based AI interaction and want a single, configurable way to manage them within Neovim.
@@ -24,13 +24,13 @@ This plugin is ideal for users who prefer terminal-based AI interaction and want
   * **View Differences:**
     * `diff_changes()`: Opens modified files in Neovim's built-in `vimdiff`. Use standard commands like `:diffget`, `:diffput`.
     * `diff_changes({ delta = true })`: Shows a unified diff using the [delta](https://github.com/dandavison/delta) tool in a terminal buffer (requires `delta` installed). Offers advanced highlighting but no `:diffget`/`:diffput`.
-  * **Revert Changes:** `revert_changes()` restores your project files to the state captured in the last backup (effectively undoing changes made during the current AI session).
+  * **Revert Changes:** `revert_changes()` reverses the changes in the diff view.
   * **Quick Close:** Press `q` in any vimdiff window or the delta terminal buffer to close the diff view (this mapping is added automatically).
 * **🔃 Automatic File Reloading:** When you switch focus away from the AI terminal window, all listed buffers in Neovim are checked for modifications and reloaded if necessary, ensuring you see the latest changes made by the AI.
 * **📋 Send Visual Selection:** Send the currently selected text (visual mode) to the AI terminal, automatically wrapped in a markdown code block with the file path and language type included.
 
   *Tip:* After sending the selection, ai-terminal doesn't send the enter key so you can add custom prompts to the selection.
-  This is a goto way of sending prompts with context so the LLM knows which code the prompt pertains to (when not using Aider and the add comment command).
+  This is a goto way of sending prompts with context so the LLM knows which code the prompt pertains to (similar to the add comment command for Aider).
 
   The format of the visual selection in the terminal will look a bit strange (e.g. shows ^I in-place of tabs).
   This is becuase it's using bracketed paste mode which is a unform way of sending multi-line text (without "\n" submitting the prompt).
