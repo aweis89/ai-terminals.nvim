@@ -101,7 +101,7 @@ end
 ---@param terminal_name string The name of the terminal.
 ---@param position "float"|"bottom"|"top"|"left"|"right"|nil Optional override position.
 ---@return string?, table? Resolved command string and options table, or nil, nil on failure.
-local function _resolve_terminal_options(terminal_name, position)
+function Term.resolve_terminal_options(terminal_name, position)
 	local term_config, resolved_position, dimensions = resolve_term_details(terminal_name, position)
 	if not term_config then
 		return nil, nil -- Error already notified by resolve_term_details
@@ -141,7 +141,7 @@ end
 ---@param position "float"|"bottom"|"top"|"left"|"right"|nil Optional override position.
 ---@return snacks.win|nil The terminal window object or nil on failure.
 function Term.toggle(terminal_name, position)
-	local cmd_str, opts = _resolve_terminal_options(terminal_name, position)
+	local cmd_str, opts = Term.resolve_terminal_options(terminal_name, position)
 	if not cmd_str then
 		return nil -- Error handled in helper
 	end
@@ -176,7 +176,7 @@ end
 ---@param position "float"|"bottom"|"top"|"left"|"right"|nil Optional override position.
 ---@return snacks.win?, boolean? The terminal window object and a boolean indicating if it was created (true) or retrieved (false).
 function Term.get(terminal_name, position)
-	local cmd_str, opts = _resolve_terminal_options(terminal_name, position)
+	local cmd_str, opts = Term.resolve_terminal_options(terminal_name, position)
 	if not cmd_str then
 		return nil, false -- Error handled in helper
 	end
@@ -203,7 +203,7 @@ end
 ---@param position "float"|"bottom"|"top"|"left"|"right"|nil Optional override position.
 ---@return snacks.win? The terminal window object or nil on failure.
 function Term.open(terminal_name, position)
-	local cmd_str, opts = _resolve_terminal_options(terminal_name, position)
+	local cmd_str, opts = Term.resolve_terminal_options(terminal_name, position)
 	if not cmd_str then
 		return nil -- Error handled in helper
 	end

@@ -7,9 +7,22 @@ local Aider = {}
 function Aider.comment(prefix)
 	prefix = prefix or "AI!" -- Default prefix if none provided
 	local bufnr = vim.api.nvim_get_current_buf()
-	-- toggle aider terminal so we know it's running
-	TerminalLib.toggle("aider") -- Open, using name
-	TerminalLib.toggle("aider") -- Close (or focus if already open), using name
+
+	-- Start terminal in background so it's watching files
+	local cmd_str, opts = TerminalLib.resolve_terminal_options("aider")
+	if not cmd_str then
+		return nil -- Error handled in helper
+	end
+	local term, created = Snacks.terminal.get(cmd_str, opts)
+	if not term then
+		vim.notify("Unable to toggle terminal: " .. "aider", vim.log.levels.ERROR)
+		return nil
+	end
+	if created then
+		term:hide()
+	end
+
+	--  AI? what does this do?
 	local comment_text = vim.fn.input("Enter comment (" .. prefix .. "): ")
 	if comment_text == "" then
 		return -- Do nothing if the user entered nothing
