@@ -140,9 +140,10 @@ require("ai-terminals").setup({
     goose = nil,
   },
   -- Override default window dimensions (uses Snacks options)
-  window = {
-    width = 0.8, -- 80% of editor width
-    height = 0.7, -- 70% of editor height
+  -- Keys correspond to positions: 'float', 'bottom', 'top', 'left', 'right'
+  window_dimensions = {
+    float = { width = 0.8, height = 0.7 }, -- Example: Change float dimensions
+    bottom = { width = 1.0, height = 0.4 }, -- Example: Change bottom dimensions
     border = "rounded",
   },
   -- Set the default window position if none is specified (default: "float")
@@ -153,6 +154,11 @@ require("ai-terminals").setup({
   -- Disabling this (`false`) skips the backup sync and prevents diff commands
   -- from functioning.
   enable_diffing = true,
+  -- Automatically show diffs (if present) when leaving the terminal.
+  -- Set to `false` or `nil` to disable.
+  -- Set to `{ delta = true }` to automatically use delta instead of vimdiff.
+  -- Set to `{ diff_func = function(cwd, tmp_dir) ... end }` to use a custom diff function.
+  show_diffs_on_leave = true, -- Default: true (uses vimdiff)
 })
 ```
 
