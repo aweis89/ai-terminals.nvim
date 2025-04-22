@@ -157,7 +157,7 @@ require("ai-terminals").setup({
   -- Automatically show diffs (if present) when leaving the terminal.
   -- Set to `false` or `nil` to disable.
   -- Set to `{ delta = true }` to automatically use delta instead of vimdiff.
-  show_diffs_on_leave = false, -- Default: false
+  show_diffs_on_leave = true, -- Default: true
 })
 ```
 
