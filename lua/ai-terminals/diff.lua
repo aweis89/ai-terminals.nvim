@@ -426,5 +426,5 @@ return {
 	diff_changes = Diff.diff_changes,
 	close_diff = Diff.close_diff,
 	pre_sync_code_base = Diff.pre_sync_code_base,
-	revert_changes = Diff.revert_changes, -- Add the new function here
+	revert_changes = Diff.revert_changes,
 }

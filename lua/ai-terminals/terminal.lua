@@ -345,6 +345,8 @@ function Term.register_autocmds(term)
 	end
 	if registered_buffers[bufnr] then
 		return -- Already registered for this buffer
+	else
+		registered_buffers[bufnr] = true -- Mark as registered
 	end
 
 	-- Access config dynamically inside the function
@@ -383,10 +385,6 @@ function Term.register_autocmds(term)
 			callback = DiffLib.pre_sync_code_base,
 			desc = "Sync code base backup on entering AI terminal window",
 		})
-	end
-
-	if bufnr then
-		registered_buffers[bufnr] = true -- Mark as registered
 	end
 end
 
