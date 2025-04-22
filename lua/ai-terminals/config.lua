@@ -12,11 +12,11 @@ local Config = {}
 ---@alias WindowDimensionsMap table<string, WindowDimension>
 
 ---@class ConfigType
----@field terminals TerminalsMap
----@field window_dimensions WindowDimensionsMap
----@field default_position string
----@field enable_diffing boolean
----@field show_diffs_on_leave boolean|table
+---@field terminals TerminalsMap|nil
+---@field window_dimensions WindowDimensionsMap|nil
+---@field default_position string|nil
+---@field enable_diffing boolean|nil
+---@field show_diffs_on_leave boolean|table|nil
 
 ---@type ConfigType
 Config.config = {

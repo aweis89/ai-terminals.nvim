@@ -94,7 +94,6 @@ local function resolve_term_details(terminal_name, position)
 	end
 
 	local dimensions = config.window_dimensions[resolved_position]
-	-- *** Removed debug notification ***
 	return term_config, resolved_position, dimensions
 end
 
