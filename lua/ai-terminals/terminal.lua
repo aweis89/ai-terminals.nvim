@@ -111,7 +111,7 @@ function Term.resolve_terminal_options(terminal_name, position)
 	if not cmd_str then
 		return nil, nil -- Error already notified by resolve_command
 	end
-
+	---@type snacks.terminal.Opts
 	local opts = {
 		cwd = vim.fn.getcwd(),
 		env = { id = cmd_str },
