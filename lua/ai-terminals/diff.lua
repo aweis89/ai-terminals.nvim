@@ -218,7 +218,6 @@ function Diff.close_diff()
 	end
 
 	-- 2. Find dedicated delta diff tabs/terminals using the marker variable
-	local current_tab = vim.api.nvim_get_current_tabpage()
 	for _, tabid in ipairs(vim.api.nvim_list_tabpages()) do
 		if vim.api.nvim_tabpage_is_valid(tabid) then
 			local windows = vim.api.nvim_tabpage_list_wins(tabid)
@@ -237,7 +236,6 @@ function Diff.close_diff()
 								vim.log.levels.DEBUG
 							)
 						end
-						-- *** End of check ***
 					end
 				end
 			end
