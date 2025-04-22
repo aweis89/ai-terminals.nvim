@@ -87,7 +87,7 @@ end
 ---@param opts {term?: snacks.win?, submit?: boolean, insert_mode?: boolean}|nil Options: `term` specifies the target terminal, `submit` sends a newline after the text if true, `insert_mode` enters insert mode after sending if true.
 ---@return nil
 function M.send(text, opts)
-	TerminalLib.send(text, opts)
+	TerminalLib.send(text, opts or {})
 end
 
 ---Send text to a specific named terminal
