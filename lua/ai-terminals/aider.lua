@@ -1,4 +1,4 @@
-local TerminalLib = require("ai-terminals.terminal") -- Require TerminalLib directly
+local Term = require("ai-terminals.terminal") -- Require TerminalLib directly
 local Aider = {}
 
 ---Add a comment above the current line based on user input
@@ -9,7 +9,7 @@ function Aider.comment(prefix)
 	local bufnr = vim.api.nvim_get_current_buf()
 
 	-- Start terminal in background so it's watching files
-	local cmd_str, opts = TerminalLib.resolve_terminal_options("aider")
+	local cmd_str, opts = Term.resolve_terminal_options("aider")
 	if not cmd_str then
 		return nil -- Error handled in helper
 	end
@@ -22,7 +22,6 @@ function Aider.comment(prefix)
 		term:hide()
 	end
 
-	--  AI? what does this do?
 	local comment_text = vim.fn.input("Enter comment (" .. prefix .. "): ")
 	if comment_text == "" then
 		return -- Do nothing if the user entered nothing
@@ -46,7 +45,7 @@ function Aider.comment(prefix)
 	vim.api.nvim_buf_set_lines(bufnr, current_line - 1, current_line - 1, false, { formatted_comment })
 	vim.cmd.write() -- Save the file
 	vim.cmd.stopinsert() -- Exit insert mode
-	TerminalLib.toggle("aider") -- Ensure terminal is focused/open for potential follow-up, using name
+	Term.toggle("aider") -- Ensure terminal is focused/open for potential follow-up, using name
 end
 
 -- Helper function to send commands to the aider terminal
@@ -70,9 +69,9 @@ function Aider.add_files(files, opts)
 	local files_str = table.concat(absolute_files, " ")
 
 	-- Ensure the aider terminal is open and get its instance, using name
-	local term = TerminalLib.open("aider")
+	local term = Term.open("aider")
 	-- Use the TerminalLib send function
-	TerminalLib.send(command .. " " .. files_str .. "\n", { term = term, submit = true })
+	Term.send(command .. " " .. files_str .. "\n", { term = term, submit = true })
 end
 
 -- Helper function to add listed buffers to the aider terminal
