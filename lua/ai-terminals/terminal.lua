@@ -1,5 +1,5 @@
 local DiffLib = require("ai-terminals.diff")
-local Conf = require("ai-terminals.config").config
+-- Removed local Conf assignment to ensure dynamic access to potentially updated config
 local Term = {}
 
 ---Resolve the command string from configuration (can be string or function).
@@ -73,26 +73,27 @@ end
 ---@param position "float"|"bottom"|"top"|"left"|"right"|nil Optional override position.
 ---@return table?, string?, table?
 local function resolve_term_details(terminal_name, position)
-	local term_config = Conf.terminals[terminal_name]
+	local config = require("ai-terminals.config").config -- Access config dynamically
+	local term_config = config.terminals[terminal_name]
 	if not term_config then
 		vim.notify("Unknown terminal name: " .. tostring(terminal_name), vim.log.levels.ERROR)
 		return nil, nil, nil
 	end
 
-	local resolved_position = position or Conf.default_position
+	local resolved_position = position or config.default_position
 	local valid_positions = { float = true, bottom = true, top = true, left = true, right = true }
 	if not valid_positions[resolved_position] then
 		vim.notify(
 			"Invalid terminal position: "
 				.. tostring(resolved_position)
 				.. ". Falling back to default: "
-				.. Conf.default_position,
+				.. config.default_position,
 			vim.log.levels.WARN
 		)
-		resolved_position = Conf.default_position -- Fallback
+		resolved_position = config.default_position -- Fallback
 	end
 
-	local dimensions = Conf.window_dimensions[resolved_position]
+	local dimensions = config.window_dimensions[resolved_position]
 	return term_config, resolved_position, dimensions
 end
 
@@ -349,27 +350,29 @@ function Term.register_autocmds(term)
 	-- Autocommand to reload buffers when focus leaves this specific terminal buffer
 	term:on("BufLeave", Term.reload_changes, { buf = true })
 
+	local config = require("ai-terminals.config").config -- Access config dynamically
+
 	-- Auto trigger diff on leave if enabled
-	if Conf.enable_diffing and Conf.show_diffs_on_leave then
+	if config.enable_diffing and config.show_diffs_on_leave then
 		term:on("BufLeave", function()
 			-- Schedule the diff_changes call to run soon,
 			-- after the BufLeave event processing is finished.
 			vim.schedule(function()
 				local opts = {}
-				if type(Conf.show_diffs_on_leave) == "table" then
-					opts = Conf.show_diffs_on_leave
+				if type(config.show_diffs_on_leave) == "table" then
+					opts = config.show_diffs_on_leave
 				end
 				DiffLib.diff_changes(opts)
 			end)
 		end, { buf = true })
 	end
 
-	if Conf.enable_diffing then
+	if config.enable_diffing then
 		-- Call the sync function so it gets executed first time terminal is open
 		DiffLib.pre_sync_code_base()
 	end
 	-- Autocommand to run backup when entering this specific terminal window (required for diffing)
-	if Conf.enable_diffing then
+	if config.enable_diffing then
 		term:on("BufWinEnter", DiffLib.pre_sync_code_base)
 	end
 
