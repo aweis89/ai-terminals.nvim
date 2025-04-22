@@ -1,5 +1,24 @@
 local Config = {}
 
+---@class TerminalConfig
+---@field cmd string | fun(): string
+
+---@alias TerminalsMap table<string, TerminalConfig>
+
+---@class WindowDimension
+---@field width number
+---@field height number
+
+---@alias WindowDimensionsMap table<string, WindowDimension>
+
+---@class ConfigType
+---@field terminals TerminalsMap
+---@field window_dimensions WindowDimensionsMap
+---@field default_position string
+---@field enable_diffing boolean
+---@field show_diffs_on_leave boolean
+
+---@type ConfigType
 Config.config = {
 	terminals = {
 		goose = {
@@ -41,7 +60,7 @@ Config.config = {
 	default_position = "float", -- Default position if none is specified in toggle/open/get
 	enable_diffing = true, -- Enable backup sync and diff commands. Disabling this prevents `diff_changes` and `close_diff` from working.
 	-- auto show diffs (if present) when leaving terminal (set to false or nil to disable)
-	show_diffs_on_leave = false,
+	show_diffs_on_leave = true,
 }
 
 return Config
