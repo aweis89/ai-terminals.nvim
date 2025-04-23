@@ -653,7 +653,8 @@ snacks.setup({
 --     },
 --   },
 -- }
--- return vim.tbl_deep_extend("force", opts or {}, overrides)```
+-- return vim.tbl_deep_extend("force", opts or {}, overrides)
+```
 
 This adds a `send_search` helper function that extracts the text lines from the
 selected items in the picker (typically grep results) and sends them
