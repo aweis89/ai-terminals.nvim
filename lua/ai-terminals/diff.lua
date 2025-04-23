@@ -1,5 +1,9 @@
 local Diff = {}
 
+-- Add a variable to store the last sync time
+local last_sync_time = 0
+local sync_debounce_ms = 1000 -- Only allow sync once per second (adjust as needed)
+
 ------------------------------------------
 -- Ignore Patterns for Diff
 ------------------------------------------
@@ -160,30 +164,35 @@ function Diff.diff_changes(opts)
 			vim.cmd("tabnew")
 		end
 
-		vim.cmd("edit " .. vim.fn.fnameescape(files.orig))
+		-- Edit the temporary backup file first (left side)
+		vim.cmd("edit " .. vim.fn.fnameescape(files.tmp))
 		vim.cmd("diffthis")
-		vim.cmd("vsplit " .. vim.fn.fnameescape(files.tmp))
+		-- Vertically split to open the original file (right side)
+		vim.cmd("vsplit " .. vim.fn.fnameescape(files.orig))
 		vim.cmd("diffthis")
 
 		-- Enable wrap in both diff windows
-		vim.cmd("setlocal wrap") -- Set wrap for the current window (tmp file)
-		local tmp_bufnr = vim.api.nvim_get_current_buf() -- Get buffer number for tmp file
-
-		vim.cmd("wincmd p") -- Move cursor to the previous window (original file)
-		vim.cmd("setlocal wrap") -- Set wrap for the original file window
+		vim.cmd("setlocal wrap") -- Set wrap for the current window (original file)
 		local orig_bufnr = vim.api.nvim_get_current_buf() -- Get buffer number for original file
+
+		vim.cmd("wincmd p") -- Move cursor to the previous window (tmp file)
+		vim.cmd("setlocal wrap") -- Set wrap for the tmp file window
+		local tmp_bufnr = vim.api.nvim_get_current_buf() -- Get buffer number for tmp file
 
 		-- Add buffer-local mapping for 'q' to close the diff for both buffers
 		local map_opts = { noremap = true, silent = true, desc = "Close AI Terminals Diff" }
 		local map_cmd = "<Cmd>lua require('ai-terminals.diff').close_diff()<CR>"
 
+		-- Apply mapping to original file buffer (now on the right)
 		if vim.api.nvim_buf_is_valid(orig_bufnr) then
 			vim.api.nvim_buf_set_keymap(orig_bufnr, "n", "q", map_cmd, map_opts)
 		end
+		-- Apply mapping to tmp file buffer (now on the left)
 		if vim.api.nvim_buf_is_valid(tmp_bufnr) then
 			vim.api.nvim_buf_set_keymap(tmp_bufnr, "n", "q", map_cmd, map_opts)
 		end
-		-- Optional: Move back if needed: vim.cmd("wincmd p")
+		-- Optional: Move focus back to the right window (original file) if desired
+		-- vim.cmd("wincmd p")
 	end
 
 	-- Notify about all diffed files at once
@@ -306,9 +315,17 @@ function Diff.close_diff()
 end
 
 ---Run rsync to create/update a backup of the current project directory.
----This is typically called when an AI terminal window is opened.
+---This is typically called when an AI terminal window is opened or entered.
+---Includes debouncing to prevent rapid successive calls.
 ---@return nil
 function Diff.pre_sync_code_base()
+	local current_time = vim.fn.reltimefloat(vim.fn.reltime()) * 1000 -- Time in milliseconds
+
+	if current_time - last_sync_time < sync_debounce_ms then
+		return -- Exit early if called within the debounce period
+	end
+	last_sync_time = current_time -- Update the last sync time
+
 	vim.notify("Syncing code-base", vim.log.levels.DEBUG)
 	local cwd = vim.fn.getcwd()
 	local cwd_name = vim.fn.fnamemodify(cwd, ":t")
