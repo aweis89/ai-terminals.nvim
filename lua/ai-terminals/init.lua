@@ -122,6 +122,7 @@ function M.send_diagnostics(name, opts)
 		vim.notify("Terminal '" .. name .. "' not found or could not be toggled", vim.log.levels.ERROR)
 		return
 	end
+	opts.submit = opts.submit ~= false
 	M.send(diagnostics, { term = term, submit = opts.submit or false })
 end
 
