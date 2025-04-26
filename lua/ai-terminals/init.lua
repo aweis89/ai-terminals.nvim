@@ -109,7 +109,7 @@ end
 
 ---Send diagnostics to a specific named terminal
 ---@param name string Terminal name (key in M.config.terminals)
----@param opts {term?: snacks.win?, submit?: boolean}|nil Options: `term` specifies the target terminal, `submit` sends a newline after the text if true.
+---@param opts {term?: snacks.win?, submit?: boolean, prefix?: string}|nil Options: `term` specifies the target terminal, `submit` sends a newline after the text if true, `prefix` is a string to prepend to the diagnostics.
 function M.send_diagnostics(name, opts)
 	local diagnostics = M.diagnostics()
 	if not diagnostics or #diagnostics == 0 then
@@ -122,8 +122,9 @@ function M.send_diagnostics(name, opts)
 		vim.notify("Terminal '" .. name .. "' not found or could not be toggled", vim.log.levels.ERROR)
 		return
 	end
-	opts.submit = opts.submit ~= false
-	M.send(diagnostics, { term = term, submit = opts.submit or false })
+	local submit = opts.submit ~= false -- Default submit to true unless explicitly false
+	local prefix = opts.prefix or "Fix these diagnostic issues:\n"
+	M.send(prefix .. diagnostics, { term = term, submit = submit })
 end
 
 ---Get formatted diagnostics (delegates to DiagnosticsLib)
