@@ -17,9 +17,7 @@ terminals, it offers:
   Claude CLI, custom scripts, etc.) without needing separate plugins for each.
 * **Future-Proofing:** As new CLI tools emerge, integrating them is often as
   simple as adding a new entry to your configuration.
-* **Consistency:** Provides a consistent workflow (sending
-  selections/diagnostics, diffing, reversing changes and creating prompts)
-  across different tools.
+* **Consistency:** Provides a consistent workflow (sending selections/diagnostics, diffing, reversing changes, creating prompts) across different tools.
 * **Leverages Existing Tools:** Benefits from the features and updates of the
   underlying CLI tools themselves.
 
@@ -58,35 +56,23 @@ want a single, configurable way to manage them within Neovim.
   the AI terminal, automatically wrapped in a markdown code block with the file
   path and language type included.
 
-  *Tip:* After sending the selection, ai-terminal doesn't send the enter key so
-  you can add custom prompts to the selection. This is a goto way of sending
-  prompts with context so the LLM knows which code the prompt pertains to
-  (similar to the add comment command for Aider).
-
-  The format of the visual selection in the terminal will look a bit strange
-  (e.g. shows ^I in-place of tabs). This is because it's using bracketed paste
-  mode which is a uniform way of sending multi-line text (without "\n"
-  submitting the prompt).
-* **🩺 Send Diagnostics:** Send diagnostics (errors, warnings, etc.) for the
-  current buffer or visual selection to the AI terminal, formatted with
-  severity, line/column numbers, messages, and the corresponding source code
-  lines.
-* **🚀 Run Command and Send Output:** Execute an arbitrary shell command and send
-  its standard output along with the exit code to the active AI terminal. This
-  is useful for running tests, linters, or other tools and feeding the results
-  directly to the AI.
+  *Tip:* When toggling a terminal in visual mode (`:h ai-terminals.toggle`), the selection is automatically sent *without* a trailing newline, allowing you to add further instructions before submitting. This uses bracketed paste mode for reliable multi-line input.
+* **🩺 Send Diagnostics:** Send diagnostics (errors, warnings, etc.) for the current buffer or visual selection to the AI terminal (`:h ai-terminals.send_diagnostics`), formatted with severity, line/column numbers, messages, and the corresponding source code lines.
+* **🚀 Run Command and Send Output:** Execute an arbitrary shell command and send its standard output and exit code to the active AI terminal (`:h ai-terminals.send_command_output`). Useful for running tests, linters, etc., and feeding results to the AI.
+* **📝 Prompt Keymaps:** Define custom keymaps (`:h ai-terminals.config`) to send pre-defined prompts to specific terminals.
+  * **Selection Handling:** Configure whether the keymap includes visual selection (`include_selection` option, defaults to `true`).
+    * If `true`, the keymap works in normal and visual modes. In visual mode, the selection is prefixed to the prompt.
+    * If `false`, the keymap works only in normal mode and sends just the prompt.
+  * **Submission Control:** Configure whether a newline is sent after the prompt (`submit` option, defaults to `true`).
+  * **Dynamic Prompts:** Prompt text can be a string or a function that returns a string. Functions are evaluated when the keymap is triggered, allowing dynamic content (e.g., current file path). See example in `:h ai-terminals.config`.
 
 ### 🔥 Aider Specific Features
 
-While the generic features work well with Aider, this plugin includes
-additional helpers specifically for Aider:
+While the generic features work well with Aider, this plugin includes additional helpers specifically for Aider (`:h ai-terminals.aider`):
 
-* **➕ Add Files:** Quickly add the current file or a list of files to the Aider
-  chat context using `/add` or `/read-only`.
-* **➕ Add Buffers:** Add all currently listed buffers to the Aider chat context.
-* **💬 Add Comments:** Insert comments above the current line with a custom
-  prefix (e.g., `AI!`, `AI?`). This automatically starts the Aider terminal, if
-  it's not already running, and brings it to the forefront.
+* **➕ Add Files:** Quickly add the current file or a list of files to the Aider chat context using `/add` or `/read-only` (`:h ai-terminals.aider_add_files`).
+* **➕ Add Buffers:** Add all currently listed buffers to the Aider chat context (`:h ai-terminals.aider_add_buffers`).
+* **💬 Add Comments:** Insert comments above the current line with a custom prefix (e.g., `AI!`, `AI?`). This automatically starts the Aider terminal if needed (`:h ai-terminals.aider_comment`).
 
 ## ⚠️ Prerequisites
 
