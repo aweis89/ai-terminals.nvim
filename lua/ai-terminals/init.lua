@@ -8,10 +8,130 @@ local ConfigLib = require("ai-terminals.config")
 local SelectionLib = require("ai-terminals.selection")
 require("snacks") -- Load snacks.nvim for annotations
 
----Setup function to merge user configuration with defaults.
+local function setup_prompt_keymaps()
+	local config = ConfigLib.config
+	if not config.prompt_keymaps or not config.prompts then
+		return -- No keymaps or prompts defined
+	end
+
+	for i, mapping in ipairs(config.prompt_keymaps) do
+		local key = mapping.key
+		local term_name = mapping.term
+		local prompt_key = mapping.prompt
+		local description = mapping.desc
+		local include_selection_config = mapping.include_selection -- Get configured value (true, false, or nil)
+
+		-- Determine default if nil: defaults to true
+		if include_selection_config == nil then
+			include_selection_config = true
+		end
+
+		-- Determine modes based on include_selection_config
+		local keymap_modes
+		if include_selection_config then
+			keymap_modes = { "n", "v" } -- Normal and Visual mode
+		else
+			keymap_modes = "n" -- Normal mode only
+		end
+
+		-- Validate terminal name
+		if not config.terminals or not config.terminals[term_name] then
+			vim.notify(
+				string.format("AI Terminals: Invalid terminal name '%s' in prompt_keymap #%d (%s)", term_name, i, key),
+				vim.log.levels.ERROR
+			)
+			goto continue -- Skip this mapping
+		end
+
+		-- Retrieve the prompt definition (string or function)
+		local prompt_definition = config.prompts[prompt_key]
+		if not prompt_definition then
+			vim.notify(
+				string.format("AI Terminals: Invalid prompt key '%s' in prompt_keymap #%d (%s)", prompt_key, i, key),
+				vim.log.levels.ERROR
+			)
+			goto continue -- Skip this mapping
+		end
+
+		-- Create the keymap for the determined mode(s)
+		vim.keymap.set(keymap_modes, key, function()
+			-- Evaluate the prompt definition inside the callback
+			local prompt_text -- This will hold the final string prompt
+			if type(prompt_definition) == "function" then
+				local success, result = pcall(prompt_definition)
+				if success and type(result) == "string" then
+					prompt_text = result
+				else
+					vim.notify(
+						string.format(
+							"AI Terminals: Error evaluating prompt function for keymap #%d (%s): %s",
+							i,
+							key,
+							tostring(result) -- Show error message if pcall failed
+						),
+						vim.log.levels.ERROR
+					)
+					return -- Don't proceed if prompt function failed
+				end
+			elseif type(prompt_definition) == "string" then
+				prompt_text = prompt_definition -- Use the string directly
+			else
+				vim.notify(
+					string.format(
+						"AI Terminals: Invalid prompt type (%s) for keymap #%d (%s)",
+						type(prompt_definition),
+						i,
+						key
+					),
+					vim.log.levels.ERROR
+				)
+				return -- Don't proceed with invalid prompt type
+			end
+
+			local message_to_send = prompt_text -- Start with the evaluated prompt
+			local visual_selection_text = nil
+			local current_vim_mode = vim.fn.mode(1) -- Get full mode string (e.g., "v", "V", "n")
+			local submit_prompt = mapping.submit == nil or mapping.submit -- Default submit to true
+
+			-- Re-check include_selection config inside callback for logic clarity
+			local should_include_selection = mapping.include_selection
+			if should_include_selection == nil then
+				should_include_selection = true -- Default to true if not specified
+			end
+
+			-- Check if we are actually in visual mode *and* selection should be included
+			if string.match(current_vim_mode, "^[vVsS]") and should_include_selection then
+				visual_selection_text = M.get_visual_selection_with_header(0) -- 0 for current buffer
+				if visual_selection_text and visual_selection_text ~= "" then
+					-- Always prefix the selection
+					message_to_send = visual_selection_text .. "\n\n" .. prompt_text
+				else
+					-- No visual selection found, notify and send only the prompt
+					vim.notify("No visual selection found. Sending prompt only.", vim.log.levels.INFO)
+					-- message_to_send remains the original prompt_text
+				end
+			else
+				-- Not in visual mode, or selection_mode is false.
+				-- Just use the base prompt text.
+				-- message_to_send remains the original prompt_text
+			end
+
+			-- Send the potentially modified message to the specified terminal
+			M.send_term(term_name, message_to_send, { submit = submit_prompt }) -- Use the configured submit value
+
+			-- Optional: Focus the terminal after sending
+			-- M.focus()
+		end, { desc = description })
+
+		::continue:: -- Label for goto
+	end
+end
+
+---Setup function to merge user configuration with defaults and create keymaps.
 ---@param user_config ConfigType|nil
 function M.setup(user_config)
 	ConfigLib.config = vim.tbl_deep_extend("force", ConfigLib.config, user_config or {})
+	setup_prompt_keymaps() -- Create keymaps after config is merged
 end
 
 ---Create or toggle a terminal by name with specified position (delegates to TerminalLib)
