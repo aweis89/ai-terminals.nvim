@@ -30,9 +30,12 @@ Diff.DIFF_IGNORE_PATTERNS = {
 Diff.BASE_COPY_DIR = vim.fn.stdpath("cache") .. "/ai_terminals_diff/"
 
 ---Compare current directory with its backup and open differing files or show delta.
----@param opts? { diff_func?: function, delta?: boolean } Options table:
+---@param opts? { diff_func?: function, delta?: boolean, pre_diff_hook?: fun(cwd_file_path:string|nil, tmp_file_path:string|nil):void } Options table:
 ---  `diff_func`: A custom function to handle the diff (receives cwd, tmp_dir).
 ---  `delta`: If true, use `diff -ur | delta` in a terminal instead of vimdiff.
+---  `pre_diff_hook`: An optional function called for each file pair before diffing.
+---                   `cwd_file_path` is the path in the current working directory (nil if file is only in backup).
+---                   `tmp_file_path` is the path in the backup directory (nil if file is only in cwd).
 ---@return nil
 function Diff.diff_changes(opts)
 	opts = opts or {}
@@ -157,6 +160,11 @@ function Diff.diff_changes(opts)
 	local orig_files_to_notify = {}
 	-- Open each differing file in a split view
 	for i, files in ipairs(diff_files) do
+		-- Call pre_diff_hook if provided
+		if opts.pre_diff_hook then
+			opts.pre_diff_hook(files.orig, files.tmp) -- files.orig is cwd, files.tmp is backup
+		end
+
 		table.insert(orig_files_to_notify, vim.fn.fnamemodify(files.orig, ":t")) -- Add only the filename
 
 		if i > 1 then
