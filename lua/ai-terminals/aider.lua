@@ -22,30 +22,33 @@ function Aider.comment(prefix)
 		term:hide()
 	end
 
-	local comment_text = vim.fn.input("Enter comment (" .. prefix .. "): ")
-	if comment_text == "" then
-		return -- Do nothing if the user entered nothing
-	end
-	local current_line = vim.api.nvim_win_get_cursor(0)[1]
+	vim.ui.input({ prompt = "Enter comment (" .. prefix .. "): " }, function(comment_text)
+		if not comment_text then
+			vim.notify("No comment entered")
+			return -- Do nothing if the user entered nothing
+		end
 
-	local cs = vim.bo.commentstring
-	local comment_string = (cs and #cs > 0) and cs or "# %s"
+		local current_line = vim.api.nvim_win_get_cursor(0)[1]
 
-	-- Format the comment string
-	local formatted_prefix = " " .. prefix .. " " -- Add spaces around the prefix
-	local formatted_comment
-	if comment_string:find("%%s") then
-		formatted_comment = comment_string:format(formatted_prefix .. comment_text)
-	else
-		-- Handle cases where commentstring might not have %s (less common)
-		-- or just prepend if it's a simple prefix like '#'
-		formatted_comment = comment_string .. formatted_prefix .. comment_text
-	end
-	-- Insert the comment above the current line
-	vim.api.nvim_buf_set_lines(bufnr, current_line - 1, current_line - 1, false, { formatted_comment })
-	vim.cmd.write() -- Save the file
-	vim.cmd.stopinsert() -- Exit insert mode
-	Term.open("aider") -- Ensure terminal is focused/open for potential follow-up, using name
+		local cs = vim.bo.commentstring
+		local comment_string = (cs and #cs > 0) and cs or "# %s"
+
+		-- Format the comment string
+		local formatted_prefix = " " .. prefix .. " " -- Add spaces around the prefix
+		local formatted_comment
+		if comment_string:find("%%s") then
+			formatted_comment = comment_string:format(formatted_prefix .. comment_text)
+		else
+			-- Handle cases where commentstring might not have %s (less common)
+			-- or just prepend if it's a simple prefix like '#'
+			formatted_comment = comment_string .. formatted_prefix .. comment_text
+		end
+		-- Insert the comment above the current line
+		vim.api.nvim_buf_set_lines(bufnr, current_line - 1, current_line - 1, false, { formatted_comment })
+		vim.cmd.write() -- Save the file
+		vim.cmd.stopinsert() -- Exit insert mode
+		Term.open("aider") -- Ensure terminal is focused/open for potential follow-up, using name
+	end)
 end
 
 -- Helper function to send commands to the aider terminal
