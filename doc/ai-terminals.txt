@@ -1,0 +1,448 @@
+*ai-terminals.nvim*	AI Terminals for Neovim
+
+==============================================================================
+CONTENTS						*ai-terminals-contents*
+
+1. Introduction			|ai-terminals-introduction|
+2. Features				|ai-terminals-features|
+3. Prerequisites		|ai-terminals-prerequisites|
+4. Dependencies			|ai-terminals-dependencies|
+5. Configuration		|ai-terminals-configuration|
+6. Usage				|ai-terminals-usage|
+7. API					|ai-terminals-api|
+8. Aider Helpers		|ai-terminals-aider|
+9. Installation			|ai-terminals-installation|
+
+==============================================================================
+INTRODUCTION						*ai-terminals-introduction*
+
+ai-terminals.nvim seamlessly integrates command-line (CLI) AI coding agents
+into Neovim. It provides a unified workflow for interacting with AI assistants
+directly within your editor, reducing the need for specific, dedicated AI
+plugins for each tool.
+
+Motivation:
+- Flexibility: Easily switch between or use multiple AI agents.
+- Future-Proofing: Integrate new CLI tools easily via configuration.
+- Consistency: Unified workflow for sending selections/diagnostics, diffing, etc.
+- Leverages Existing Tools: Benefits from the features of the CLI tools.
+
+Ideal for users who prefer terminal-based AI interaction and want a single,
+configurable way to manage them within Neovim.
+
+==============================================================================
+FEATURES						*ai-terminals-features*
+
+Generic Features (Work with any terminal-based AI agent): ~
+
+*ai-terminals-feature-terminal-integration*
+*Configurable Terminal Integration:*
+	Define and manage terminals for various AI CLI tools via the `terminals`
+	option in |ai-terminals-configuration|. Uses |Snacks.nvim| for window
+	management.
+
+*ai-terminals-feature-diffing*
+*Diff View & Revert:*
+	- Track Changes: See modifications since the last AI terminal interaction.
+	- How it Works: If |ai-terminals-config-enable_diffing| is `true` (default),
+	  maintains a persistent `rsync` backup, synced on terminal entry.
+	- View Differences:
+		- |ai-terminals.diff_changes()|: Opens modified files in `vimdiff`.
+		- |ai-terminals.diff_changes()| with `{ delta = true }`: Shows unified diff
+		  using `delta` tool (requires `delta` installed).
+	- Revert Changes: |ai-terminals.revert_changes()| reverses changes.
+	- Quick Close: Press `q` in diff views to close.
+
+*ai-terminals-feature-reloading*
+*Automatic File Reloading:*
+	When focus leaves the AI terminal, listed buffers are checked and reloaded
+	if modified by the AI.
+
+*ai-terminals-feature-send-selection*
+*Send Visual Selection:*
+	Send selected text (visual mode) to the AI terminal, wrapped in a markdown
+	code block with file path and language. See |ai-terminals.toggle()|.
+
+*ai-terminals-feature-send-diagnostics*
+*Send Diagnostics:*
+	Send diagnostics (errors, warnings) for the current buffer or visual
+	selection to the AI terminal. See |ai-terminals.send_diagnostics()|.
+
+*ai-terminals-feature-send-command-output*
+*Run Command and Send Output:*
+	Execute a shell command and send its stdout/exit code to the active AI
+	terminal. See |ai-terminals.send_command_output()|.
+
+*ai-terminals-feature-prompt-keymaps*
+*Prompt Keymaps:*
+	Define custom keymaps to send pre-defined prompts. See
+	|ai-terminals-config-prompt-keymaps|.
+	- Selection Handling: Configure if/how visual selection is included
+	  (`include_selection` option).
+	- Submission Control: Configure if newline is sent (`submit` option).
+	- Dynamic Prompts: Prompts can be strings or functions returning strings.
+
+Aider Specific Features: ~
+See |ai-terminals-aider|.
+
+==============================================================================
+PREREQUISITES					*ai-terminals-prerequisites*
+
+You need to install the specific command-line AI tools you want to use
+*before* configuring them in this plugin. Ensure they are accessible in your
+system's `PATH`.
+
+Examples:
+- Aider: https://github.com/paul-gauthier/aider
+- Claude CLI: https://github.com/anthropics/claude-cli
+- Goose: https://github.com/aweis89/goose
+- AI Chat: https://github.com/sigoden/aichat
+- Kode: https://github.com/dnakov/anon-kode
+- Delta (Optional, for diffing): https://github.com/dandavison/delta
+
+==============================================================================
+DEPENDENCIES					*ai-terminals-dependencies*
+
+- [Snacks.nvim](https://github.com/folke/snacks.nvim) |snacks.nvim|
+
+==============================================================================
+CONFIGURATION					*ai-terminals-configuration*
+
+Configure the plugin using the `setup` function. Calling `setup()` is optional
+if the defaults are sufficient. The core functionality works out-of-the-box.
+>lua
+require("ai-terminals").setup({ ... })
+<
+Options: ~
+
+*ai-terminals-config-terminals*
+`terminals`
+	Table defining the AI terminals. Keys are terminal names (used in API calls
+	like |ai-terminals.toggle()|), values are tables with a `cmd` field.
+	`cmd`: string | function returning string. The command to run the AI tool.
+	Example: >lua
+	terminals = {
+	  aider = {
+	    cmd = function()
+	      return string.format("aider --watch-files --%s-mode", vim.o.background)
+	    end,
+	  },
+	  my_custom_ai = {
+	    cmd = "/path/to/my/ai_script.sh --interactive",
+	  },
+	  goose = nil, -- Remove default terminal
+	}
+<
+*ai-terminals-config-window_dimensions*
+`window_dimensions`
+	Table defining window sizes and appearance for different positions ('float',
+	'bottom', 'top', 'left', 'right'). Uses |Snacks.nvim| options.
+	Example: >lua
+	window_dimensions = {
+	  float = { width = 0.8, height = 0.7 },
+	  bottom = { width = 1.0, height = 0.4 },
+	  border = "rounded",
+	}
+<
+*ai-terminals-config-default_position*
+`default_position`
+	String specifying the default window position if none is given in API calls.
+	Options: 'float', 'bottom', 'top', 'left', 'right'. Default: "float".
+
+*ai-terminals-config-enable_diffing*
+`enable_diffing`
+	Boolean (default: `true`). Enables backup sync on terminal entry for diffing.
+	If `false`, |ai-terminals.diff_changes()| and |ai-terminals.revert_changes()|
+	will not work.
+
+*ai-terminals-config-show_diffs_on_leave*
+`show_diffs_on_leave`
+	Boolean or table (default: `true`). Automatically show diffs (if present)
+	when leaving the terminal window. Set to `false` or `nil` to disable. Set to
+	`{ delta = true }` to automatically use delta instead of vimdiff.
+
+*ai-terminals-config-prompts*
+`prompts`
+	Table mapping prompt keys (strings) to prompt definitions. Used by
+	|ai-terminals-config-prompt-keymaps|.
+	Value: string | function returning string. Functions are evaluated at runtime.
+	Example: >lua
+	prompts = {
+	  explain_code = "Explain the selected code snippet.",
+	  summarize_file = function()
+	    local file_path = vim.fn.expand("%:p")
+	    if file_path == "" then
+	      return "Summarize the current buffer content."
+	    else
+	      return string.format("Summarize the content of the file: `%s`", file_path)
+	    end
+	  end,
+	}
+<
+*ai-terminals-config-prompt-keymaps*
+`prompt_keymaps`
+	Array of tables defining keymaps for prompts. Each table has:
+	- `key`: string (keybinding, e.g., "<leader>ae")
+	- `term`: string (target terminal name from `terminals`)
+	- `prompt`: string (key from `prompts` table)
+	- `desc`: string (keymap description)
+	- `include_selection`: boolean (optional, default `true`).
+	  If `true`, map works in normal & visual modes (prefixes selection in visual).
+	  If `false`, map works only in normal mode.
+	- `submit`: boolean (optional, default `true`). If `true`, send newline
+	  after prompt.
+	Example: >lua
+	prompt_keymaps = {
+	  { key = "<leader>ae", term = "aider", prompt = "explain_code", desc = "Aider: Explain selection" },
+	  { key = "<leader>asf", term = "aichat", prompt = "summarize_file", desc = "Aichat: Summarize current file", include_selection = false },
+	  { key = "<leader>ar", term = "aider", prompt = "refactor_code", desc = "Aider: Refactor selection", include_selection = true, submit = false },
+	}
+<
+==============================================================================
+USAGE							*ai-terminals-usage*
+
+Interact with the plugin primarily through Lua functions bound to keymaps.
+See |ai-terminals-api| for available functions and |ai-terminals-installation|
+for example keymap setups.
+
+Common Workflows:
+- Toggle a terminal: Use |ai-terminals.toggle()|. If in visual mode, selection is sent.
+- Send diagnostics: Use |ai-terminals.send_diagnostics()|.
+- View changes: Use |ai-terminals.diff_changes()|.
+- Revert changes: Use |ai-terminals.revert_changes()|.
+- Use prompt keymaps: Trigger the key defined in |ai-terminals-config-prompt-keymaps|.
+
+==============================================================================
+API							*ai-terminals-api*
+
+Public Lua functions available under `require("ai-terminals")`:
+
+*ai-terminals.setup()*
+`setup({config})`
+	Configures the plugin with user options, merging them with defaults.
+	See |ai-terminals-configuration|.
+
+*ai-terminals.toggle()*
+`toggle({terminal_name}, {position})`
+	Toggles the specified terminal window. If the terminal doesn't exist, it's
+	created. If it exists and is hidden, it's shown. If it exists and is
+	visible, it's hidden.
+	If invoked in visual mode, the current visual selection is automatically
+	sent to the terminal (using |ai-terminals.get_visual_selection_with_header()|)
+	*without* a trailing newline, allowing further instructions before submitting.
+	- `{terminal_name}`: string, the name of the terminal (key in the `terminals`
+	  configuration table).
+	- `{position}`: string|nil, optional position ('float', 'bottom', 'top',
+	  'left', 'right') overriding the default |ai-terminals-config-default_position|.
+	Returns the |snacks.win| object for the terminal or nil if creation failed.
+
+*ai-terminals.open()*
+`open({terminal_name}, {position})`
+	Opens the specified terminal, creating it if necessary. Unlike `toggle`, this
+	will always ensure the terminal is visible.
+	Parameters and return value are the same as |ai-terminals.toggle()|.
+
+*ai-terminals.get()*
+`get({terminal_name}, {position})`
+	Gets an existing terminal instance without changing its visibility state. Can
+	be used to check if a terminal exists or to get its |snacks.win| object for
+	use with other functions like |ai-terminals.send()|.
+	Parameters are the same as |ai-terminals.toggle()|.
+	Returns `snacks.win?, boolean?` (the terminal object or nil, and a boolean
+	indicating if it was newly created).
+
+*ai-terminals.focus()*
+`focus()`
+	Moves the cursor focus to the most recently used AI terminal window managed
+	by this plugin.
+
+*ai-terminals.send()*
+`send({text}, {opts})`
+	Sends arbitrary text to a terminal.
+	- `{text}`: string, the text to send. Multi-line text is handled correctly
+	  using bracketed paste mode.
+	- `{opts}`: table|nil, options:
+		- `term`: |snacks.win| object (optional). The target terminal. If omitted,
+		  defaults to the most recently used terminal managed by this plugin.
+		- `submit`: boolean (optional, default `false`). If `true`, appends a
+		  newline character (`\n`) to the text before sending, effectively
+		  submitting the command in most shells/REPLs.
+		- `insert_mode`: boolean (optional, default `false`). If `true`, attempts
+		  to switch the terminal window to insert mode after sending the text.
+
+*ai-terminals.send_term()*
+`send_term({name}, {text}, {opts})`
+	Sends text to a *named* terminal, opening it if needed using |ai-terminals.open()|.
+	This is a convenience wrapper around |ai-terminals.open()| and |ai-terminals.send()|.
+	- `{name}`: string, the name of the terminal (key in `terminals` config).
+	- `{text}`: string, the text to send.
+	- `{opts}`: table|nil, options:
+		- `submit`: boolean (optional, default `false`). Passed to |ai-terminals.send()|.
+
+*ai-terminals.send_diagnostics()*
+`send_diagnostics({name}, {opts})`
+	Formats diagnostics from the current buffer (or visual selection range if
+	in visual mode) and sends them to the specified named terminal. Opens the
+	terminal if needed using |ai-terminals.toggle()|.
+	- `{name}`: string, the name of the target terminal.
+	- `{opts}`: table|nil, options:
+		- `term`: |snacks.win| object (optional). Explicitly specify the target
+		  terminal object, bypassing the lookup by name.
+		- `submit`: boolean (optional, default `true`). Whether to submit the
+		  diagnostics message with a newline.
+		- `prefix`: string (optional, default "Fix these diagnostic issues:\n").
+		  Text to prepend before the formatted diagnostics list.
+
+*ai-terminals.diagnostics()*
+`diagnostics()`
+	Gets formatted diagnostics for the current buffer (or visual selection range)
+	as a single multi-line string. Uses |vim.diagnostic.get()| internally.
+	Returns `string|nil`.
+
+*ai-terminals.diff_changes()*
+`diff_changes({opts})`
+	Shows changes between the current project state and the last backup sync
+	created when an AI terminal was opened. Requires |ai-terminals-config-enable_diffing|
+	to be `true`.
+	- `{opts}`: table|nil, options:
+		- `delta`: boolean (optional, default `false`). If `true`, uses the `delta`
+		  tool (must be installed) to show a unified diff in a terminal buffer.
+		  If `false` or omitted, uses Neovim's built-in `vimdiff` to open
+		  modified files side-by-side.
+		- `diff_func`: function (optional). A custom function to handle the diff,
+		  receiving `(cwd, tmp_dir)` as arguments. Overrides default behavior.
+
+*ai-terminals.revert_changes()*
+`revert_changes()`
+	Reverts changes in the project directory by restoring files from the backup
+	created by the diffing mechanism. Requires |ai-terminals-config-enable_diffing|
+	to be `true`. Uses `rsync` to copy files back from the backup directory.
+
+*ai-terminals.close_diff()*
+`close_diff()`
+	Closes vimdiff windows or the delta terminal buffer opened by
+	|ai-terminals.diff_changes()|. Wipes out the temporary diff buffers.
+
+*ai-terminals.send_command_output()*
+`send_command_output({term_name}, {cmd}, {opts})`
+	Executes an arbitrary shell command and sends its standard output and exit
+	code to the specified named terminal. Opens the terminal if needed.
+	- `{term_name}`: string, the name of the target terminal.
+	- `{cmd}`: string|nil. The shell command to execute. If `nil` or an empty
+	  string, prompts the user to enter a command using |vim.ui.input()|.
+	- `{opts}`: table|nil, options passed to the internal send function:
+		- `term`: |snacks.win| object (optional). Explicit target terminal.
+		- `submit`: boolean (optional, default `true`). Submit the output message?
+
+*ai-terminals.destroy_all()*
+`destroy_all()`
+	Closes all AI terminal windows managed by this plugin and attempts to stop
+	their associated background processes gracefully using the underlying
+	|Snacks.nvim| `destroy()` method.
+
+*ai-terminals.get_visual_selection()*
+`get_visual_selection({bufnr})`
+	Gets raw details about the current visual selection.
+	- `{bufnr}`: number|nil (optional, defaults to current buffer 0).
+	Returns a tuple: `lines[]|nil, filepath|nil, start_line|nil, end_line|nil`.
+	Returns nil values if not in visual mode or no selection exists.
+
+*ai-terminals.get_visual_selection_with_header()*
+`get_visual_selection_with_header({bufnr})`
+	Gets the visual selection and formats it as a markdown code block, including
+	a header with the file path and line range.
+	- `{bufnr}`: number|nil (optional, defaults to current buffer 0).
+	Returns `string|nil`. Example format:
+	> ```markdown
+	> File: path/to/your/file.lua (Lines: 10-15)
+	> ```lua
+	> -- selected lua code here
+	> ```
+	> ```
+<
+==============================================================================
+AIDER HELPERS					*ai-terminals-aider*
+
+These functions provide convenient wrappers for common Aider commands, sending
+them to the terminal configured with the name "aider" (see
+|ai-terminals-config-terminals|). They generally ensure the "aider" terminal is
+open before sending the command.
+
+*ai-terminals.aider_comment()*
+`aider_comment({prefix})`
+	Prompts the user for a comment using |vim.ui.input()|. If a comment is
+	provided, it inserts the `{prefix}` followed by the comment text on the line
+	above the cursor, saves the current file, and ensures the "aider" terminal
+	is open using |ai-terminals.toggle()|.
+	- `{prefix}`: string. The text to prepend to the user's comment (e.g., "AI!", "AI?").
+
+*ai-terminals.aider_add_files()*
+`aider_add_files({files}, {opts})`
+	Sends Aider's `/add` or `/read-only` command to the "aider" terminal.
+	- `{files}`: string | string[]. A single file path or a list of file paths
+	  to add to the Aider chat context. Relative paths are made absolute based
+	  on the current working directory.
+	- `{opts}`: table|nil, options:
+		- `read_only`: boolean (optional, default `false`). If `true`, sends the
+		  `/read-only` command instead of `/add`.
+
+*ai-terminals.aider_add_buffers()*
+`aider_add_buffers()`
+	Retrieves a list of all currently listed buffers (|vim.fn.getbufinfo()| with
+	`{"buflisted": 1}`). Filters out buffers without associated file paths. Sends
+	an `/add` command to the "aider" terminal containing the list of valid file
+	paths.
+
+==============================================================================
+INSTALLATION					*ai-terminals-installation*
+
+Requires |Snacks.nvim| dependency.
+
+Using `lazy.nvim`: ~
+>lua
+-- lua/plugins/ai-terminals.lua
+return {
+  {
+    "aweis89/ai-terminals.nvim",
+    opts = {
+      -- Optional configuration overrides here
+      -- See :h ai-terminals-configuration
+    },
+    dependencies = { "folke/snacks.nvim" },
+    keys = {
+      -- Optional: Define keymaps directly here
+      { "<leader>ata", function() require("ai-terminals").toggle("aider") end, mode = { "n", "v" }, desc = "Toggle Aider" },
+      -- ... other keymaps ...
+    },
+    config = function(_, opts)
+      -- Or configure and set keymaps within the config function
+      require("ai-terminals").setup(opts)
+      vim.keymap.set({"n", "v"}, "<leader>atc", function() require("ai-terminals").toggle("claude") end, { desc = "Toggle Claude" })
+      -- ... other keymaps ...
+    end,
+  },
+}
+<
+Restart Neovim or run `:Lazy sync`.
+
+Using `packer.nvim`: ~
+>lua
+-- lua/plugins.lua or similar
+use({
+  "aweis89/ai-terminals.nvim",
+  requires = { "folke/snacks.nvim" },
+  config = function()
+    -- Optional: Call setup only if you need to customize defaults
+    require("ai-terminals").setup({
+      -- Your custom configuration here
+    })
+    -- Define keymaps here
+    vim.keymap.set({"n", "v"}, "<leader>ata", function() require("ai-terminals").toggle("aider") end, { desc = "Toggle Aider" })
+    -- ... other keymaps ...
+  end,
+})
+<
+Run `:PackerSync`.
+
+==============================================================================
+vim: ft=help :

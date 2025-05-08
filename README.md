@@ -17,9 +17,7 @@ terminals, it offers:
   Claude CLI, custom scripts, etc.) without needing separate plugins for each.
 * **Future-Proofing:** As new CLI tools emerge, integrating them is often as
   simple as adding a new entry to your configuration.
-* **Consistency:** Provides a consistent workflow (sending
-  selections/diagnostics, diffing, reversing changes and creating prompts)
-  across different tools.
+* **Consistency:** Provides a consistent workflow (sending selections/diagnostics, diffing, reversing changes, creating prompts) across different tools.
 * **Leverages Existing Tools:** Benefits from the features and updates of the
   underlying CLI tools themselves.
 
@@ -58,35 +56,23 @@ want a single, configurable way to manage them within Neovim.
   the AI terminal, automatically wrapped in a markdown code block with the file
   path and language type included.
 
-  *Tip:* After sending the selection, ai-terminal doesn't send the enter key so
-  you can add custom prompts to the selection. This is a goto way of sending
-  prompts with context so the LLM knows which code the prompt pertains to
-  (similar to the add comment command for Aider).
-
-  The format of the visual selection in the terminal will look a bit strange
-  (e.g. shows ^I in-place of tabs). This is because it's using bracketed paste
-  mode which is a uniform way of sending multi-line text (without "\n"
-  submitting the prompt).
-* **🩺 Send Diagnostics:** Send diagnostics (errors, warnings, etc.) for the
-  current buffer or visual selection to the AI terminal, formatted with
-  severity, line/column numbers, messages, and the corresponding source code
-  lines.
-* **🚀 Run Command and Send Output:** Execute an arbitrary shell command and send
-  its standard output along with the exit code to the active AI terminal. This
-  is useful for running tests, linters, or other tools and feeding the results
-  directly to the AI.
+  *Tip:* When toggling a terminal in visual mode (`:h ai-terminals.toggle`), the selection is automatically sent *without* a trailing newline, allowing you to add further instructions before submitting. This uses bracketed paste mode for reliable multi-line input.
+* **🩺 Send Diagnostics:** Send diagnostics (errors, warnings, etc.) for the current buffer or visual selection to the AI terminal (`:h ai-terminals.send_diagnostics`), formatted with severity, line/column numbers, messages, and the corresponding source code lines.
+* **🚀 Run Command and Send Output:** Execute an arbitrary shell command and send its standard output and exit code to the active AI terminal (`:h ai-terminals.send_command_output`). Useful for running tests, linters, etc., and feeding results to the AI.
+* **📝 Prompt Keymaps:** Define custom keymaps (`:h ai-terminals.config`) to send pre-defined prompts to specific terminals.
+  * **Selection Handling:** Configure whether the keymap includes visual selection (`include_selection` option, defaults to `true`).
+    * If `true`, the keymap works in normal and visual modes. In visual mode, the selection is prefixed to the prompt.
+    * If `false`, the keymap works only in normal mode and sends just the prompt.
+  * **Submission Control:** Configure whether a newline is sent after the prompt (`submit` option, defaults to `true`).
+  * **Dynamic Prompts:** Prompt text can be a string or a function that returns a string. Functions are evaluated when the keymap is triggered, allowing dynamic content (e.g., current file path). See example in `:h ai-terminals.config`.
 
 ### 🔥 Aider Specific Features
 
-While the generic features work well with Aider, this plugin includes
-additional helpers specifically for Aider:
+While the generic features work well with Aider, this plugin includes additional helpers specifically for Aider (`:h ai-terminals.aider`):
 
-* **➕ Add Files:** Quickly add the current file or a list of files to the Aider
-  chat context using `/add` or `/read-only`.
-* **➕ Add Buffers:** Add all currently listed buffers to the Aider chat context.
-* **💬 Add Comments:** Insert comments above the current line with a custom
-  prefix (e.g., `AI!`, `AI?`). This automatically starts the Aider terminal, if
-  it's not already running, and brings it to the forefront.
+* **➕ Add Files:** Quickly add the current file or a list of files to the Aider chat context using `/add` or `/read-only` (`:h ai-terminals.aider_add_files`).
+* **➕ Add Buffers:** Add all currently listed buffers to the Aider chat context (`:h ai-terminals.aider_add_buffers`).
+* **💬 Add Comments:** Insert comments above the current line with a custom prefix (e.g., `AI!`, `AI?`). This automatically starts the Aider terminal if needed (`:h ai-terminals.aider_comment`).
 
 ## ⚠️ Prerequisites
 
@@ -496,177 +482,9 @@ underlying `Snacks` library's `destroy()` method. The next time you use `toggle`
 or `open` for a specific AI tool, a completely new instance of that tool will be
 started.
 
-#### 🤝 Integrating with a File Picker (e.g., snacks.nvim)
+### 🧩 Integrating with Other Tools or Pickers
 
-You can integrate the `aider_add_files` function with file pickers like
-`snacks.nvim` to easily add selected files to the Aider context.
-
-Here's an example of how you might configure `snacks.nvim` to add actions for
-sending files to Aider:
-
-```lua
--- In your snacks.nvim configuration (e.g., lua/plugins/snacks.lua)
-local snacks = require("snacks")
-local ai_terminals = require("ai-terminals") -- Make sure ai-terminals is loaded
-
--- Helper function to get selected file paths from the picker
-local function add_files_from_picker(picker, read_only)
-  local selected_items = picker:get_selected_items()
-  if not selected_items or #selected_items == 0 then
-    vim.notify("No files selected in picker", vim.log.levels.WARN)
-    return
-  end
-
-  local files_to_add = {}
-  for _, item in ipairs(selected_items) do
-    -- Assuming item.filename holds the full path
-    if item.filename then
-      table.insert(files_to_add, item.filename)
-    end
-  end
-
-  if #files_to_add > 0 then
-    ai_terminals.aider_add_files(files_to_add, { read_only = read_only })
-  else
-    vim.notify("Could not extract filenames from selected items", vim.log.levels.WARN)
-  end
-end
-
--- Define actions for Snacks
-local actions = {
-  aider_add = function(picker)
-    add_files_from_picker(picker, false) -- Add normally
-  end,
-  aider_read_only = function(picker)
-    add_files_from_picker(picker, true) -- Add as read-only
-  end,
-}
-
--- Configure Snacks sources to use these actions
-snacks.setup({
-  -- ... your other snacks config ...
-  sources = {
-    files = {
-      -- ... your files source config ...
-      actions = {
-        ["<leader><space>a"] = actions.aider_add,
-        ["<leader><space>r"] = actions.aider_read_only,
-      },
-    },
-    git_status = {
-      -- ... your git_status source config ...
-      actions = {
-        ["<leader><space>a"] = actions.aider_add,
-        ["<leader><space>r"] = actions.aider_read_only,
-      },
-    },
-    -- ... other sources ...
-  },
-})
-
--- Optional: Add keymaps to open Snacks with these sources
--- vim.keymap.set("n", "<leader>pf", function() snacks.show("files") end, { desc = "Pick Files (Snacks)" })
--- vim.keymap.set("n", "<leader>pg", function() snacks.show("git_status") end, { desc = "Pick Git Status (Snacks)" })
-```
-
-This setup defines two actions, `aider_add` and `aider_read_only`, which use the
-helper function `add_files_from_picker` to collect selected file paths from the
-picker and pass them to `require("ai-terminals").aider_add_files`. Keymaps are
-then added to specific picker sources (like `files` and `git_status`) to
-trigger these actions.
-
-##### 🔍 Sending Grep Results to Aider
-
-Similarly, you can configure Snacks to send selected lines from a grep search
-directly to the Aider terminal.
-
-```lua
--- In your snacks.nvim configuration (e.g., lua/plugins/snacks.lua)
-local snacks = require("snacks")
-local ai_terminals = require("ai-terminals") -- Ensure ai-terminals is loaded
-
--- Helper function to send selected grep lines to Aider
-local function send_search_results_to_aider(picker)
-  local selected_items = picker:get_selected_items()
-  if not selected_items or #selected_items == 0 then
-    vim.notify("No lines selected in picker", vim.log.levels.WARN)
-    return
-  end
-
-  local lines_to_send = {}
-  for _, item in ipairs(selected_items) do
-    -- Assuming item.text holds the grep line content
-    if item.text then
-      table.insert(lines_to_send, item.text)
-    end
-  end
-
-  if #lines_to_send > 0 then
-    -- Send the concatenated lines to the *active* or *last used* Aider
-    -- terminal. Note: This uses the generic 'send' function, assuming Aider
-    -- is the target. You might need to adjust if you have multiple terminals
-    -- open.
-    ai_terminals.send_term("aider", table.concat(lines_to_send, "\n"))
-    -- Optionally focus the aider terminal after sending
-    -- ai_terminals.focus()
-  else
-    vim.notify("Could not extract text from selected items", vim.log.levels.WARN)
-  end
-end
-
--- Define an action for sending search results
-local actions = {
-  aider_search = function(picker)
-    send_search_results_to_aider(picker)
-  end,
-  -- Include your aider_add and aider_read_only actions from the previous
-  -- example if needed
-}
-
--- Configure the grep source in Snacks
-snacks.setup({
-  -- ... your other snacks config ...
-  sources = {
-    grep = {
-      -- ... your grep source config ...
-      actions = {
-        ["<leader><space>s"] = actions.aider_search, -- Mnemonic: Send Search
-      },
-    },
-    -- Include your files and git_status sources with their actions here
-  },
-})
-
--- Optional: Add a keymap to open the grep source
--- vim.keymap.set("n", "<leader>ps", function() snacks.show("grep") end, { desc = "Pick Grep (Snacks)" })
-
--- Example of overriding default grep options if needed
--- local overrides = {
---   grep = {
---     cmd = "rg",
---     args = function(opts)
---       return { "--vimgrep", "--no-heading", "--smart-case", opts.query }
---     end,
---     -- Add your actions here as well if overriding the whole source table
---     actions = {
---       ["<leader><space>s"] = actions.aider_search,
---     },
---   },
--- }
--- return vim.tbl_deep_extend("force", opts or {}, overrides)
-```
-
-This adds a `send_search` helper function that extracts the text lines from the
-selected items in the picker (typically grep results) and sends them
-concatenated together to the Aider terminal using
-`require("ai-terminals").send`. An `aider_search` action is defined to use this
-helper, and a keymap (`<leader><space>s`) is added to the `grep` source to
-trigger this action.
-
-💡 **Tip:** You can use `<Tab>` in the Snacks picker to select multiple items
-(files or grep lines) one by one, or `<C-a>` (Control-A) to select *all*
-visible items. When you then use the `aider_add` or `aider_search` keymaps, all
-selected items will be sent to Aider at once!
+`ai-terminals.nvim` can be easily integrated with other Neovim plugins for advanced workflows. Check the [recipes directory](recipes/) for examples.
 
 ## 🤝 Contributing
 
