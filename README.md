@@ -482,7 +482,7 @@ underlying `Snacks` library's `destroy()` method. The next time you use `toggle`
 or `open` for a specific AI tool, a completely new instance of that tool will be
 started.
 
-### 🧩 Integrating with Other Tools
+### 🧩 Integrating with Other Tools or Pickers
 
 `ai-terminals.nvim` can be easily integrated with other Neovim plugins for advanced workflows. Check the [recipes directory](recipes/) for examples.
 
