@@ -63,7 +63,7 @@ function Term.send(text, opts)
 	end
 
 	if opts.insert_mode then
-		vim.cmd.startinsert()
+		vim.fn.feedkeys("i", "n")
 	end
 end
 
