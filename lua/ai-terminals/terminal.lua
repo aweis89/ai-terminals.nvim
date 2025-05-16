@@ -317,7 +317,7 @@ end
 local registered_buffers = {}
 
 function Term.reload_changes()
-	vim.notify("Reloading changes in all buffers", vim.log.levels.DEBUG)
+	-- vim.notify("Reloading changes in all buffers", vim.log.levels.DEBUG)
 	vim.schedule(function() -- Defer execution slightly
 		for _, bufinfo in ipairs(vim.fn.getbufinfo({ buflisted = 1 })) do
 			local bnr = bufinfo.bufnr

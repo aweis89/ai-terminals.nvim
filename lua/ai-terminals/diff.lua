@@ -69,7 +69,7 @@ function Diff.diff_changes(opts)
 		local exit_code = vim.v.shell_error
 
 		if exit_code == 0 then
-			vim.notify("No differences found (delta mode).", vim.log.levels.INFO)
+			-- vim.notify("No differences found (delta mode).", vim.log.levels.INFO)
 			return -- Exit the function, no need to open terminal
 		elseif exit_code > 1 then
 			-- Handle potential errors from the diff command itself
@@ -121,7 +121,7 @@ function Diff.diff_changes(opts)
 	local diff_output = vim.fn.system(diff_cmd)
 
 	if vim.v.shell_error == 0 then
-		vim.notify("No differences found", vim.log.levels.INFO)
+		-- vim.notify("No differences found", vim.log.levels.INFO)
 		return
 	end
 
@@ -334,7 +334,7 @@ function Diff.pre_sync_code_base()
 	end
 	last_sync_time = current_time -- Update the last sync time
 
-	vim.notify("Syncing code-base", vim.log.levels.DEBUG)
+	-- vim.notify("Syncing code-base", vim.log.levels.DEBUG)
 	local cwd = vim.fn.getcwd()
 	local cwd_name = vim.fn.fnamemodify(cwd, ":t")
 	local backup_dir = Diff.BASE_COPY_DIR .. cwd_name
