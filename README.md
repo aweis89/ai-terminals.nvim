@@ -114,8 +114,8 @@ require("ai-terminals").setup({
     -- Example: Override the default Aider command
     aider = {
       cmd = function()
-        -- Use a different theme based on background
-        return string.format("aider --watch-files --%s-mode --theme %s", vim.o.background, vim.o.background)
+        -- Use dark/light mode based on background
+        return string.format("aider --watch-files --%s-mode", vim.o.background)
       end,
     },
     -- Example: Add a new terminal for a custom script
@@ -370,15 +370,15 @@ return {
         -- vim.keymap.set("n", "<leader>dvc", function() require("ai-terminals").close_diff() end, { desc = "Close all diff views (and wipeout buffers)" })
 
         -- Claude Keymaps
-        vim.keymap.set({"n", "v"}, "<leader>atc", function() require("ai-terminals").toggle("claude") end, { desc = "Toggle Claude terminal (sends selection)" })
+        vim.keymap.set({"n", "v"}, "<leader>atc", function() require("ai-terminals").toggle("claude") end, { desc = "Toggle Claude terminal (sends selection in visual mode)" })
         vim.keymap.set({"n", "v"}, "<leader>adc", function() require("ai-terminals").send_diagnostics("claude") end, { desc = "Send diagnostics to Claude" })
 
         -- Goose Keymaps
-        vim.keymap.set({"n", "v"}, "<leader>atg", function() require("ai-terminals").toggle("goose") end, { desc = "Toggle Goose terminal (sends selection)" })
+        vim.keymap.set({"n", "v"}, "<leader>atg", function() require("ai-terminals").toggle("goose") end, { desc = "Toggle Goose terminal (sends selection in visual mode)" })
         vim.keymap.set({"n", "v"}, "<leader>adg", function() require("ai-terminals").send_diagnostics("goose") end, { desc = "Send diagnostics to Goose" })
 
         -- Aider Keymaps
-        vim.keymap.set({"n", "v"}, "<leader>ata", function() require("ai-terminals").toggle("aider") end, { desc = "Toggle Aider terminal (sends selection)" })
+        vim.keymap.set({"n", "v"}, "<leader>ata", function() require("ai-terminals").toggle("aider") end, { desc = "Toggle Aider terminal (sends selection in visual mode)" })
         vim.keymap.set("n", "<leader>ac", function() require("ai-terminals").aider_comment("AI!") end, { desc = "Add 'AI!' comment above line" })
         vim.keymap.set("n", "<leader>aC", function() require("ai-terminals").aider_comment("AI?") end, { desc = "Add 'AI?' comment above line" })
         vim.keymap.set("n", "<leader>al", function() require("ai-terminals").aider_add_files(vim.fn.expand("%")) end, { desc = "Add current file to Aider (/add)" })
@@ -387,23 +387,23 @@ return {
         vim.keymap.set({"n", "v"}, "<leader>ada", function() require("ai-terminals").send_diagnostics("aider") end, { desc = "Send diagnostics to Aider" })
 
         -- aichat Keymaps
-        vim.keymap.set({"n", "v"}, "<leader>ati", function() require("ai-terminals").toggle("aichat") end, { desc = "Toggle AI Chat terminal (sends selection)" })
+        vim.keymap.set({"n", "v"}, "<leader>ati", function() require("ai-terminals").toggle("aichat") end, { desc = "Toggle AI Chat terminal (sends selection in visual mode)" })
         vim.keymap.set({"n", "v"}, "<leader>adi", function() require("ai-terminals").send_diagnostics("aichat") end, { desc = "Send diagnostics to AI Chat" })
 
         -- Kode Keymaps
-        vim.keymap.set({"n", "v"}, "<leader>atk", function() require("ai-terminals").toggle("kode") end, { desc = "Toggle Kode terminal (sends selection)" })
+        vim.keymap.set({"n", "v"}, "<leader>atk", function() require("ai-terminals").toggle("kode") end, { desc = "Toggle Kode terminal (sends selection in visual mode)" })
         vim.keymap.set({"n", "v"}, "<leader>adk", function() require("ai-terminals").send_diagnostics("kode") end, { desc = "Send diagnostics to Kode" })
 
-        -- Example: Run a command and send output to a specific terminal
-        vim.keymap.set("n", "<leader>ar", function() require("ai-terminals").send_command_output("aider") end, { desc = "Run command (prompts) and send output to Aider" })
+        -- Run Command and Send Output
+        vim.keymap.set("n", "<leader>ar", function() require("ai-terminals").send_command_output("aider") end, { desc = "Run command (prompts) and send output to Aider terminal" })
         -- Or use a fixed command like:
         -- vim.keymap.set("n", "<leader>ar", function() require("ai-terminals").send_command_output("aider", "make test") end, { desc = "Run 'make test' and send output to Aider" })
 
-       -- Destroy All Terminals
-       vim.keymap.set("n", "<leader>ax", function() require("ai-terminals").destroy_all() end, { desc = "Destroy all AI terminals (closes windows, stops processes)" })
+        -- Destroy All Terminals
+        vim.keymap.set("n", "<leader>ax", function() require("ai-terminals").destroy_all() end, { desc = "Destroy all AI terminals (closes windows, stops processes)" })
 
-       -- Focus Terminal
-       vim.keymap.set("n", "<leader>af", function() require("ai-terminals").focus() end, { desc = "Focus the last used AI terminal window" })
+        -- Focus Terminal
+        vim.keymap.set("n", "<leader>af", function() require("ai-terminals").focus() end, { desc = "Focus the last used AI terminal window" })
       end,
     }
     ```
