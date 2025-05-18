@@ -115,6 +115,7 @@ function Term.resolve_terminal_options(terminal_name, position)
 	local opts = {
 		cwd = vim.fn.getcwd(),
 		env = { id = cmd_str },
+		interactive = true,
 		win = {
 			position = resolved_position,
 			height = dimensions and dimensions.height,
@@ -194,7 +195,7 @@ end
 function Term.destroy_all()
 	local terms = Snacks.terminal.list()
 	for _, term in ipairs(terms) do
-		require("snacks.bufdelete").delete({ buf = term.buf, wipe = true })
+		term:close({ buf = true })
 	end
 end
 
