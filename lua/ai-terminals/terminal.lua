@@ -343,8 +343,8 @@ function Term.register_autocmds(term)
 	local bufnr = term.buf
 	if not bufnr then
 		vim.notify("Invalid terminal or buffer provided for autocommand registration.", vim.log.levels.ERROR)
-	end
-	if registered_buffers[bufnr] then
+		return
+	elseif registered_buffers[bufnr] then
 		return -- Already registered for this buffer
 	else
 		registered_buffers[bufnr] = true -- Mark as registered
