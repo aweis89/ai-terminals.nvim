@@ -114,103 +114,128 @@ function Diff.diff_changes(opts)
     return
   end
 
-  -- Default behavior: Use diff -rq and vimdiff
-
-  -- Get list of files that differ using diff -rq
+  -- Default behavior: Use diff -rq and vimdiff - but make it asynchronous
   local diff_cmd = string.format("diff -rq %s %s %s", exclude_str, cwd, tmp_dir)
-  local diff_output = vim.fn.system(diff_cmd)
 
-  if vim.v.shell_error == 0 then
-    -- vim.notify("No differences found", vim.log.levels.INFO)
-    return
-  end
+  vim.notify("Finding differences...", vim.log.levels.INFO)
 
-  -- Process diff output and extract file paths
-  local diff_files = {}
-  for line in vim.gsplit(diff_output, "\n") do
-    -- Match only text file differences, ignore binary file differences
-    if line:match("^Files .* and .* differ$") then
-      local orig_file = line:match("^Files (.-) and")
-      local tmp_file = line:match(" and (.-) differ$")
-      -- Ensure we captured both file paths correctly
-      if orig_file and tmp_file then
-        table.insert(diff_files, { orig = orig_file, tmp = tmp_file })
-      else
-        vim.notify("Could not parse diff line: " .. line, vim.log.levels.WARN)
+  vim.fn.jobstart(diff_cmd, {
+    stdout_buffered = true,
+    on_stdout = function(_, data)
+      if not data or #data == 0 or (data[1] == "" and #data == 1) then
+        vim.schedule(function()
+          vim.notify("No differences found", vim.log.levels.INFO)
+        end)
+        return
       end
-    elseif line:match("^Binary files .* and .* differ$") then
-      -- Explicitly ignore binary file differences
-      local binary_file1 = line:match("^Binary files (.-) and")
-      vim.notify(
-        "Ignoring binary file difference: " .. vim.fn.fnamemodify(binary_file1, ":t"),
-        vim.log.levels.DEBUG
-      )
+
+      -- Process diff output and extract file paths
+      local diff_files = {}
+      for _, line in ipairs(data) do
+        -- Match only text file differences, ignore binary file differences
+        if line:match("^Files .* and .* differ$") then
+          local orig_file = line:match("^Files (.-) and")
+          local tmp_file = line:match(" and (.-) differ$")
+          -- Ensure we captured both file paths correctly
+          if orig_file and tmp_file then
+            table.insert(diff_files, { orig = orig_file, tmp = tmp_file })
+          else
+            vim.notify("Could not parse diff line: " .. line, vim.log.levels.WARN)
+          end
+        elseif line:match("^Binary files .* and .* differ$") then
+          -- Explicitly ignore binary file differences
+          local binary_file1 = line:match("^Binary files (.-) and")
+          vim.notify(
+            "Ignoring binary file difference: " .. vim.fn.fnamemodify(binary_file1, ":t"),
+            vim.log.levels.DEBUG
+          )
+        end
+      end
+
+      if #diff_files == 0 then
+        vim.schedule(function()
+          vim.notify("No text file differences found.", vim.log.levels.INFO)
+        end)
+        return
+      end
+
+      vim.schedule(function()
+        -- Close all current windows
+        vim.cmd("tabonly")
+        vim.cmd("only")
+
+        local orig_files_to_notify = {}
+        -- Open each differing file in a split view
+        for i, files in ipairs(diff_files) do
+          -- Call pre_diff_hook if provided
+          if opts.pre_diff_hook then
+            opts.pre_diff_hook(files.orig, files.tmp) -- files.orig is cwd, files.tmp is backup
+          end
+
+          table.insert(orig_files_to_notify, vim.fn.fnamemodify(files.orig, ":t")) -- Add only the filename
+
+          if i > 1 then
+            -- Create a new tab for each additional file pair
+            vim.cmd("tabnew")
+          end
+
+          -- Edit the temporary backup file first (left side)
+          vim.cmd("edit " .. vim.fn.fnameescape(files.tmp))
+          vim.cmd("diffthis")
+          -- Vertically split to open the original file (right side)
+          vim.cmd("vsplit " .. vim.fn.fnameescape(files.orig))
+          vim.cmd("diffthis")
+
+          -- Enable wrap in both diff windows
+          vim.cmd("setlocal wrap")                          -- Set wrap for the current window (original file)
+          local orig_bufnr = vim.api.nvim_get_current_buf() -- Get buffer number for original file
+
+          vim.cmd("wincmd p")                               -- Move cursor to the previous window (tmp file)
+          vim.cmd("setlocal wrap")                          -- Set wrap for the tmp file window
+          local tmp_bufnr = vim.api.nvim_get_current_buf()  -- Get buffer number for tmp file
+
+          -- Add buffer-local mapping for 'q' to close the diff for both buffers
+          local map_opts = { noremap = true, silent = true, desc = "Close AI Terminals Diff" }
+          local map_cmd = "<Cmd>lua require('ai-terminals.diff').close_diff()<CR>"
+
+          -- Apply mapping to original file buffer (now on the right)
+          if vim.api.nvim_buf_is_valid(orig_bufnr) then
+            vim.api.nvim_buf_set_keymap(orig_bufnr, "n", "q", map_cmd, map_opts)
+          end
+          -- Apply mapping to tmp file buffer (now on the left)
+          if vim.api.nvim_buf_is_valid(tmp_bufnr) then
+            vim.api.nvim_buf_set_keymap(tmp_bufnr, "n", "q", map_cmd, map_opts)
+          end
+          -- Optional: Move focus back to the right window (original file) if desired
+          -- vim.cmd("wincmd p")
+        end
+
+        -- Notify about all diffed files at once
+        if #orig_files_to_notify > 0 then
+          local notification_lines = { "Opened diffs for:" }
+          for _, filename in ipairs(orig_files_to_notify) do
+            table.insert(notification_lines, "- " .. filename)
+          end
+          vim.notify(table.concat(notification_lines, "\n"), vim.log.levels.INFO)
+        end
+      end)
+    end,
+    on_stderr = function(_, data)
+      if data and #data > 0 and data[1] ~= "" then
+        vim.schedule(function()
+          vim.notify("Error finding differences: " .. table.concat(data, "\n"), vim.log.levels.ERROR)
+        end)
+      end
+    end,
+    on_exit = function(_, exit_code)
+      if exit_code > 1 then
+        vim.schedule(function()
+          vim.notify("Error running diff command (exit code: " .. exit_code .. ")", vim.log.levels.ERROR)
+        end)
+      end
+      -- Exit code 1 is normal for diff when differences found, so no error needed
     end
-  end
-
-  if #diff_files == 0 then
-    vim.notify("No text file differences found.", vim.log.levels.INFO)
-    return
-  end
-
-  -- Close all current windows
-  vim.cmd("tabonly")
-  vim.cmd("only")
-
-  local orig_files_to_notify = {}
-  -- Open each differing file in a split view
-  for i, files in ipairs(diff_files) do
-    -- Call pre_diff_hook if provided
-    if opts.pre_diff_hook then
-      opts.pre_diff_hook(files.orig, files.tmp) -- files.orig is cwd, files.tmp is backup
-    end
-
-    table.insert(orig_files_to_notify, vim.fn.fnamemodify(files.orig, ":t")) -- Add only the filename
-
-    if i > 1 then
-      -- Create a new tab for each additional file pair
-      vim.cmd("tabnew")
-    end
-
-    -- Edit the temporary backup file first (left side)
-    vim.cmd("edit " .. vim.fn.fnameescape(files.tmp))
-    vim.cmd("diffthis")
-    -- Vertically split to open the original file (right side)
-    vim.cmd("vsplit " .. vim.fn.fnameescape(files.orig))
-    vim.cmd("diffthis")
-
-    -- Enable wrap in both diff windows
-    vim.cmd("setlocal wrap")                        -- Set wrap for the current window (original file)
-    local orig_bufnr = vim.api.nvim_get_current_buf() -- Get buffer number for original file
-
-    vim.cmd("wincmd p")                             -- Move cursor to the previous window (tmp file)
-    vim.cmd("setlocal wrap")                        -- Set wrap for the tmp file window
-    local tmp_bufnr = vim.api.nvim_get_current_buf() -- Get buffer number for tmp file
-
-    -- Add buffer-local mapping for 'q' to close the diff for both buffers
-    local map_opts = { noremap = true, silent = true, desc = "Close AI Terminals Diff" }
-    local map_cmd = "<Cmd>lua require('ai-terminals.diff').close_diff()<CR>"
-
-    -- Apply mapping to original file buffer (now on the right)
-    if vim.api.nvim_buf_is_valid(orig_bufnr) then
-      vim.api.nvim_buf_set_keymap(orig_bufnr, "n", "q", map_cmd, map_opts)
-    end
-    -- Apply mapping to tmp file buffer (now on the left)
-    if vim.api.nvim_buf_is_valid(tmp_bufnr) then
-      vim.api.nvim_buf_set_keymap(tmp_bufnr, "n", "q", map_cmd, map_opts)
-    end
-    -- Optional: Move focus back to the right window (original file) if desired
-    -- vim.cmd("wincmd p")
-  end
-
-  -- Notify about all diffed files at once
-  if #orig_files_to_notify > 0 then
-    local notification_lines = { "Opened diffs for:" }
-    for _, filename in ipairs(orig_files_to_notify) do
-      table.insert(notification_lines, "- " .. filename)
-    end
-    vim.notify(table.concat(notification_lines, "\n"), vim.log.levels.INFO)
-  end
+  })
 end
 
 ---Close and wipe out any buffers whose file path is inside the BASE_COPY_DIR,
@@ -367,8 +392,8 @@ function Diff.pre_sync_code_base()
         end)
       end
     end,
-    stdout_buffered = true,                     -- Capture stdout if needed for debugging
-    stderr_buffered = true,                     -- Capture stderr
+    stdout_buffered = true,                        -- Capture stdout if needed for debugging
+    stderr_buffered = true,                        -- Capture stderr
     on_stderr = function(_, data)
       if data and #data > 0 and data[1] ~= "" then -- Check for actual error messages
         local err_msg = table.concat(data, "\n")
@@ -437,8 +462,8 @@ function Diff.revert_changes()
         end
       end)
     end,
-    stdout_buffered = true,                     -- Capture stdout for potential debugging
-    stderr_buffered = true,                     -- Capture stderr for errors
+    stdout_buffered = true,                        -- Capture stdout for potential debugging
+    stderr_buffered = true,                        -- Capture stderr for errors
     on_stderr = function(_, data)
       if data and #data > 0 and data[1] ~= "" then -- Check for actual error messages
         local err_msg = table.concat(data, "\n")
