@@ -91,42 +91,42 @@ Config.config = {
 	--   submit: Optional, defaults to true. If false, no newline is sent after the prompt.
 	prompt_keymaps = {
 		-- Default behavior: include_selection=true (implicitly), works in n/v modes, prefixes selection in visual
-		{ key = "<leader>ae", term = "aider", prompt = "explain_code", desc = "Aider: Explain selection" },
+		-- { key = "<leader>ae", term = "aider", prompt = "explain_code", desc = "Aider: Explain selection" },
 		-- Example: Include selection (prefix), don't submit automatically, works in n/v modes
-		{
-			key = "<leader>ar",
-			term = "aider",
-			prompt = "refactor_code",
-			desc = "Aider: Refactor selection",
-			include_selection = true,
-			submit = false,
-		},
+		-- {
+		-- 	key = "<leader>ar",
+		-- 	term = "aider",
+		-- 	prompt = "refactor_code",
+		-- 	desc = "Aider: Refactor selection",
+		-- 	include_selection = true,
+		-- 	submit = false,
+		-- },
 		-- Example: Explicitly include selection (prefix), works in n/v modes
-		{
-			key = "<leader>ab",
-			term = "aider",
-			prompt = "find_bugs",
-			desc = "Aider: Find bugs",
-			include_selection = true,
-		},
+		-- {
+		-- 	key = "<leader>ab",
+		-- 	term = "aider",
+		-- 	prompt = "find_bugs",
+		-- 	desc = "Aider: Find bugs",
+		-- 	include_selection = true,
+		-- },
 		-- Example: Don't include selection, only works in normal mode
-		{
-			key = "<leader>at",
-			term = "aider",
-			prompt = "write_tests",
-			desc = "Aider: Write tests",
-			include_selection = false,
-		},
-		{ key = "<leader>ce", term = "claude", prompt = "explain_code", desc = "Claude: Explain selection" }, -- include_selection defaults to true
-		{ key = "<leader>cs", term = "claude", prompt = "summarize", desc = "Claude: Summarize selection" }, -- include_selection defaults to true
+		-- {
+		-- 	key = "<leader>at",
+		-- 	term = "aider",
+		-- 	prompt = "write_tests",
+		-- 	desc = "Aider: Write tests",
+		-- 	include_selection = false,
+		-- },
+		-- { key = "<leader>ce", term = "claude", prompt = "explain_code", desc = "Claude: Explain selection" }, -- include_selection defaults to true
+		-- { key = "<leader>cs", term = "claude", prompt = "summarize", desc = "Claude: Summarize selection" }, -- include_selection defaults to true
 		-- Example using the function prompt (normal mode only)
-		{
-			key = "<leader>asf",
-			term = "aichat",
-			prompt = "summarize_file",
-			desc = "Aichat: Summarize current file",
-			include_selection = false,
-		},
+		-- {
+		-- 	key = "<leader>asf",
+		-- 	term = "aichat",
+		-- 	prompt = "summarize_file",
+		-- 	desc = "Aichat: Summarize current file",
+		-- 	include_selection = false,
+		-- },
 	},
 }
 
