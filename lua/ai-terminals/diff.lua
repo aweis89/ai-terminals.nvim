@@ -179,10 +179,10 @@ function Diff.diff_changes(opts)
 						vim.cmd("tabnew")
 					end
 
-					-- Edit the temporary backup file first
+					-- Edit the orig file first
 					vim.cmd("edit " .. vim.fn.fnameescape(files.orig))
 					vim.cmd("diffthis")
-					-- Vertically split to open the original file
+					-- Vertically split to open the tmp file
 					vim.cmd("vsplit " .. vim.fn.fnameescape(files.tmp))
 					vim.cmd("diffthis")
 
