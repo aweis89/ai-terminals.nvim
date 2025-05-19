@@ -69,7 +69,7 @@ function Diff.diff_changes(opts)
 		local exit_code = vim.v.shell_error
 
 		if exit_code == 0 then
-			-- vim.notify("No differences found (delta mode).", vim.log.levels.INFO)
+			vim.notify("No differences found (delta mode).", vim.log.levels.DEBUG)
 			return -- Exit the function, no need to open terminal
 		elseif exit_code > 1 then
 			-- Handle potential errors from the diff command itself
@@ -341,7 +341,7 @@ function Diff.close_diff()
 	end
 
 	if #messages > 0 then
-		vim.notify(table.concat(messages, "\n"), vim.log.levels.INFO)
+		vim.notify(table.concat(messages, "\n"), vim.log.levels.DEBUG)
 	else
 		vim.notify("No diff buffers or delta tabs found to close.", vim.log.levels.DEBUG)
 	end
@@ -421,7 +421,6 @@ function Diff.revert_changes()
 	-- Check if the backup directory exists
 	if vim.fn.isdirectory(backup_dir) == 0 then
 		vim.notify("Backup directory not found: " .. backup_dir, vim.log.levels.ERROR)
-		vim.notify("Cannot revert changes. Run an AI terminal first to create a backup.", vim.log.levels.WARN)
 		return
 	end
 
