@@ -159,7 +159,6 @@ function Diff.diff_changes(opts)
 				return
 			end
 
-			--  AI! can we modify this so that the split sides are reversed. the new change cwd should be on the right side and tmp file should be on the left when showing the diff
 			vim.schedule(function()
 				-- Close all current windows
 				vim.cmd("tabonly")
@@ -180,11 +179,11 @@ function Diff.diff_changes(opts)
 						vim.cmd("tabnew")
 					end
 
-					-- Edit the temporary backup file first (right side)
-					vim.cmd("edit " .. vim.fn.fnameescape(files.tmp))
+					-- Edit the temporary backup file first
+					vim.cmd("edit " .. vim.fn.fnameescape(files.orig))
 					vim.cmd("diffthis")
-					-- Vertically split to open the original file (left side)
-					vim.cmd("vsplit " .. vim.fn.fnameescape(files.orig))
+					-- Vertically split to open the original file
+					vim.cmd("vsplit " .. vim.fn.fnameescape(files.tmp))
 					vim.cmd("diffthis")
 
 					-- Enable wrap in both diff windows
