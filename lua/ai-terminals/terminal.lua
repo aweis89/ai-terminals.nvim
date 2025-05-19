@@ -49,7 +49,14 @@ function Term.send(text, opts)
 	-- Send the main text
 	local success = vim.fn.chansend(job_id, text_to_send)
 	if success == 0 then
-		vim.notify("Failed to send text to terminal", vim.log.levels.ERROR)
+		vim.notify(
+			string.format(
+				"Failed to send text to terminal (job_id: %s, content length: %d). Possible causes: terminal is closed or invalid job ID.",
+				tostring(job_id),
+				#text_to_send
+			),
+			vim.log.levels.ERROR
+		)
 		return -- Don't proceed if sending text failed
 	end
 
