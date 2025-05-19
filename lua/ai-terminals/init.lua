@@ -296,7 +296,7 @@ function M.send_diagnostics(name, opts)
 		vim.notify("Terminal '" .. name .. "' not found or could not be toggled", vim.log.levels.ERROR)
 		return
 	end
-	local submit = opts.submit ~= false -- Default submit to true unless explicitly false
+	local submit = opts.submit == true -- Default submit to false unless explicitly true
 	local prefix = opts.prefix or "Fix these diagnostic issues:\n"
 	M.send(prefix .. diagnostics, { term = term, submit = submit })
 end
