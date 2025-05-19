@@ -58,13 +58,16 @@ want a single, configurable way to manage them within Neovim.
 
   *Tip:* When toggling a terminal in visual mode (`:h ai-terminals.toggle`), the selection is automatically sent *without* a trailing newline, allowing you to add further instructions before submitting. This uses bracketed paste mode for reliable multi-line input.
 * **🩺 Send Diagnostics:** Send diagnostics (errors, warnings, etc.) for the current buffer or visual selection to the AI terminal (`:h ai-terminals.send_diagnostics`), formatted with severity, line/column numbers, messages, and the corresponding source code lines.
-* **🚀 Run Command and Send Output:** Execute an arbitrary shell command and send its standard output and exit code to the active AI terminal (`:h ai-terminals.send_command_output`). Useful for running tests, linters, etc., and feeding results to the AI.
+* **🚀 Run Command and Send Output:** Execute an arbitrary shell command and send its standard output and exit code to the active AI terminal (`:h ai-terminals.send_command_output`). Useful for running tests, linters, or even fetching information from other CLIs (e.g., `jira issue view MYTICKET-123`) and feeding results to the AI.
 * **📝 Prompt Keymaps:** Define custom keymaps (`:h ai-terminals.config`) to send pre-defined prompts to specific terminals.
   * **Selection Handling:** Configure whether the keymap includes visual selection (`include_selection` option, defaults to `true`).
     * If `true`, the keymap works in normal and visual modes. In visual mode, the selection is prefixed to the prompt.
     * If `false`, the keymap works only in normal mode and sends just the prompt.
   * **Submission Control:** Configure whether a newline is sent after the prompt (`submit` option, defaults to `true`).
   * **Dynamic Prompts:** Prompt text can be a string or a function that returns a string. Functions are evaluated when the keymap is triggered, allowing dynamic content (e.g., current file path). See example in `:h ai-terminals.config`.
+* **⌨️ Terminal Keymaps:** Define custom keymaps (`:h ai-terminals.config`) that only apply within the AI terminal buffers.
+  * **Modes:** Specify which modes the keymap applies to (e.g., "t" for terminal mode, "n" for normal mode within the terminal). Defaults to "t".
+  * **Actions:** Actions can be functions or strings (e.g., to close the terminal or send keys).
 
 ### 🔥 Aider Specific Features
 
@@ -144,6 +147,12 @@ require("ai-terminals").setup({
   -- Set to `false` or `nil` to disable.
   -- Set to `{ delta = true }` to automatically use delta instead of vimdiff.
   show_diffs_on_leave = true, -- Default: true
+  -- Define keymaps that only apply within terminal buffers
+  terminal_keymaps = {
+    { key = "<C-w>q", action = "close", desc = "Close terminal window", modes = "t" },
+    { key = "<Esc>", action = function() vim.cmd("stopinsert") end, desc = "Exit terminal insert mode", modes = "t"},
+    -- Add more terminal-specific keymaps here
+  },
 })
 ```
 

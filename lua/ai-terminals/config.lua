@@ -19,9 +19,14 @@ local Config = {}
 ---@field show_diffs_on_leave boolean|table|nil
 ---@field prompts table<string, string | fun(): string>|nil A table of reusable prompt texts, keyed by a name. Values can be strings or functions returning strings (evaluated at runtime).
 ---@field prompt_keymaps {key: string, term: string, prompt: string, desc: string, include_selection?: boolean, submit?: boolean}[]|nil Keymaps for prompts (array of tables). `include_selection` (optional, boolean, default: true): If true, the keymap works in normal & visual modes (prefixing selection in visual). If false, it only works in normal mode (no selection). `submit` (optional, boolean, default: true): If true, sends a newline after the prompt.
+---@field terminal_keymaps {key: string, action: string | fun(), desc: string, modes?: string | string[]}[]|nil Keymaps that only apply within terminal buffers (array of tables). `modes` (optional, string or array of strings, default: "t"): Specifies the modes for the keymap.
 
 ---@type ConfigType
 Config.config = {
+	terminal_keymaps = {
+		-- Example: { key = "<localleader>q", action = "close", desc = "Close terminal" },
+		-- Example: { key = "<C-k>", action = function() vim.cmd("wincmd k") end, desc = "Move to window above" },
+	},
 	terminals = {
 		goose = {
 			cmd = function()

@@ -8,6 +8,55 @@ local ConfigLib = require("ai-terminals.config")
 local SelectionLib = require("ai-terminals.selection")
 require("snacks") -- Load snacks.nvim for annotations
 
+local function setup_terminal_keymaps()
+	local config = ConfigLib.config
+	if not config.terminal_keymaps or #config.terminal_keymaps == 0 then
+		return -- No terminal keymaps defined
+	end
+
+	-- Create autocmd group for terminal buffer keymaps
+	local group_id = vim.api.nvim_create_augroup("AITerminalBufferKeymaps", { clear = true })
+
+	-- Create autocmd to apply keymaps when terminal buffer is created
+	vim.api.nvim_create_autocmd("TermOpen", {
+		group = group_id,
+		pattern = "*",
+		callback = function(ev)
+			-- Only apply to AI terminal buffers (check if this is our terminal)
+			if not vim.b[ev.buf].term_title then
+				return
+			end
+
+			for _, mapping in ipairs(config.terminal_keymaps) do
+				local key = mapping.key
+				local action = mapping.action
+				local description = mapping.desc or "Terminal keymap"
+				local modes = mapping.modes or "t" -- Default to "t" (terminal mode)
+
+				-- Create buffer-local keymap
+				if type(action) == "function" then
+					vim.keymap.set(modes, key, action, { buffer = ev.buf, desc = description })
+				elseif type(action) == "string" then
+					-- Handle string actions
+					if action == "close" then
+						vim.keymap.set(modes, key, function()
+							local term = Snacks.terminal.for_buf(ev.buf)
+							if term then
+								term:close()
+							end
+						end, { buffer = ev.buf, desc = description })
+					else
+						-- Default: treat as raw keys to send (if action is a string of keys)
+						-- For string actions that are meant to be sent as keys, they should typically be in terminal mode.
+						-- If the user wants to map a string action to normal mode in a terminal, they can specify modes = "n".
+						vim.keymap.set(modes, key, action, { buffer = ev.buf, desc = description })
+					end
+				end
+			end
+		end,
+	})
+end
+
 local function setup_prompt_keymaps()
 	local config = ConfigLib.config
 	if not config.prompt_keymaps or not config.prompts then
@@ -132,6 +181,7 @@ end
 function M.setup(user_config)
 	ConfigLib.config = vim.tbl_deep_extend("force", ConfigLib.config, user_config or {})
 	setup_prompt_keymaps() -- Create keymaps after config is merged
+	setup_terminal_keymaps() -- Setup terminal-specific keymaps
 end
 
 ---Create or toggle a terminal by name with specified position (delegates to TerminalLib)
