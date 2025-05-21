@@ -102,7 +102,6 @@ function Diff.diff_changes(opts)
 		else
 			vim.notify("Could not get buffer number for delta terminal to mark it.", vim.log.levels.WARN)
 		end
-		-- *** End of added section ***
 
 		-- Wait a moment for terminal to open then scroll to top
 		vim.defer_fn(function()
