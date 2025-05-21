@@ -137,6 +137,13 @@ require("ai-terminals").setup({
   },
   -- Set the default window position if none is specified (default: "float")
   default_position = "bottom", -- Example: Make terminals open at the bottom
+  -- Prefix for all terminal commands (e.g., to use a specific shell)
+  cmd_prefix = vim.o.shell .. " -c", -- Example: Uses Neovim's shell setting
+  -- Environment variables to set for terminal commands
+  env = {
+    PAGER = "cat", -- Example: Set PAGER to cat
+    -- MY_API_KEY = os.getenv("MY_SECRET_API_KEY"), -- Example: Pass an env var
+  },
   -- Enable/disable the diffing feature (default: true)
   -- When enabled, a backup sync runs on terminal entry, allowing
   -- `diff_changes` and `close_diff` to work.
@@ -330,12 +337,21 @@ return {
       },
       -- Run Command and Send Output
       {
-        "<leader>ar", -- Mnemonic: AI Run command
+        "<leader>ar", -- Mnemonic: AI Run command (prompts)
         function()
-          -- Prompts user for command, then sends output to Aider
-          require("ai-terminals").send_command_output("aider")
+          -- Prompts user for a command, then sends its output to the active/last-focused AI terminal.
+          require("ai-terminals").send_command_output()
         end,
-        desc = "Run command (prompts) and send output to Aider terminal",
+        desc = "Run command (prompts) and send output to active AI terminal",
+      },
+      {
+        "<leader>aj", -- Mnemonic: AI Jira (example fixed command)
+        function()
+          -- Sends output of a fixed command to the active/last-focused AI terminal.
+          -- Replace with your actual command, e.g., dynamically get ticket ID.
+          require("ai-terminals").send_command_output("jira issue view YOUR-TICKET-ID --plain")
+        end,
+        desc = "Send Jira ticket (example) to active AI terminal",
       },
       -- Destroy All Terminals
       {
