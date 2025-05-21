@@ -137,8 +137,6 @@ require("ai-terminals").setup({
   },
   -- Set the default window position if none is specified (default: "float")
   default_position = "bottom", -- Example: Make terminals open at the bottom
-  -- Prefix for all terminal commands (e.g., to use a specific shell)
-  cmd_prefix = vim.o.shell .. " -c", -- Example: Uses Neovim's shell setting
   -- Environment variables to set for terminal commands
   env = {
     PAGER = "cat", -- Example: Set PAGER to cat
