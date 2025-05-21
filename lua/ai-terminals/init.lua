@@ -348,6 +348,8 @@ end
 ---@param opts {term?: snacks.win?, submit?: boolean}|nil Options: `term` specifies the target terminal, `submit` sends a newline after the text if true.
 ---@return nil
 function M.send_command_output(term_name, cmd, opts)
+	term_name = term_name or vim.b[0].term_title
+
 	local term = M.open(term_name) -- Use M.open which delegates
 	if not term then
 		vim.notify(
