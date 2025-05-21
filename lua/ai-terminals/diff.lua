@@ -69,7 +69,7 @@ function Diff.diff_changes(opts)
 		local exit_code = vim.v.shell_error
 
 		if exit_code == 0 then
-			vim.notify("No differences found (delta mode).", vim.log.levels.DEBUG)
+			vim.notify("No changes made (delta mode).", vim.log.levels.DEBUG)
 			return -- Exit the function, no need to open terminal
 		elseif exit_code > 1 then
 			-- Handle potential errors from the diff command itself
@@ -117,14 +117,14 @@ function Diff.diff_changes(opts)
 	-- Default behavior: Use diff -rq and vimdiff - but make it asynchronous
 	local diff_cmd = string.format("diff -rq %s %s %s", exclude_str, cwd, tmp_dir)
 
-	vim.notify("Finding differences...", vim.log.levels.INFO)
+	vim.notify("Finding differences...", vim.log.levels.DEBUG)
 
 	vim.fn.jobstart(diff_cmd, {
 		stdout_buffered = true,
 		on_stdout = function(_, data)
 			if not data or #data == 0 or (data[1] == "" and #data == 1) then
 				vim.schedule(function()
-					vim.notify("No differences found", vim.log.levels.INFO)
+					vim.notify("No changes made", vim.log.levels.INFO)
 				end)
 				return
 			end
