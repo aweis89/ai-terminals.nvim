@@ -120,7 +120,7 @@ function Term.resolve_terminal_options(terminal_name, position)
 	end
 	local config = require("ai-terminals.config").config
 	if config.cmd_prefix then
-		cmd_str = config.cmd_prefix .. " " .. cmd_str
+		cmd_str = config.cmd_prefix .. " " .. vim.fn.shellescape(cmd_str)
 	end
 	---@type snacks.terminal.Opts
 	local opts = {
