@@ -16,7 +16,6 @@ local Config = {}
 ---@field window_dimensions WindowDimensionsMap|nil
 ---@field default_position string|nil
 ---@field enable_diffing boolean|nil
----@field cmd_prefix string|nil
 ---@field env table|nil
 ---@field show_diffs_on_leave boolean|table|nil
 ---@field prompts table<string, string | fun(): string>|nil A table of reusable prompt texts, keyed by a name. Values can be strings or functions returning strings (evaluated at runtime).
@@ -29,7 +28,6 @@ Config.config = {
 		-- Example: { key = "<localleader>q", action = "close", desc = "Close terminal" },
 		-- Example: { key = "<C-k>", action = function() vim.cmd("wincmd k") end, desc = "Move to window above" },
 	},
-	cmd_prefix = vim.o.shell .. " -c",
 	env = {
 		PAGER = "cat",
 	},

@@ -119,9 +119,6 @@ function Term.resolve_terminal_options(terminal_name, position)
 		return nil, nil -- Error already notified by resolve_command
 	end
 	local config = require("ai-terminals.config").config
-	if config.cmd_prefix then
-		cmd_str = config.cmd_prefix .. " " .. vim.fn.shellescape(cmd_str)
-	end
 	---@type snacks.terminal.Opts
 	local opts = {
 		cwd = vim.fn.getcwd(),
