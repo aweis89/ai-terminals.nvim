@@ -33,8 +33,7 @@ want a single, configurable way to manage them within Neovim.
   through a simple configuration table. Uses `Snacks` for terminal window
   management.
 * **🔄 Diff View & Revert:**
-  * **Track Changes:** See modifications made to your project files since the
-    last time an AI terminal was opened.
+  * **Track Changes:** See modifications made to your project files in the last AI terminal session.
   * **How it Works:** When `enable_diffing = true` (default), the plugin
     maintains a persistent backup of your project using `rsync`. This backup is
     synced *every time* you open an AI terminal, capturing the state *before*
