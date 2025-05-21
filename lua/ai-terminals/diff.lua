@@ -116,8 +116,6 @@ function Diff.diff_changes(opts)
 	-- Default behavior: Use diff -rq and vimdiff - but make it asynchronous
 	local diff_cmd = string.format("diff -rq %s %s %s", exclude_str, cwd, tmp_dir)
 
-	vim.notify("Finding differences...", vim.log.levels.DEBUG)
-
 	vim.fn.jobstart(diff_cmd, {
 		stdout_buffered = true,
 		on_stdout = function(_, data)
