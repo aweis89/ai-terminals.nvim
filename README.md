@@ -152,6 +152,8 @@ require("ai-terminals").setup({
   -- Set to `false` or `nil` to disable.
   -- Set to `{ delta = true }` to automatically use delta instead of vimdiff.
   show_diffs_on_leave = true, -- Default: true
+  -- Keymapping used within diff views (vimdiff or delta terminal) to close the diff.
+  diff_close_keymap = "q", -- Default: "q"
   -- Define keymaps that only apply within terminal buffers
   terminal_keymaps = {
     { key = "<C-w>q", action = "close", desc = "Close terminal window", modes = "t" },

@@ -1,3 +1,4 @@
+local ConfigLib = require("ai-terminals.config")
 local Diff = {}
 
 -- Add a variable to store the last sync time
@@ -91,11 +92,12 @@ function Diff.diff_changes(opts)
 		local term_bufnr = vim.api.nvim_get_current_buf()
 		if term_bufnr and term_bufnr ~= 0 then
 			vim.b[term_bufnr].is_ai_terminals_delta_diff = true -- Set a unique marker variable
-			-- Add buffer-local mapping for 'q' to close the diff
+			-- Add buffer-local mapping to close the diff
+			local close_key = ConfigLib.config.diff_close_keymap
 			vim.api.nvim_buf_set_keymap(
 				term_bufnr,
 				"n",
-				"q",
+				close_key,
 				"<Cmd>lua require('ai-terminals.diff').close_diff()<CR>",
 				{ noremap = true, silent = true, desc = "Close AI Terminals Diff" }
 			)
@@ -191,17 +193,20 @@ function Diff.diff_changes(opts)
 					vim.cmd("setlocal wrap") -- Set wrap for the tmp file window
 					local tmp_bufnr = vim.api.nvim_get_current_buf() -- Get buffer number for tmp file
 
-					-- Add buffer-local mapping for 'q' to close the diff for both buffers
+					-- Add buffer-local mapping to close the diff for both buffers
+					local close_key = ConfigLib.config.diff_close_keymap
 					local map_opts = { noremap = true, silent = true, desc = "Close AI Terminals Diff" }
 					local map_cmd = "<Cmd>lua require('ai-terminals.diff').close_diff()<CR>"
 
-					-- Apply mapping to original file buffer (now on the right)
-					if vim.api.nvim_buf_is_valid(orig_bufnr) then
-						vim.api.nvim_buf_set_keymap(orig_bufnr, "n", "q", map_cmd, map_opts)
-					end
-					-- Apply mapping to tmp file buffer (now on the left)
-					if vim.api.nvim_buf_is_valid(tmp_bufnr) then
-						vim.api.nvim_buf_set_keymap(tmp_bufnr, "n", "q", map_cmd, map_opts)
+					if close_key then
+						-- Apply mapping to original file buffer
+						if vim.api.nvim_buf_is_valid(orig_bufnr) then
+							vim.api.nvim_buf_set_keymap(orig_bufnr, "n", close_key, map_cmd, map_opts)
+						end
+						-- Apply mapping to tmp file buffer
+						if vim.api.nvim_buf_is_valid(tmp_bufnr) then
+							vim.api.nvim_buf_set_keymap(tmp_bufnr, "n", close_key, map_cmd, map_opts)
+						end
 					end
 					-- Optional: Move focus back to the right window (original file) if desired
 					-- vim.cmd("wincmd p")
