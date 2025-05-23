@@ -29,7 +29,7 @@ want a single, configurable way to manage them within Neovim.
 ### ⚙️ Generic Features (Works with any terminal-based AI agent)
 
 * **🔌 Configurable Terminal Integration:** Define and manage terminals for
-  various AI CLI tools (e.g., Claude, Goose, Aider, Kode, custom scripts)
+  various AI CLI tools (e.g., Claude, Goose, Aider, custom scripts)
   through a simple configuration table. Uses `Snacks` for terminal window
   management.
 * **🔄 Diff View & Revert:**
@@ -88,7 +88,7 @@ Here are links to some of the tools mentioned in the default configuration:
 * **Claude CLI:** [Claude CLI](https://github.com/anthropics/claude-cli)
 * **Goose:** [Goose](https://github.com/aweis89/goose)
 * **AI Chat:** [AI Chat](https://github.com/sigoden/aichat)
-* **Kode:** [Kode](https://github.com/dnakov/anon-kode)
+
 * **Delta (Optional, for diffing):** [Delta](https://github.com/dandavison/delta)
 
 Make sure these (or your chosen alternatives) are installed and accessible in
@@ -200,11 +200,6 @@ return {
             return string.format("claude config set -g theme %s && claude", vim.o.background)
           end,
         },
-        kode = {
-          cmd = function()
-            return string.format("kode config set -g theme %s && kode", vim.o.background)
-          end,
-        },
         aider = {
           cmd = function()
             return string.format("aider --watch-files --%s-mode", vim.o.background)
@@ -232,7 +227,7 @@ return {
         desc = "Revert changes from backup",
       },
       -- Example Keymaps (using default terminal names: 'claude', 'goose',
-      -- 'aider', 'aichat', 'kode')
+      -- 'aider', 'aichat')
       -- Claude Keymaps
       {
         "<leader>atc", -- Mnemonic: AI Terminal Claude
@@ -322,19 +317,6 @@ return {
         mode = { "n", "v" },
         desc = "Send diagnostics to AI Chat",
       },
-      -- Kode Keymaps
-      {
-        "<leader>atk",
-        function() require("ai-terminals").toggle("kode") end,
-        mode = { "n", "v" },
-        desc = "Toggle Kode terminal (sends selection in visual mode)",
-      },
-      {
-        "<leader>adk",
-        function() require("ai-terminals").send_diagnostics("kode") end,
-        mode = { "n", "v" },
-        desc = "Send diagnostics to Kode",
-      },
       -- Run Command and Send Output
       {
         "<leader>ar", -- Mnemonic: AI Run command (prompts)
@@ -415,10 +397,6 @@ return {
         vim.keymap.set({"n", "v"}, "<leader>ati", function() require("ai-terminals").toggle("aichat") end, { desc = "Toggle AI Chat terminal (sends selection in visual mode)" })
         vim.keymap.set({"n", "v"}, "<leader>adi", function() require("ai-terminals").send_diagnostics("aichat") end, { desc = "Send diagnostics to AI Chat" })
 
-        -- Kode Keymaps
-        vim.keymap.set({"n", "v"}, "<leader>atk", function() require("ai-terminals").toggle("kode") end, { desc = "Toggle Kode terminal (sends selection in visual mode)" })
-        vim.keymap.set({"n", "v"}, "<leader>adk", function() require("ai-terminals").send_diagnostics("kode") end, { desc = "Send diagnostics to Kode" })
-
         -- Run Command and Send Output
         vim.keymap.set("n", "<leader>ar", function() require("ai-terminals").send_command_output("aider") end, { desc = "Run command (prompts) and send output to Aider terminal" })
         -- Or use a fixed command like:
@@ -482,10 +460,6 @@ use({
     -- aichat Keymaps
     vim.keymap.set({"n", "v"}, "<leader>ati", function() require("ai-terminals").toggle("aichat") end, { desc = "Toggle AI Chat terminal (sends selection)" })
     vim.keymap.set({"n", "v"}, "<leader>adi", function() require("ai-terminals").send_diagnostics("aichat") end, { desc = "Send diagnostics to AI Chat" })
-
-    -- Kode Keymaps
-    vim.keymap.set({"n", "v"}, "<leader>atk", function() require("ai-terminals").toggle("kode") end, { desc = "Toggle Kode terminal (sends selection)" })
-    vim.keymap.set({"n", "v"}, "<leader>adk", function() require("ai-terminals").send_diagnostics("kode") end, { desc = "Send diagnostics to Kode" })
 
     -- Example: Run a command and send output to a specific terminal
     vim.keymap.set("n", "<leader>ar", function() require("ai-terminals").send_command_output("aider") end, { desc = "Run command (prompts) and send output to Aider" })
