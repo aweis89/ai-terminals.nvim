@@ -21,7 +21,8 @@ terminals, it offers:
 * **Consistency:** Provides a consistent workflow (sending selections/diagnostics, diffing, reversing changes, creating prompts) across different tools.
 * **Leverages Existing Tools:** Benefits from the features and updates of the
   underlying CLI tools themselves.
-* **Stdin Integration:** CLI tools provide a straightforward API for sending input via `stdin`. This plugin utilizes that capability by exposing functions like `send`, enabling a wide range of custom integrations. You can automate processes like pulling in Jira ticket details for context or sending PR diffs for review by retrieving the necessary information and piping it directly to the AI.
+* **Stdin Integration:** CLI tools provide a straightforward API for sending input via `stdin`.
+* This plugin utilizes that capability by exposing functions like `send`, enabling a wide range of custom integrations. For example, when toggling any terminal from visual mode, the code will get added to the prompt with the file path. You can also send diagnostics or command outputs. The `send` function can also be used to create custom prompts or functions like pulling in Jira ticket details or reviewing PRs.
 
 This plugin is ideal for users who prefer terminal-based AI interaction and
 want a single, configurable way to manage them within Neovim.
