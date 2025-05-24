@@ -1,5 +1,8 @@
 # 🤖 AI Terminals Neovim Plugin
 
+
+<img width="1512" alt="Screenshot 2025-05-24 at 2 52 48 PM" src="https://github.com/user-attachments/assets/cd7b5acb-4285-498e-b4af-825a5f3161a9" />
+
 This plugin **seamlessly integrates any command-line (CLI) AI coding agents**
 into Neovim. It provides a unified workflow for interacting with AI assistants
 directly within your editor, reducing the need for specific, dedicated AI
