@@ -6,6 +6,29 @@ local last_sync_time = 0
 local sync_debounce_ms = 1000 -- Only allow sync once per second (adjust as needed)
 
 ------------------------------------------
+-- Helper Functions
+------------------------------------------
+---Checks if the current directory is a git repository.
+---@return boolean true if it's a git repository, false otherwise.
+local function is_git_repository()
+	local is_git_repo_output = vim.fn.system("git rev-parse --is-inside-work-tree 2>/dev/null")
+	-- vim.v.shell_error will be 0 if the command was successful
+	return vim.v.shell_error == 0 and is_git_repo_output:match("true")
+end
+
+---Determines if a diff operation should proceed.
+---Currently checks if the CWD is a git repository.
+---@param operation_name string Name of the operation (e.g., "Sync", "Diff") for notifications.
+---@return boolean true if the operation should proceed, false otherwise.
+local function should_diff(operation_name)
+	if not is_git_repository() then
+		vim.notify(operation_name .. " skipped: not in a git repository.", vim.log.levels.DEBUG)
+		return false
+	end
+	return true
+end
+
+------------------------------------------
 -- Ignore Patterns for Diff
 ------------------------------------------
 Diff.DIFF_IGNORE_PATTERNS = {
@@ -39,6 +62,10 @@ Diff.BASE_COPY_DIR = vim.fn.stdpath("cache") .. "/ai_terminals_diff/"
 ---                   `tmp_file_path` is the path in the backup directory (nil if file is only in cwd).
 ---@return nil
 function Diff.diff_changes(opts)
+	if not should_diff("Diff") then
+		return
+	end
+
 	opts = opts or {}
 	local cwd = vim.fn.getcwd()
 	local cwd_name = vim.fn.fnamemodify(cwd, ":t")
@@ -360,11 +387,7 @@ function Diff.pre_sync_code_base()
 		return -- Exit early if called within the debounce period
 	end
 
-	-- Check if we're in a git repository
-	local is_git_repo = vim.fn.system("git rev-parse --is-inside-work-tree 2>/dev/null"):match("true")
-	if not is_git_repo then
-		-- Not in a git repo, don't run the sync
-		vim.notify("Sync skipped: not in a git repository", vim.log.levels.DEBUG)
+	if not should_diff("Sync") then
 		return
 	end
 
