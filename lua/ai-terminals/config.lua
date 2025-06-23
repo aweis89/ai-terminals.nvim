@@ -58,6 +58,9 @@ Config.config = {
 				return string.format("aider --watch-files --%s-mode", vim.o.background)
 			end,
 		},
+		codex = {
+			cmd = "codex",
+		},
 	},
 	window_dimensions = {
 		float = { width = 0.9, height = 0.9 },
