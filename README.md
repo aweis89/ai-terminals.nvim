@@ -91,6 +91,8 @@ Here are links to some of the tools mentioned in the default configuration:
 * **Claude CLI:** [Claude CLI](https://github.com/anthropics/claude-cli)
 * **Goose:** [Goose](https://github.com/aweis89/goose)
 * **AI Chat:** [AI Chat](https://github.com/sigoden/aichat)
+* **Codex:** [Codex CLI](https://github.com/openai/codex)
+* **Gemini:** [Gemini CLI](https://github.com/google-gemini/gemini-cli)
 
 * **Delta (Optional, for diffing):** [Delta](https://github.com/dandavison/delta)
 
