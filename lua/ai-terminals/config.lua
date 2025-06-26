@@ -61,6 +61,9 @@ Config.config = {
 		codex = {
 			cmd = "codex",
 		},
+		gemini = {
+			cmd = "gemini",
+		},
 	},
 	window_dimensions = {
 		float = { width = 0.9, height = 0.9 },
