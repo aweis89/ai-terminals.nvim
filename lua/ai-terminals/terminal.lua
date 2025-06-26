@@ -165,7 +165,12 @@ function Term.toggle(terminal_name, position)
 end
 
 ---Focus an existing terminal instance by command and position
-function Term.focus()
+---@param term snacks.win|nil
+function Term.focus(term)
+	if term then
+		term:focus()
+		return
+	end
 	local terms = Snacks.terminal.list()
 	if #terms == 1 then
 		terms[1]:focus()
