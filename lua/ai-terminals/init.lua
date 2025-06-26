@@ -202,6 +202,7 @@ function M.toggle(terminal_name, position)
 
 	if selection and term then
 		M.send(selection, { term = term, insert_mode = true })
+		M.focus(term)
 	end
 	return term
 end
@@ -223,8 +224,9 @@ function M.get(terminal_name, position)
 	return term, created
 end
 
-function M.focus()
-	TerminalLib.focus()
+---@param term snacks.win|nil
+function M.focus(term)
+	TerminalLib.focus(term)
 end
 
 ---Open a terminal by name, creating if necessary (delegates to TerminalLib)
