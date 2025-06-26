@@ -68,10 +68,6 @@ function Term.send(text, opts)
 			return
 		end
 	end
-
-	if opts.insert_mode then
-		vim.fn.feedkeys("i", "n")
-	end
 end
 
 ---Helper to resolve term config, position, and dimensions
