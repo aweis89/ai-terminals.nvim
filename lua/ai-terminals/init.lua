@@ -166,10 +166,7 @@ local function setup_prompt_keymaps()
 			end
 
 			-- Send the potentially modified message to the specified terminal
-			M.send_term(term_name, message_to_send, { submit = submit_prompt }) -- Use the configured submit value
-
-			-- Optional: Focus the terminal after sending
-			-- M.focus()
+			M.send_term(term_name, message_to_send, { submit = submit_prompt, focus = true }) -- Use the configured submit value
 		end, { desc = description })
 
 		::continue:: -- Label for goto
@@ -189,20 +186,18 @@ end
 ---@param position "float"|"bottom"|"top"|"left"|"right"|nil
 ---@return snacks.win|nil
 function M.toggle(terminal_name, position)
-	-- Send selection if in visual mode (moved from original M.toggle)
-	local selection = nil
 	local term
 	if vim.fn.mode() == "v" or vim.fn.mode() == "V" then
-		selection = M.get_visual_selection_with_header(0)
+		local selection = M.get_visual_selection_with_header(0)
 		-- never toggle closed when in visual mode
-		term = TerminalLib.open(terminal_name, position)
+		term = TerminalLib.open(terminal_name, position, function(term)
+			if selection then
+				M.send(selection, { term = term, insert_mode = true })
+			end
+			M.focus(term)
+		end)
 	else
 		term = TerminalLib.toggle(terminal_name, position)
-	end
-
-	if selection and term then
-		M.send(selection, { term = term, insert_mode = true })
-		M.focus(term)
 	end
 	return term
 end
@@ -219,7 +214,17 @@ function M.get(terminal_name, position)
 	end
 	local term, created = TerminalLib.get(terminal_name, position)
 	if selection and term then
-		M.send(selection, { term = term, insert_mode = true })
+		if created then
+			-- Defer send and focus to allow the terminal to initialize
+			vim.defer_fn(function()
+				M.send(selection, { term = term, insert_mode = true })
+				M.focus(term)
+			end, 100) -- 100ms delay
+		else
+			-- If terminal already exists, send and focus immediately
+			M.send(selection, { term = term, insert_mode = true })
+			M.focus(term)
+		end
 	end
 	return term, created
 end
@@ -232,9 +237,13 @@ end
 ---Open a terminal by name, creating if necessary (delegates to TerminalLib)
 ---@param terminal_name string The name of the terminal (key in M.config.terminals)
 ---@param position "float"|"bottom"|"top"|"left"|"right"|nil Optional: Specify position if needed for matching window dimensions
----@return snacks.win?
-function M.open(terminal_name, position)
-	return TerminalLib.open(terminal_name, position)
+---@return snacks.win?, boolean
+function M.open(terminal_name, position, callback)
+	local term, created = TerminalLib.open(terminal_name, position, callback)
+	if not term then
+		return nil, false
+	end
+	return term, created
 end
 
 ---Compare current directory with its backup and open differing files or show delta.
@@ -269,18 +278,25 @@ end
 ---Send text to a specific named terminal
 ---@param name string Terminal name (key in M.config.terminals)
 ---@param text string text to send
----@param opts {submit?: boolean}|nil Options: `submit` sends a newline after the text if true.
+---@param opts {submit?: boolean, focus?: boolean}|nil Options: `submit` sends a newline after the text if true, `focus` will focus the terminal.
 function M.send_term(name, text, opts)
-	local term = M.open(name) -- Use M.open which delegates to TerminalLib.open
+	opts = opts or {}
+	local send_opts = {
+		term = nil, -- will be set later
+		submit = opts.submit or false,
+	}
+
+	local term = M.open(name, nil, function(term)
+		M.send(text, send_opts)
+		if opts.focus then -- Only focus if requested
+			M.focus(term)
+		end
+	end)
+
 	if not term then
 		vim.notify("Terminal '" .. name .. "' not found or could not be opened", vim.log.levels.ERROR)
 		return
 	end
-	opts = opts or {}
-	M.send(text, {
-		term = term,
-		submit = opts.submit or false,
-	})
 end
 
 ---Send diagnostics to a specific named terminal
@@ -351,8 +367,15 @@ end
 ---@return nil
 function M.send_command_output(term_name, cmd, opts)
 	term_name = term_name or vim.b[0].term_title
+	opts = opts or {}
 
-	local term = M.open(term_name) -- Use M.open which delegates
+	local function send_output(term)
+		opts.term = term
+		TerminalLib.run_command_and_send_output(cmd, opts) -- Call TerminalLib directly
+	end
+
+	local term, created = M.open(term_name, nil, send_output)
+
 	if not term then
 		vim.notify(
 			"Terminal '" .. term_name .. "' not found or could not be opened for command output",
@@ -360,9 +383,10 @@ function M.send_command_output(term_name, cmd, opts)
 		)
 		return
 	end
-	opts = opts or {}
-	opts.term = opts.term or term
-	TerminalLib.run_command_and_send_output(cmd, opts) -- Call TerminalLib directly
+
+	if not created then
+		send_output(term)
+	end
 end
 
 ---Get the current visual selection (delegates to SelectionLib)
