@@ -233,7 +233,7 @@ function Term.open(terminal_name, position, callback)
 		if created then
 			vim.defer_fn(function()
 				callback(term)
-			end, 2000)
+			end, 1000)
 		else
 			callback(term)
 		end
