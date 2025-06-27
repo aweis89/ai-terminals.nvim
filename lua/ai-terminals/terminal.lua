@@ -211,24 +211,34 @@ end
 ---Open a terminal by name, creating it if it doesn't exist.
 ---@param terminal_name string The name of the terminal (key in ConfigLib.config.terminals)
 ---@param position "float"|"bottom"|"top"|"left"|"right"|nil Optional override position.
----@return snacks.win? The terminal window object or nil on failure.
-function Term.open(terminal_name, position)
+---@param callback function(snacks.win)? -- Optional callback to execute after terminal is opened.
+---@return snacks.win?, boolean
+function Term.open(terminal_name, position, callback)
 	local cmd_str, opts = Term.resolve_terminal_options(terminal_name, position)
 	if not cmd_str then
-		return nil -- Error handled in helper
+		return nil, false -- Error handled in helper
 	end
 
 	-- Use Snacks.terminal.get because 'open' should retrieve if exists, or create if not.
-	local term, _ = Snacks.terminal.get(cmd_str, opts) -- We don't need the 'created' flag here
+	local term, created = Snacks.terminal.get(cmd_str, opts) -- We don't need the 'created' flag here
 	if not term then
 		vim.notify("Unable to open terminal: " .. terminal_name, vim.log.levels.ERROR)
-		return nil
+		return nil, false
 	end
 
 	_after_terminal_creation(term, terminal_name)
 	term:show() -- Ensure the window is visible after opening/getting
 
-	return term
+	if callback then
+		if created then
+			vim.defer_fn(function()
+				callback(term)
+			end, 2000)
+		else
+			callback(term)
+		end
+	end
+	return term, created or false
 end
 
 ---Execute a shell command and send its stdout to the active terminal buffer.
