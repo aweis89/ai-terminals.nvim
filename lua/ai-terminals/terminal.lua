@@ -49,6 +49,7 @@ function Term.send(text, opts)
 	-- Send the main text
 	local success = vim.fn.chansend(job_id, text_to_send)
 
+	local config = require("ai-terminals.config").config
 	if config.add_to_clipboard then
 		vim.fn.setreg("+", text_to_send)
 	end
