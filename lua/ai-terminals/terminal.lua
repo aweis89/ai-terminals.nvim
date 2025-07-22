@@ -48,6 +48,11 @@ function Term.send(text, opts)
 
 	-- Send the main text
 	local success = vim.fn.chansend(job_id, text_to_send)
+
+	if config.add_to_clipboard then
+		vim.fn.setreg("+", text_to_send)
+	end
+
 	if success == 0 then
 		vim.notify(
 			string.format(
@@ -230,13 +235,13 @@ function Term.open(terminal_name, position, callback)
 	term:show() -- Ensure the window is visible after opening/getting
 
 	if callback then
-		if created then
-			vim.defer_fn(function()
-				callback(term)
-			end, 1000)
-		else
+		-- if created then
+		vim.defer_fn(function()
 			callback(term)
-		end
+		end, 500)
+		-- else
+		-- 	callback(term)
+		-- end
 	end
 	return term, created or false
 end
