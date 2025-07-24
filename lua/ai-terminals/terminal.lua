@@ -50,8 +50,9 @@ function Term.send(text, opts)
 	local success = vim.fn.chansend(job_id, text_to_send)
 
 	local config = require("ai-terminals.config").config
-	if config.add_to_clipboard then
-		vim.fn.setreg("+", text_to_send)
+	if config.clipboard_register ~= false then
+		local reg = config.clipboard_register or "a"
+		vim.fn.setreg(reg, text_to_send)
 	end
 
 	if success == 0 then
