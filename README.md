@@ -100,7 +100,6 @@ Here are links to some of the tools mentioned in the default configuration:
 * **Goose:** [Goose](https://github.com/aweis89/goose)
 * **AI Chat:** [AI Chat](https://github.com/sigoden/aichat)
 * **Codex:** [Codex CLI](https://github.com/openai/codex)
-* **Gemini:** [Gemini CLI](https://github.com/google-gemini/gemini-cli)
 
 * **Delta (Optional, for diffing):** [Delta](https://github.com/dandavison/delta)
 
@@ -132,12 +131,6 @@ require("ai-terminals").setup({
       cmd = function()
         -- Use dark/light mode based on background
         return string.format("aider --watch-files --%s-mode", vim.o.background)
-      end,
-    },
-    -- Example: Adding Gemini CLI 
-    gemini = {
-      cmd = function()
-        return "gemini"
       end,
     },
     -- Example: Add a new terminal for a custom script
