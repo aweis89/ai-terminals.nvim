@@ -56,7 +56,9 @@ want a single, configurable way to manage them within Neovim.
   and reloaded if necessary, ensuring you see the latest changes made by the AI.
 * **📋 Send Visual Selection:** Send the currently selected text (visual mode) to
   the AI terminal, automatically wrapped in a markdown code block with the file
-  path and language type included.
+  path and language type included. Each terminal can have a custom path header
+  template to format file paths according to the AI tool's preferences (e.g., 
+  `@filename` or `` `filename` ``).
 
   
 * **🩺 Send Diagnostics:** Send diagnostics (errors, warnings, etc.) for the current buffer or visual selection to the AI terminal (`:h ai-terminals.send_diagnostics`), formatted with severity, line/column numbers, messages, and the corresponding source code lines.
@@ -124,10 +126,14 @@ require("ai-terminals").setup({
         -- Use dark/light mode based on background
         return string.format("aider --watch-files --%s-mode", vim.o.background)
       end,
+      -- Custom path header template for Aider (uses backticks)
+      path_header_template = "`%s`",
     },
     -- Example: Add a new terminal for a custom script
     my_custom_ai = {
       cmd = "/path/to/my/ai_script.sh --interactive",
+      -- Custom path header template with '@' prefix
+      path_header_template = "@%s",
     },
     -- Example: Remove a default terminal if you don't use it
     goose = nil,
@@ -172,6 +178,34 @@ a string. Using a function allows the command to be generated dynamically *just
 before* the terminal is opened (e.g., to check `vim.o.background` at invocation
 time).
 
+### 🎯 Path Header Templates
+
+Each terminal can have a custom `path_header_template` that controls how file paths are formatted when sending visual selections. This allows different AI terminals to receive path information in their preferred format without requiring additional tool calls.
+
+**Key Benefits:**
+- **Automatic Context:** File paths are automatically included with code selections, giving AI tools immediate context about the file being discussed
+- **Format Flexibility:** Each terminal can use its own preferred path format (e.g., `@filename` for some tools, `` `filename` `` for others)
+- **No Extra Steps:** No need for separate commands to provide file context - it's included automatically
+
+**Default Templates:**
+- **Aider:** `` `%s` `` (wrapped in backticks for Aider's file reference format)
+- **All other terminals:** `@%s` (prefixed with @ symbol)
+
+**Custom Template Example:**
+```lua
+terminals = {
+  my_ai_tool = {
+    cmd = "my-ai-cli",
+    path_header_template = "File: %s", -- Custom format
+  },
+}
+```
+
+When you send a visual selection from `src/main.js` to a terminal, the path header will be formatted according to that terminal's template:
+- Aider receives: `` `src/main.js` ``
+- Claude receives: `@src/main.js`
+- Custom tool receives: `File: src/main.js`
+
 ### 🚀 Example Usage
 
 Here's a more complete example using `lazy.nvim`:
@@ -189,6 +223,7 @@ return {
           cmd = function()
             return string.format("GOOSE_CLI_THEME=%s goose", vim.o.background)
           end,
+          path_header_template = "@%s", -- Default: @ prefix
         },
         aichat = {
           cmd = function()
@@ -198,16 +233,19 @@ return {
               tostring(vim.o.background == "light")
             )
           end,
+          path_header_template = "@%s", -- Default: @ prefix
         },
         claude = {
           cmd = function()
             return string.format("claude config set -g theme %s && claude", vim.o.background)
           end,
+          path_header_template = "@%s", -- Default: @ prefix
         },
         aider = {
           cmd = function()
             return string.format("aider --watch-files --%s-mode", vim.o.background)
           end,
+          path_header_template = "`%s`", -- Special: backticks for Aider
         },
       },
       -- You can also set window, default_position, enable_diffing here

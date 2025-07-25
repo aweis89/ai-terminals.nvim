@@ -2,6 +2,7 @@ local Config = {}
 
 ---@class TerminalConfig
 ---@field cmd string | fun(): string
+---@field path_header_template string|nil Template for path header in visual selection. Use %s as placeholder for path.
 
 ---@alias TerminalsMap table<string, TerminalConfig>
 
@@ -39,6 +40,7 @@ Config.config = {
 			cmd = function()
 				return string.format("GOOSE_CLI_THEME=%s goose", vim.o.background)
 			end,
+			path_header_template = "@%s",
 		},
 		aichat = {
 			cmd = function()
@@ -47,22 +49,27 @@ Config.config = {
 					tostring(vim.o.background == "light") -- Convert boolean to string "true" or "false"
 				)
 			end,
+			path_header_template = "@%s",
 		},
 		claude = {
 			cmd = function()
 				return string.format("claude config set -g theme %s && claude", vim.o.background)
 			end,
+			path_header_template = "@%s",
 		},
 		aider = {
 			cmd = function()
 				return string.format("aider --watch-files --%s-mode", vim.o.background)
 			end,
+			path_header_template = "`%s`",
 		},
 		codex = {
 			cmd = "codex",
+			path_header_template = "@%s",
 		},
 		gemini = {
-			cmd = "gemini",
+			cmd = "gemini -p",
+			path_header_template = "@%s",
 		},
 	},
 	window_dimensions = {
@@ -74,7 +81,6 @@ Config.config = {
 	},
 	default_position = "float", -- Default position if none is specified in toggle/open/get
 	enable_diffing = true, -- Enable backup sync and diff commands. Disabling this prevents `diff_changes` and `close_diff` from working.
-
 
 	-- auto show diffs (if present) when leaving terminal (set to false or nil to disable)
 	show_diffs_on_leave = true,
