@@ -49,11 +49,6 @@ function Term.send(text, opts)
 	-- Send the main text
 	local success = vim.fn.chansend(job_id, text_to_send)
 
-	local config = require("ai-terminals.config").config
-	if config.clipboard_register ~= false then
-		local reg = config.clipboard_register or "a"
-		vim.fn.setreg(reg, text_to_send)
-	end
 
 	if success == 0 then
 		vim.notify(
