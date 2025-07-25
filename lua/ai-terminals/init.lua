@@ -150,7 +150,7 @@ local function setup_prompt_keymaps()
 
 			-- Check if we are actually in visual mode *and* selection should be included
 			if string.match(current_vim_mode, "^[vVsS]") and should_include_selection then
-				visual_selection_text = M.get_visual_selection_with_header(0) -- 0 for current buffer
+				visual_selection_text = M.get_visual_selection_with_header(0, term_name) -- 0 for current buffer
 				if visual_selection_text and visual_selection_text ~= "" then
 					-- Always prefix the selection
 					message_to_send = visual_selection_text .. "\n\n" .. prompt_text
@@ -188,7 +188,7 @@ end
 function M.toggle(terminal_name, position)
 	local term
 	if vim.fn.mode() == "v" or vim.fn.mode() == "V" then
-		local selection = M.get_visual_selection_with_header(0)
+		local selection = M.get_visual_selection_with_header(0, terminal_name)
 		-- never toggle closed when in visual mode
 		term = TerminalLib.open(terminal_name, position, function(term)
 			if selection then
@@ -210,7 +210,7 @@ function M.get(terminal_name, position)
 	-- Send selection if in visual mode (moved from original M.toggle)
 	local selection = nil
 	if vim.fn.mode() == "v" or vim.fn.mode() == "V" then
-		selection = M.get_visual_selection_with_header(0)
+		selection = M.get_visual_selection_with_header(0, terminal_name)
 	end
 	local term, created = TerminalLib.get(terminal_name, position)
 	if selection and term then
@@ -401,9 +401,10 @@ end
 
 ---Format visual selection with markdown code block and file path (delegates to SelectionLib)
 ---@param bufnr integer|nil
+---@param terminal_name string|nil
 ---@return string|nil
-function M.get_visual_selection_with_header(bufnr)
-	return SelectionLib.get_visual_selection_with_header(bufnr)
+function M.get_visual_selection_with_header(bufnr, terminal_name)
+	return SelectionLib.get_visual_selection_with_header(bufnr, terminal_name)
 end
 
 return M

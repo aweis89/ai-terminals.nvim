@@ -42,8 +42,9 @@ end
 ---Format visual selection with markdown code block and file path.
 ---Returns nil if no visual selection is found.
 ---@param bufnr integer|nil
+---@param terminal_name string|nil Optional terminal name to use for path header template
 ---@return string|nil
-function Selection.get_visual_selection_with_header(bufnr)
+function Selection.get_visual_selection_with_header(bufnr, terminal_name)
 	bufnr = bufnr or 0
 	local lines, path = Selection.get_visual_selection(bufnr)
 
@@ -56,7 +57,18 @@ function Selection.get_visual_selection_with_header(bufnr)
 
 	local filetype = vim.bo[bufnr].filetype or ""
 	slines = "```" .. filetype .. "\n" .. slines .. "\n```"
-	return string.format("\n# Path: %s\n%s\n", path, slines)
+	
+	-- Get path header template from terminal config or use default
+	local path_header = "# Path: %s"
+	if terminal_name then
+		local Config = require("ai-terminals.config")
+		local terminal_config = Config.config.terminals and Config.config.terminals[terminal_name]
+		if terminal_config and terminal_config.path_header_template then
+			path_header = terminal_config.path_header_template
+		end
+	end
+	
+	return string.format("\n%s\n%s\n", string.format(path_header, path), slines)
 end
 
 return Selection
