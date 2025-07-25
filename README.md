@@ -58,15 +58,8 @@ want a single, configurable way to manage them within Neovim.
   the AI terminal, automatically wrapped in a markdown code block with the file
   path and language type included.
 
-  *Tip:* When toggling a terminal in visual mode (`:h ai-terminals.toggle`), the selection is automatically sent *without* a trailing newline, allowing you to add further instructions before submitting. This uses bracketed paste mode for reliable multi-line input. The selection is also copied to your clipboard so you can manually paste it if the terminal isn't ready to receive input (some terminals like Gemini may need a moment after startup).
+  *Tip:* When toggling a terminal in visual mode (`:h ai-terminals.toggle`), the selection is automatically sent *without* a trailing newline, allowing you to add further instructions before submitting. This uses bracketed paste mode for reliable multi-line input. The selection is also copied to the Vim register specified by `clipboard_register` (defaults to `"a"`), so you can manually paste it if the terminal isn't ready to receive input (some terminals, like the Gemini CLI, may need a moment after startup).
   
-  *Note:* Gemini CLI in particular doesn't play nicely with automatic text selection during the first startup. If you encounter issues, use the clipboard paste functionality instead. You can create a terminal-mode mapping for pasting in your configuration:
-  ```lua
-  terminal_keymaps = {
-    { key = "<C-v>", action = function() vim.api.nvim_feedkeys(vim.fn.getreg('+'), "t", true) end, desc = "Paste from clipboard", modes = "t" },
-    -- Your other terminal keymaps...
-  },
-  ```
 * **🩺 Send Diagnostics:** Send diagnostics (errors, warnings, etc.) for the current buffer or visual selection to the AI terminal (`:h ai-terminals.send_diagnostics`), formatted with severity, line/column numbers, messages, and the corresponding source code lines.
 * **🚀 Run Command and Send Output:** Execute an arbitrary shell command and send its standard output and exit code to the active AI terminal (`:h ai-terminals.send_command_output`). Useful for running tests, linters, or even fetching information from other CLIs (e.g., `jira issue view MYTICKET-123`) and feeding results to the AI.
 * **📝 Prompt Keymaps:** Define custom keymaps (`:h ai-terminals.config`) to send pre-defined prompts to specific terminals.
@@ -166,6 +159,9 @@ require("ai-terminals").setup({
   show_diffs_on_leave = true, -- Default: true
   -- Keymapping used within diff views (vimdiff or delta terminal) to close the diff.
   diff_close_keymap = "q", -- Default: "q"
+  -- Specify a register to copy text into for manual pasting (e.g., if bracketed paste mode isn't supported). Set to `false` to disable.
+  -- Defaults to `"a"`.
+  clipboard_register = "a", -- Default: "a"
   -- Define keymaps that only apply within terminal buffers
   terminal_keymaps = {
     { key = "<C-w>q", action = "close", desc = "Close terminal window", modes = "t" },
