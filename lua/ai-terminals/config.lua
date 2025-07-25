@@ -1,8 +1,14 @@
 local Config = {}
 
+---@class FileCommands
+---@field add_files string|nil Template for adding files. Use %s as placeholder for file paths.
+---@field add_files_readonly string|nil Template for adding files as read-only. Use %s as placeholder for file paths.
+---@field submit boolean|nil Whether to submit after sending file command (default: false)
+
 ---@class TerminalConfig
 ---@field cmd string | fun(): string
 ---@field path_header_template string|nil Template for path header in visual selection. Use %s as placeholder for path.
+---@field file_commands FileCommands|nil Commands for file operations
 
 ---@alias TerminalsMap table<string, TerminalConfig>
 
@@ -62,6 +68,11 @@ Config.config = {
 				return string.format("aider --watch-files --%s-mode", vim.o.background)
 			end,
 			path_header_template = "`%s`",
+			file_commands = {
+				add_files = "/add %s",
+				add_files_readonly = "/read-only %s",
+				submit = true,
+			},
 		},
 		codex = {
 			cmd = "codex",

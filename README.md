@@ -63,6 +63,7 @@ want a single, configurable way to manage them within Neovim.
   
 * **🩺 Send Diagnostics:** Send diagnostics (errors, warnings, etc.) for the current buffer or visual selection to the AI terminal (`:h ai-terminals.send_diagnostics`), formatted with severity, line/column numbers, messages, and the corresponding source code lines.
 * **🚀 Run Command and Send Output:** Execute an arbitrary shell command and send its standard output and exit code to the active AI terminal (`:h ai-terminals.send_command_output`). Useful for running tests, linters, or even fetching information from other CLIs (e.g., `jira issue view MYTICKET-123`) and feeding results to the AI.
+* **📁 File Management:** Generic functions to add files or buffers to any terminal using configurable commands (`:h ai-terminals.add_files_to_terminal`, `:h ai-terminals.add_buffers_to_terminal`). Works with all terminals, with fallback behavior for terminals without specific file commands configured.
 * **📝 Prompt Keymaps:** Define custom keymaps (`:h ai-terminals.config`) to send pre-defined prompts to specific terminals.
   * **Selection Handling:** Configure whether the keymap includes visual selection (`include_selection` option, defaults to `true`).
     * If `true`, the keymap works in normal and visual modes. In visual mode, the selection is prefixed to the prompt.
@@ -73,12 +74,41 @@ want a single, configurable way to manage them within Neovim.
   * **Modes:** Specify which modes the keymap applies to (e.g., "t" for terminal mode, "n" for normal mode within the terminal). Defaults to "t".
   * **Actions:** Actions can be functions or strings (e.g., to close the terminal or send keys).
 
+### 📁 File Management
+
+The plugin provides generic file management functions that work with any terminal:
+
+* **📂 Add Files to Terminal:** `add_files_to_terminal(terminal_name, files, opts)`
+  * Send files to any terminal using its configured file commands
+  * **Aider:** Uses `/add` or `/read-only` commands with automatic submission
+  * **Other terminals:** Uses fallback `@file1 @file2` format without submission
+  * **Options:** `{ read_only = true }` for read-only mode (if supported by terminal)
+  
+* **📋 Add Buffers to Terminal:** `add_buffers_to_terminal(terminal_name, opts)`
+  * Add all currently listed buffers to any terminal
+  * Filters out invalid, unloaded, or non-modifiable buffers
+  * Uses the same command templates as `add_files_to_terminal`
+
+**Configuration:** Add `file_commands` to your terminal config to customize:
+```lua
+terminals = {
+  my_ai_tool = {
+    cmd = "my-ai-cli",
+    file_commands = {
+      add_files = "load %s",           -- Template for adding files
+      add_files_readonly = "view %s",  -- Template for read-only files  
+      submit = true,                   -- Whether to auto-submit
+    },
+  },
+}
+```
+
 ### 🔥 Aider Specific Features
 
-While the generic features work well with Aider, this plugin includes additional helpers specifically for Aider (`:h ai-terminals.aider`):
+While the generic file management works with Aider, this plugin includes additional helpers specifically for Aider (`:h ai-terminals.aider`):
 
-* **➕ Add Files:** Quickly add the current file or a list of files to the Aider chat context using `/add` or `/read-only` (`:h ai-terminals.aider_add_files`).
-* **➕ Add Buffers:** Add all currently listed buffers to the Aider chat context (`:h ai-terminals.aider_add_buffers`).
+* **➕ Add Files:** *(Deprecated)* Use `add_files_to_terminal("aider", files, opts)` instead (`:h ai-terminals.aider_add_files`).
+* **➕ Add Buffers:** *(Deprecated)* Use `add_buffers_to_terminal("aider", opts)` instead (`:h ai-terminals.aider_add_buffers`).
 * **💬 Add Comments:** Insert comments above the current line with a custom prefix (e.g., `AI!`, `AI?`).
 * This automatically starts the Aider terminal if not already running (`:h ai-terminals.aider_comment`).
 
@@ -128,6 +158,12 @@ require("ai-terminals").setup({
       end,
       -- Custom path header template for Aider (uses backticks)
       path_header_template = "`%s`",
+      -- File management commands (optional)
+      file_commands = {
+        add_files = "/add %s",           -- Template for adding files
+        add_files_readonly = "/read-only %s",  -- Template for read-only files
+        submit = true,                   -- Auto-submit after sending command
+      },
     },
     -- Example: Add a new terminal for a custom script
     my_custom_ai = {
@@ -319,13 +355,31 @@ return {
         end,
         desc = "Add 'AI?' comment above line",
       },
+      -- Generic File Management (works with any terminal)
+      {
+        "<leader>af", -- Mnemonic: Add Files
+        function()
+          -- Add current file to Claude using generic function
+          require("ai-terminals").add_files_to_terminal("claude", {vim.fn.expand("%")})
+        end,
+        desc = "Add current file to Claude",
+      },
+      {
+        "<leader>aF", -- Mnemonic: Add Files (all buffers)
+        function()
+          -- Add all buffers to Claude using generic function
+          require("ai-terminals").add_buffers_to_terminal("claude")
+        end,
+        desc = "Add all buffers to Claude",
+      },
+      -- Aider-specific shortcuts (deprecated but still supported)
       {
         "<leader>al", -- Mnemonic: AI add Local file
         function()
           -- add current file (path conversion happens inside)
           require("ai-terminals").aider_add_files(vim.fn.expand("%"))
         end,
-        desc = "Add current file to Aider (/add)",
+        desc = "Add current file to Aider (/add) [DEPRECATED]",
       },
       {
         "<leader>aR", -- Mnemonic: AI add Read-only
@@ -333,12 +387,12 @@ return {
           -- add current file as read-only (path conversion happens inside)
           require("ai-terminals").aider_add_files(vim.fn.expand("%"), { read_only = true })
         end,
-        desc = "Add current file to Aider (read-only)",
+        desc = "Add current file to Aider (read-only) [DEPRECATED]",
       },
       {
         "<leader>aL", -- Mnemonic: AI add Listed buffers
         function() require("ai-terminals").aider_add_buffers() end,
-        desc = "Add all listed buffers to Aider",
+        desc = "Add all listed buffers to Aider [DEPRECATED]",
       },
       {
         "<leader>ada",
@@ -494,9 +548,14 @@ use({
     vim.keymap.set({"n", "v"}, "<leader>ata", function() require("ai-terminals").toggle("aider") end, { desc = "Toggle Aider terminal (sends selection)" })
     vim.keymap.set("n", "<leader>ac", function() require("ai-terminals").aider_comment("AI!") end, { desc = "Add 'AI!' comment above line" })
     vim.keymap.set("n", "<leader>aC", function() require("ai-terminals").aider_comment("AI?") end, { desc = "Add 'AI?' comment above line" })
-    vim.keymap.set("n", "<leader>al", function() require("ai-terminals").aider_add_files(vim.fn.expand("%")) end, { desc = "Add current file to Aider (/add)" })
-    vim.keymap.set("n", "<leader>aR", function() require("ai-terminals").aider_add_files(vim.fn.expand("%"), { read_only = true }) end, { desc = "Add current file to Aider (read-only)" })
-    vim.keymap.set("n", "<leader>aL", function() require("ai-terminals").aider_add_buffers() end, { desc = "Add all listed buffers to Aider" })
+    -- Generic File Management (works with any terminal)
+    vim.keymap.set("n", "<leader>af", function() require("ai-terminals").add_files_to_terminal("claude", {vim.fn.expand("%")}) end, { desc = "Add current file to Claude" })
+    vim.keymap.set("n", "<leader>aF", function() require("ai-terminals").add_buffers_to_terminal("claude") end, { desc = "Add all buffers to Claude" })
+    
+    -- Aider-specific shortcuts (deprecated but still supported)
+    vim.keymap.set("n", "<leader>al", function() require("ai-terminals").aider_add_files(vim.fn.expand("%")) end, { desc = "Add current file to Aider (/add) [DEPRECATED]" })
+    vim.keymap.set("n", "<leader>aR", function() require("ai-terminals").aider_add_files(vim.fn.expand("%"), { read_only = true }) end, { desc = "Add current file to Aider (read-only) [DEPRECATED]" })
+    vim.keymap.set("n", "<leader>aL", function() require("ai-terminals").aider_add_buffers() end, { desc = "Add all listed buffers to Aider [DEPRECATED]" })
     vim.keymap.set({"n", "v"}, "<leader>ada", function() require("ai-terminals").send_diagnostics("aider") end, { desc = "Send diagnostics to Aider" })
 
     -- aichat Keymaps

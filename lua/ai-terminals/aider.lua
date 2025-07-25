@@ -52,47 +52,25 @@ function Aider.comment(prefix)
 end
 
 -- Helper function to send commands to the aider terminal
+---@deprecated Use M.add_files_to_terminal("aider", files, opts) instead
 ---@param files string[] List of file paths to add to aider. Paths will be converted to absolute paths.
 ---@param opts? { read_only?: boolean } Options for the command
 function Aider.add_files(files, opts)
-	opts = opts or {}
-	local command = opts.read_only and "/read-only" or "/add"
-
-	if #files == 0 then
-		vim.notify("No files provided to add", vim.log.levels.WARN)
-		return
-	end
-
-	-- Convert all file paths to absolute paths
-	local absolute_files = {}
-	for _, file in ipairs(files) do
-		table.insert(absolute_files, vim.fn.fnamemodify(file, ":p"))
-	end
-
-	local files_str = table.concat(absolute_files, " ")
-
-	-- Ensure the aider terminal is open and get its instance, using name
-	local term = Term.open("aider")
-	-- Use the TerminalLib send function
-	Term.send(command .. " " .. files_str .. "\n", { term = term, submit = true })
+	vim.notify("Aider.add_files is deprecated. Use M.add_files_to_terminal('aider', files, opts) instead.", vim.log.levels.WARN)
+	
+	-- Get the main module to call the new generic function
+	local M = require("ai-terminals")
+	M.add_files_to_terminal("aider", files, opts)
 end
 
 -- Helper function to add listed buffers to the aider terminal
+---@deprecated Use M.add_buffers_to_terminal("aider", opts) instead
 function Aider.add_buffers()
-	vim.schedule(function() -- Defer execution slightly
-		local files = {}
-
-		for _, bufinfo in ipairs(vim.fn.getbufinfo({ buflisted = 1 })) do
-			local bnr = bufinfo.bufnr
-			-- Check if buffer is valid, loaded, modifiable, and not the terminal buffer itself
-			local filename = vim.api.nvim_buf_get_name(bnr)
-			if vim.api.nvim_buf_is_valid(bnr) and bufinfo.loaded and vim.bo[bnr].modifiable then
-				table.insert(files, filename)
-			end
-		end
-		-- Call add_files directly (no TerminalLib to pass)
-		Aider.add_files(files)
-	end)
+	vim.notify("Aider.add_buffers is deprecated. Use M.add_buffers_to_terminal('aider') instead.", vim.log.levels.WARN)
+	
+	-- Get the main module to call the new generic function
+	local M = require("ai-terminals")
+	M.add_buffers_to_terminal("aider")
 end
 
 return Aider
