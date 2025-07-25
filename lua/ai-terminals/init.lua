@@ -389,6 +389,88 @@ function M.send_command_output(term_name, cmd, opts)
 	end
 end
 
+---Send files to a terminal using its configured file commands
+---@param terminal_name string The name of the terminal (key in ConfigLib.config.terminals)
+---@param files string[] List of file paths to add to terminal. Paths will be converted to absolute paths.
+---@param opts? { read_only?: boolean } Options for the command
+function M.add_files_to_terminal(terminal_name, files, opts)
+	opts = opts or {}
+
+	if #files == 0 then
+		vim.notify("No files provided to add", vim.log.levels.WARN)
+		return
+	end
+
+	-- Get terminal config
+	local terminal_config = ConfigLib.config.terminals[terminal_name]
+	if not terminal_config then
+		vim.notify("Terminal '" .. terminal_name .. "' not found in config", vim.log.levels.ERROR)
+		return
+	end
+
+	-- Convert all file paths to absolute paths
+	local absolute_files = {}
+	for _, file in ipairs(files) do
+		table.insert(absolute_files, vim.fn.fnamemodify(file, ":p"))
+	end
+
+	-- Get file commands config or use defaults
+	local file_commands = terminal_config.file_commands or {}
+	local template = opts.read_only and file_commands.add_files_readonly or file_commands.add_files
+	local submit = file_commands.submit or false
+
+	-- Use fallback template if none configured
+	if not template then
+		-- Default fallback: "@<path-a> @<path-b>"
+		local formatted_files = {}
+		for _, file in ipairs(absolute_files) do
+			table.insert(formatted_files, "@" .. file)
+		end
+		local command = table.concat(formatted_files, " ")
+
+		-- Send to terminal
+		local term = M.open(terminal_name)
+		if not term then
+			vim.notify("Terminal '" .. terminal_name .. "' not found or could not be opened", vim.log.levels.ERROR)
+			return
+		end
+		M.send(command, { term = term, submit = submit })
+		return
+	end
+
+	-- Use configured template
+	local files_str = table.concat(absolute_files, " ")
+	local command = string.format(template, files_str)
+
+	-- Send to terminal
+	local term = M.open(terminal_name)
+	if not term then
+		vim.notify("Terminal '" .. terminal_name .. "' not found or could not be opened", vim.log.levels.ERROR)
+		return
+	end
+	M.send(command, { term = term, submit = submit })
+end
+
+---Add all listed buffers to a terminal
+---@param terminal_name string The name of the terminal (key in ConfigLib.config.terminals)
+---@param opts? { read_only?: boolean } Options for the command
+function M.add_buffers_to_terminal(terminal_name, opts)
+	vim.schedule(function() -- Defer execution slightly
+		local files = {}
+
+		for _, bufinfo in ipairs(vim.fn.getbufinfo({ buflisted = 1 })) do
+			local bnr = bufinfo.bufnr
+			-- Check if buffer is valid, loaded, modifiable, and not the terminal buffer itself
+			local filename = vim.api.nvim_buf_get_name(bnr)
+			if vim.api.nvim_buf_is_valid(bnr) and bufinfo.loaded and vim.bo[bnr].modifiable and filename ~= "" then
+				table.insert(files, filename)
+			end
+		end
+
+		M.add_files_to_terminal(terminal_name, files, opts)
+	end)
+end
+
 ---Get the current visual selection (delegates to SelectionLib)
 ---@param bufnr number|nil Buffer number (defaults to current buffer)
 ---@return string[]|nil lines Selected lines (nil if no selection)
