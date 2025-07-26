@@ -186,9 +186,21 @@ function Diff.diff_changes(opts)
 			end
 
 			vim.schedule(function()
-				-- Close all current windows
-				vim.cmd("tabonly")
-				vim.cmd("only")
+				-- Close all current windows (only if there are multiple tabs)
+				if #vim.api.nvim_list_tabpages() > 1 then
+					vim.cmd("tabonly")
+				end
+				-- Only close windows if there are non-floating windows to keep
+				local has_normal_win = false
+				for _, winid in ipairs(vim.api.nvim_list_wins()) do
+					if vim.api.nvim_win_get_config(winid).relative == "" then
+						has_normal_win = true
+						break
+					end
+				end
+				if has_normal_win then
+					vim.cmd("only")
+				end
 
 				local orig_files_to_notify = {}
 				-- Open each differing file in a split view
