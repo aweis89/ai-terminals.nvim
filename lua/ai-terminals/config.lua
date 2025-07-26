@@ -114,11 +114,11 @@ Config.config = {
 		},
 		-- Disable status bar for clean popup appearance
 		on_init = { "set status off" },
-		-- toggle = {
-		-- 	-- this will be a tmux keybinding so it should be in the format that is acceptable to tmux
-		-- 	key = "-n q",
-		-- 	mode = "force-close",
-		-- },
+		toggle = {
+			-- this will be a tmux keybinding so it should be in the format that is acceptable to tmux
+			key = "-n C-d",
+			mode = "force-close",
+		},
 	},
 
 	-- auto show diffs (if present) when leaving terminal (set to false or nil to disable)
