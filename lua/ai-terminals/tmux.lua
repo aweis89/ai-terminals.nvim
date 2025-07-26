@@ -349,12 +349,7 @@ local registered_terminals = {}
 
 function TmuxTerminal.reload_changes()
 	vim.schedule(function()
-		for _, bufinfo in ipairs(vim.fn.getbufinfo({ buflisted = 1 })) do
-			local bnr = bufinfo.bufnr
-			if vim.api.nvim_buf_is_valid(bnr) and bufinfo.loaded and vim.bo[bnr].modifiable then
-				pcall(vim.cmd, bnr .. "checktime")
-			end
-		end
+		vim.cmd.checktime()
 	end)
 end
 
