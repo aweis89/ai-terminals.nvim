@@ -482,7 +482,7 @@ function M.add_files_to_terminal(terminal_name, files, opts)
 
 	-- Send to terminal
 	return M.open(terminal_name, nil, function(term)
-		M.send(command, { term = term, submit = submit })
+		M.send(command .. " ", { term = term, submit = submit })
 	end)
 end
 
