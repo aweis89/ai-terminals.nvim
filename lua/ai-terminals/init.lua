@@ -191,16 +191,16 @@ end
 ---@param user_config ConfigType|nil
 function M.setup(user_config)
 	ConfigLib.config = vim.tbl_deep_extend("force", ConfigLib.config, user_config or {})
-	
+
 	-- Ensure the appropriate backend is loaded
 	ensure_snacks_loaded()
-	
+
 	-- Validate tmux backend requirements
 	if ConfigLib.config.backend == "tmux" then
 		if not vim.env.TMUX then
 			vim.notify("Warning: tmux backend selected but not running in tmux session", vim.log.levels.WARN)
 		end
-		
+
 		-- Setup tmux-toggle-popup with our configuration
 		local ok, tmux_popup = pcall(require, "ai-terminals.vendor.tmux-toggle-popup")
 		if not ok then
@@ -216,7 +216,7 @@ function M.setup(user_config)
 			end
 		end
 	end
-	
+
 	setup_prompt_keymaps() -- Create keymaps after config is merged
 	setup_terminal_keymaps() -- Setup terminal-specific keymaps
 end
