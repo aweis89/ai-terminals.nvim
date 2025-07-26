@@ -18,6 +18,12 @@ local Config = {}
 
 ---@alias WindowDimensionsMap table<string, WindowDimension>
 
+---@class TmuxConfig
+---@field width? number | (fun(columns: number): number?) Width of the tmux popup
+---@field height? number | (fun(lines: number): number?) Height of the tmux popup  
+---@field flags? table Tmux popup flags configuration
+---@field toggle? table Tmux toggle keymap configuration
+
 ---@class ConfigType
 ---@field terminals TerminalsMap|nil
 ---@field window_dimensions WindowDimensionsMap|nil
@@ -29,6 +35,8 @@ local Config = {}
 ---@field prompts table<string, string | fun(): string>|nil A table of reusable prompt texts, keyed by a name. Values can be strings or functions returning strings (evaluated at runtime).
 ---@field prompt_keymaps {key: string, term: string, prompt: string, desc: string, include_selection?: boolean, submit?: boolean}[]|nil Keymaps for prompts (array of tables). `include_selection` (optional, boolean, default: true): If true, the keymap works in normal & visual modes (prefixing selection in visual). If false, it only works in normal mode (no selection). `submit` (optional, boolean, default: true): If true, sends a newline after the prompt.
 ---@field terminal_keymaps {key: string, action: string | fun(), desc: string, modes?: string | string[]}[]|nil Keymaps that only apply within terminal buffers (array of tables). `modes` (optional, string or array of strings, default: "t"): Specifies the modes for the keymap.
+---@field backend "snacks"|"tmux"|nil Terminal backend to use. "snacks" uses snacks.nvim terminal (default), "tmux" uses tmux-toggle-popup.nvim
+---@field tmux TmuxConfig|nil Configuration for tmux backend when backend="tmux"
 
 ---@type ConfigType
 Config.config = {
@@ -92,6 +100,23 @@ Config.config = {
 	},
 	default_position = "right", -- Default position if none is specified in toggle/open/get
 	enable_diffing = true, -- Enable backup sync and diff commands. Disabling this prevents `diff_changes` and `close_diff` from working.
+	backend = "snacks", -- Default to snacks.nvim terminal backend
+	tmux = {
+		-- Default tmux popup configuration
+		width = 0.9, -- 90% of terminal width
+		height = 0.9, -- 90% of terminal height
+		flags = {
+			close_on_exit = true, -- Close popup when command exits
+			start_directory = function() return vim.fn.getcwd() end, -- Start in current working directory
+		},
+		-- Disable status bar for clean popup appearance
+		on_init = { "set status off" },
+		-- Uncomment to add global toggle key for all tmux popups
+		-- toggle = {
+		-- 	key = "-n F1", -- Global F1 key to toggle (adjust as needed)
+		-- 	mode = "force-close"
+		-- },
+	},
 
 	-- auto show diffs (if present) when leaving terminal (set to false or nil to disable)
 	show_diffs_on_leave = true,
