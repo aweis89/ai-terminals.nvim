@@ -4,7 +4,7 @@ local Term = {}
 -- Backend implementations
 local backends = {
 	snacks = nil, -- Will be loaded lazily
-	tmux = nil,   -- Will be loaded lazily
+	tmux = nil, -- Will be loaded lazily
 }
 
 ---Get the active backend based on configuration
@@ -12,7 +12,7 @@ local backends = {
 local function get_backend()
 	local config = require("ai-terminals.config").config
 	local backend_name = config.backend or "snacks"
-	
+
 	-- Load backend lazily
 	if not backends[backend_name] then
 		if backend_name == "snacks" then
@@ -30,7 +30,7 @@ local function get_backend()
 			return nil
 		end
 	end
-	
+
 	return backends[backend_name]
 end
 
@@ -44,12 +44,12 @@ local function delegate_to_backend(method_name, ...)
 		vim.notify("No valid backend available", vim.log.levels.ERROR)
 		return nil
 	end
-	
+
 	if not backend[method_name] then
 		vim.notify("Backend does not implement method: " .. method_name, vim.log.levels.ERROR)
 		return nil
 	end
-	
+
 	return backend[method_name](...)
 end
 
@@ -66,7 +66,6 @@ function Term.resolve_command(cmd_config)
 		return nil
 	end
 end
-
 
 -- Snacks backend implementation functions (used when backend = "snacks")
 
@@ -416,7 +415,7 @@ function Term.resolve_command(cmd_config)
 	if config.backend == "tmux" then
 		return delegate_to_backend("resolve_command", cmd_config)
 	end
-	
+
 	-- Original snacks implementation
 	if type(cmd_config) == "function" then
 		return cmd_config()
@@ -434,7 +433,7 @@ function Term.send(text, opts)
 	if config.backend == "tmux" then
 		return delegate_to_backend("send", text, opts)
 	end
-	
+
 	-- Original snacks implementation follows...
 	opts = opts or {} -- Ensure opts is a table
 	local job_id = vim.b.terminal_job_id
@@ -451,10 +450,6 @@ function Term.send(text, opts)
 		text_to_send = Term._multiline(text)
 	end
 
-	-- Enter insert mode
-	if opts.insert_mode then
-		vim.fn.chansend(job_id, "\27i") -- \27 is ESC then 'i'
-	end
 	-- Send the main text
 	local success = vim.fn.chansend(job_id, text_to_send)
 
