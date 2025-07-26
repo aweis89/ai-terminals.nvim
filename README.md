@@ -144,6 +144,15 @@ your system's `PATH`.
 You can optionally configure the plugin using the `setup` function. This allows
 you to define your own terminals or override the default commands and settings.
 
+### 🖥️ Tmux Backend
+
+When using the tmux backend (`backend = "tmux"`), the plugin provides additional configuration options:
+
+**Default Keybinding:** 
+- `C-h` - Hide/toggle the tmux popup when it's in focus
+
+This keybinding is automatically configured when using the tmux backend and allows you to quickly hide the terminal popup from within tmux.
+
 **Note:** Calling `setup()` is only necessary if you want to customize the
 default configuration (e.g., change terminal commands, window dimensions, or the
 default position). The core functionality, including autocommands for file
