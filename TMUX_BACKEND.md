@@ -41,11 +41,11 @@ With lazy.nvim:
 
 ## Configuration
 
-To enable the tmux backend, set `backend = "tmux"` in your ai-terminals configuration:
+The tmux backend is **automatically enabled** when running Neovim inside a tmux session. You can also explicitly set the backend:
 
 ```lua
 require("ai-terminals").setup({
-  backend = "tmux", -- Use tmux instead of snacks terminal
+  backend = "tmux", -- Explicitly use tmux backend (auto-detected if in tmux)
   
   -- Optional tmux-specific configuration
   tmux = {
@@ -86,6 +86,35 @@ require("ai-terminals").send_term("aider", "Hello from tmux!")
 -- All other functions work as before
 ```
 
+## Popup Sizing
+
+The tmux backend uses simple width and height parameters instead of positions (since tmux popups are always centered):
+
+```lua
+require("ai-terminals").setup({
+  backend = "tmux",
+  tmux = {
+    width = 0.8,   -- 80% of terminal width (0.0-1.0)
+    height = 0.6,  -- 60% of terminal height (0.0-1.0)
+  },
+})
+```
+
+**Note**: Position arguments are ignored with the tmux backend - all popups are centered with the configured width/height.
+
+## Usage Notes
+
+### Hiding/Closing Popups
+- **Prefix + d** (usually Ctrl+b d) - Hide the popup without closing the process
+- **Toggle functions** - When using `toggle()` in visual mode, it will open the popup and send selected text, but won't close existing popups (closing is controlled by tmux keymappings)
+- **Exit command** - Type `exit` or use Ctrl+C to close the command and popup
+
+### Tmux Control
+Since popups run in tmux sessions, they're controlled by tmux rather than Neovim:
+- Popups persist when Neovim exits
+- Use tmux commands to manage popup lifecycle
+- Configure tmux toggle keys for convenient popup control
+
 ## Differences from Snacks Backend
 
 ### Advantages
@@ -93,36 +122,28 @@ require("ai-terminals").send_term("aider", "Hello from tmux!")
 - **Better resource management**: Terminals survive Neovim crashes/restarts
 - **Tmux features**: Access to all tmux functionality (copy mode, etc.)
 - **Multiple sessions**: Can run different terminals in separate tmux sessions
+- **Simple configuration**: Direct width/height control
 
 ### Limitations
 - **No vim buffers**: Tmux terminals don't create vim buffers, so some buffer-specific features may not work
 - **Requires tmux**: Only works when running inside a tmux session
 - **Different focus handling**: Tmux handles focus differently than vim windows
 - **Limited integration**: Some vim-specific features (like terminal keymaps) may have limited functionality
+- **No positional control**: Tmux popups are always centered - no positioning like vim splits
+- **Position arguments ignored**: `toggle("aider", "right")` behaves same as `toggle("aider")`
 
-## Fallback Strategy
+## Backend Selection
 
-You can implement a fallback strategy like this:
+The plugin automatically chooses the appropriate backend:
+
+- **In tmux session**: Uses tmux backend automatically  
+- **Outside tmux**: Uses snacks backend automatically
+- **Override**: Set `backend = "snacks"` to force snacks even in tmux
 
 ```lua
-local function setup_ai_terminals()
-  local backend = "snacks" -- Default
-  
-  -- Use tmux backend if available and in tmux session
-  if vim.env.TMUX then
-    local ok, _ = pcall(require, "tmux-toggle-popup")
-    if ok then
-      backend = "tmux"
-    end
-  end
-  
-  require("ai-terminals").setup({
-    backend = backend,
-    -- ... rest of config
-  })
-end
-
-setup_ai_terminals()
+-- Force snacks backend even in tmux
+require("ai-terminals").setup({
+  backend = "snacks",
+  -- ... rest of config
+})
 ```
-
-This will automatically use the tmux backend when available and fall back to snacks otherwise.
