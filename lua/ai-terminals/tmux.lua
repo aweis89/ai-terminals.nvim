@@ -46,10 +46,10 @@ local function needs_startup_delay(session_name)
 	if not creation_time then
 		return false
 	end
-	
+
 	local elapsed_ns = vim.loop.hrtime() - creation_time
 	local elapsed_ms = elapsed_ns / 1000000
-	
+
 	-- Remove from tracking and return true if less than 2 seconds have passed
 	if elapsed_ms < 2000 then
 		return true
@@ -93,8 +93,14 @@ function TmuxTerminal.send(text, opts)
 
 	-- Add delay if this is a newly created session to allow REPL startup
 	local function send_text()
+		-- Handle multi-line text with paste escape codes
+		local text_to_send = text
+		if text:find("\n") then
+			text_to_send = TmuxTerminal._multiline(text)
+		end
+
 		-- Send text to the tmux session
-		local escaped_text = vim.fn.shellescape(text)
+		local escaped_text = vim.fn.shellescape(text_to_send)
 		local send_cmd = string.format("tmux send-keys -t %s %s", vim.fn.shellescape(session_name), escaped_text)
 
 		-- Send the text
@@ -466,6 +472,15 @@ function TmuxTerminal._after_terminal_creation(term, terminal_name)
 	-- Store terminal name in the mock object
 	term.terminal_name = terminal_name
 	TmuxTerminal.register_autocmds(term)
+end
+
+-- Helper function for multi-line text handling
+function TmuxTerminal._multiline(text)
+	local esc = "\27"
+	local prefix = esc .. "[200~" -- Start sequence: ESC [ 200 ~
+	local postfix = esc .. "[201~" -- End sequence:   ESC [ 201 ~
+	-- Concatenate prefix, text, and postfix
+	return prefix .. text .. postfix
 end
 
 return TmuxTerminal
