@@ -25,6 +25,40 @@ function TmuxTerminal.resolve_command(cmd_config)
 	end
 end
 
+-- Track newly created sessions that need startup delay
+local newly_created_sessions = {}
+
+---Mark a session as newly created
+---@param session_name string The tmux session name
+local function mark_session_as_new(session_name)
+	newly_created_sessions[session_name] = vim.loop.hrtime()
+	-- Auto-cleanup after 5 seconds
+	vim.defer_fn(function()
+		newly_created_sessions[session_name] = nil
+	end, 5000)
+end
+
+---Check if a session was recently created and needs startup delay
+---@param session_name string The tmux session name
+---@return boolean True if session needs startup delay
+local function needs_startup_delay(session_name)
+	local creation_time = newly_created_sessions[session_name]
+	if not creation_time then
+		return false
+	end
+	
+	local elapsed_ns = vim.loop.hrtime() - creation_time
+	local elapsed_ms = elapsed_ns / 1000000
+	
+	-- Remove from tracking and return true if less than 2 seconds have passed
+	if elapsed_ms < 2000 then
+		return true
+	else
+		newly_created_sessions[session_name] = nil
+		return false
+	end
+end
+
 ---Send text to a tmux popup terminal
 ---@param text string The text to send
 ---@param opts {term?: table, submit?: boolean, insert_mode?: boolean}|nil
@@ -57,24 +91,35 @@ function TmuxTerminal.send(text, opts)
 		return
 	end
 
-	-- Send text to the tmux session
-	local escaped_text = vim.fn.shellescape(text)
-	local send_cmd = string.format("tmux send-keys -t %s %s", vim.fn.shellescape(session_name), escaped_text)
+	-- Add delay if this is a newly created session to allow REPL startup
+	local function send_text()
+		-- Send text to the tmux session
+		local escaped_text = vim.fn.shellescape(text)
+		local send_cmd = string.format("tmux send-keys -t %s %s", vim.fn.shellescape(session_name), escaped_text)
 
-	-- Send the text
-	local result = vim.fn.system(send_cmd)
-	if vim.v.shell_error ~= 0 then
-		vim.notify("Failed to send text to tmux session: " .. result, vim.log.levels.ERROR)
-		return
+		-- Send the text
+		local result = vim.fn.system(send_cmd)
+		if vim.v.shell_error ~= 0 then
+			vim.notify("Failed to send text to tmux session: " .. result, vim.log.levels.ERROR)
+			return
+		end
+
+		-- Send newline if submit is requested
+		if opts.submit then
+			local submit_cmd = string.format("tmux send-keys -t %s Enter", vim.fn.shellescape(session_name))
+			local submit_result = vim.fn.system(submit_cmd)
+			if vim.v.shell_error ~= 0 then
+				vim.notify("Failed to send Enter to tmux session: " .. submit_result, vim.log.levels.ERROR)
+			end
+		end
 	end
 
-	-- Send newline if submit is requested
-	if opts.submit then
-		local submit_cmd = string.format("tmux send-keys -t %s Enter", vim.fn.shellescape(session_name))
-		local submit_result = vim.fn.system(submit_cmd)
-		if vim.v.shell_error ~= 0 then
-			vim.notify("Failed to send Enter to tmux session: " .. submit_result, vim.log.levels.ERROR)
-		end
+	if needs_startup_delay(session_name) then
+		-- Delay sending to allow REPL startup time (default 1 second)
+		local delay_ms = 1000
+		vim.defer_fn(send_text, delay_ms)
+	else
+		send_text()
 	end
 end
 
@@ -142,6 +187,10 @@ function TmuxTerminal.toggle(terminal_name, position)
 		vim.notify("Failed to open tmux popup: " .. tostring(result), vim.log.levels.ERROR)
 		return nil
 	end
+
+	-- Mark this session as newly created for startup delay
+	local session_name = tmux_popup.format(session_opts)
+	mark_session_as_new(session_name)
 
 	-- Create a mock terminal object that mimics snacks.win interface
 	local mock_term = {
@@ -225,7 +274,8 @@ function TmuxTerminal.get(terminal_name, position)
 		return mock_term, false
 	else
 		-- Create new session
-		return TmuxTerminal.toggle(terminal_name, position), true
+		local new_term = TmuxTerminal.toggle(terminal_name, position)
+		return new_term, true
 	end
 end
 
