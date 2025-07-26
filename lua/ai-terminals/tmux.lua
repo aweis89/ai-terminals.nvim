@@ -321,7 +321,7 @@ function TmuxTerminal.open(terminal_name, position, callback)
 		-- For tmux, we need to defer the callback since popup creation is async
 		vim.defer_fn(function()
 			callback(term)
-		end, 100)
+		end, 300)
 	end
 
 	return term, created or false
