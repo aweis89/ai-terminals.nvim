@@ -465,6 +465,7 @@ function M.add_files_to_terminal(terminal_name, files, opts)
 	local template = opts.read_only and file_commands.add_files_readonly or file_commands.add_files
 	local submit = file_commands.submit or false
 
+	local command
 	-- Use fallback template if none configured
 	if not template then
 		-- Default fallback: "@<path-a> @<path-b>"
@@ -472,29 +473,17 @@ function M.add_files_to_terminal(terminal_name, files, opts)
 		for _, file in ipairs(absolute_files) do
 			table.insert(formatted_files, "@" .. file)
 		end
-		local command = table.concat(formatted_files, " ")
-
-		-- Send to terminal
-		local term = M.open(terminal_name)
-		if not term then
-			vim.notify("Terminal '" .. terminal_name .. "' not found or could not be opened", vim.log.levels.ERROR)
-			return
-		end
-		M.send(command, { term = term, submit = submit })
-		return
+		command = table.concat(formatted_files, " ")
+	else
+		-- Use configured template
+		local files_str = table.concat(absolute_files, " ")
+		command = string.format(template, files_str)
 	end
-
-	-- Use configured template
-	local files_str = table.concat(absolute_files, " ")
-	local command = string.format(template, files_str)
 
 	-- Send to terminal
-	local term = M.open(terminal_name)
-	if not term then
-		vim.notify("Terminal '" .. terminal_name .. "' not found or could not be opened", vim.log.levels.ERROR)
-		return
-	end
-	M.send(command, { term = term, submit = submit })
+	return M.open(terminal_name, nil, function(term)
+		M.send(command, { term = term, submit = submit })
+	end)
 end
 
 ---Add all listed buffers to a terminal
