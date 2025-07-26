@@ -117,7 +117,7 @@ function TmuxTerminal.send(text, opts)
 			if newline_count > 0 then
 				local down_keys = {}
 				for i = 1, newline_count do
-					table.insert(down_keys, "C-n")
+					table.insert(down_keys, "Down")
 				end
 				local down_cmd = string.format(
 					"tmux send-keys -t %s %s",
