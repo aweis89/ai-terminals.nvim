@@ -37,7 +37,7 @@ want a single, configurable way to manage them within Neovim.
   management.
 * **🔄 Diff View & Revert:**
   * **Track Changes:** See modifications made to your project files in the last AI terminal session.
-  * **How it Works:** When `enable_diffing = true` (default), the plugin
+  * **How it Works:** When `enable_diffing = true`, the plugin
     maintains a persistent backup of your project using `rsync`. This backup is
     synced *every time* you open an AI terminal, capturing the state *before*
     the current AI interaction begins.
@@ -201,7 +201,7 @@ require("ai-terminals").setup({
     PAGER = "cat", -- Example: Set PAGER to cat
     -- MY_API_KEY = os.getenv("MY_SECRET_API_KEY"), -- Example: Pass an env var
   },
-  -- Enable/disable the diffing feature (default: true)
+  -- Enable/disable the diffing feature (default: false)
   -- When enabled, a backup sync runs on terminal entry, allowing
   -- `diff_changes` and `close_diff` to work.
   -- Disabling this (`false`) skips the backup sync and prevents diff commands
