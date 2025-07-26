@@ -376,7 +376,33 @@ function TmuxTerminal.register_autocmds(term)
 	local config = require("ai-terminals.config").config
 
 	-- Since tmux popups don't have vim buffers, we can't use BufLeave events
-	-- Instead, we'll rely on manual triggering or other events
+	-- Instead, we'll set up FocusGained to reload buffers when returning to neovim
+	local group_name = "AITerminalTmux_" .. terminal_name
+	vim.api.nvim_create_augroup(group_name, { clear = true })
+
+	-- Reload buffers when neovim gains focus (returning from tmux popup)
+	vim.api.nvim_create_autocmd("FocusGained", {
+		group = group_name,
+		callback = TmuxTerminal.reload_changes,
+		desc = "Reload buffers when returning to neovim from tmux popup",
+	})
+
+	-- Auto trigger diff on focus gain if enabled
+	if config.enable_diffing and config.show_diffs_on_leave then
+		vim.api.nvim_create_autocmd("FocusGained", {
+			group = group_name,
+			callback = function()
+				vim.schedule(function()
+					local opts = {}
+					if type(config.show_diffs_on_leave) == "table" then
+						opts = config.show_diffs_on_leave
+					end
+					DiffLib.diff_changes(opts)
+				end)
+			end,
+			desc = "Show diffs when returning to neovim from tmux popup",
+		})
+	end
 
 	-- Set up diffing if enabled
 	if config.enable_diffing then
