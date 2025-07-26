@@ -57,7 +57,7 @@ function Selection.get_visual_selection_with_header(bufnr, terminal_name)
 
 	local filetype = vim.bo[bufnr].filetype or ""
 	slines = "```" .. filetype .. "\n" .. slines .. "\n```"
-	
+
 	-- Get path header template from terminal config or use default
 	local path_header = "# Path: %s"
 	if terminal_name then
@@ -67,7 +67,7 @@ function Selection.get_visual_selection_with_header(bufnr, terminal_name)
 			path_header = terminal_config.path_header_template
 		end
 	end
-	
+
 	return string.format("\n%s\n%s\n", string.format(path_header, path), slines)
 end
 
