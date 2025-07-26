@@ -100,7 +100,7 @@ Config.config = {
 		right = { width = 0.5, height = 0.5 },
 	},
 	default_position = "right", -- Default position if none is specified in toggle/open/get
-	enable_diffing = true, -- Enable backup sync and diff commands. Disabling this prevents `diff_changes` and `close_diff` from working.
+	enable_diffing = false, -- Enable backup sync and diff commands. Disabling this prevents `diff_changes` and `close_diff` from working.
 	backend = vim.env.TMUX and "tmux" or "snacks", -- Auto-detect: use tmux backend if in tmux session, otherwise snacks
 	tmux = {
 		-- Tmux popup configuration - simple width/height parameters
