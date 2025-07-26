@@ -19,10 +19,11 @@ local Config = {}
 ---@alias WindowDimensionsMap table<string, WindowDimension>
 
 ---@class TmuxConfig
----@field width? number | (fun(columns: number): number?) Width of the tmux popup
----@field height? number | (fun(lines: number): number?) Height of the tmux popup  
+---@field width? number | (fun(columns: number): number?) Width of the tmux popup (0.0-1.0 as percentage)
+---@field height? number | (fun(lines: number): number?) Height of the tmux popup (0.0-1.0 as percentage)
 ---@field flags? table Tmux popup flags configuration
 ---@field toggle? table Tmux toggle keymap configuration
+---@field on_init? string[] Tmux commands to run after popup creation
 
 ---@class ConfigType
 ---@field terminals TerminalsMap|nil
@@ -100,11 +101,11 @@ Config.config = {
 	},
 	default_position = "right", -- Default position if none is specified in toggle/open/get
 	enable_diffing = true, -- Enable backup sync and diff commands. Disabling this prevents `diff_changes` and `close_diff` from working.
-	backend = "snacks", -- Default to snacks.nvim terminal backend
+	backend = vim.env.TMUX and "tmux" or "snacks", -- Auto-detect: use tmux backend if in tmux session, otherwise snacks
 	tmux = {
-		-- Default tmux popup configuration
-		width = 0.9, -- 90% of terminal width
-		height = 0.9, -- 90% of terminal height
+		-- Tmux popup configuration - simple width/height parameters
+		width = 0.9, -- 90% of terminal width (0.0-1.0)
+		height = 0.85, -- 85% of terminal height (accounts for tmux status bar)
 		flags = {
 			close_on_exit = true, -- Close popup when command exits
 			start_directory = function() return vim.fn.getcwd() end, -- Start in current working directory

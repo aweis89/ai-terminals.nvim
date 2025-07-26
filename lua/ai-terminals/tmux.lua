@@ -78,9 +78,9 @@ function TmuxTerminal.send(text, opts)
 	end
 end
 
----Helper to resolve term config, position, and dimensions for tmux
+---Helper to resolve term config and options for tmux
 ---@param terminal_name string The name of the terminal
----@param position string|nil Optional override position (not used for tmux)
+---@param position string|nil Position parameter (ignored - tmux uses width/height instead)
 ---@return table?, table?
 local function resolve_tmux_session_options(terminal_name, position)
 	local config = require("ai-terminals.config").config
@@ -102,19 +102,17 @@ local function resolve_tmux_session_options(terminal_name, position)
 		env = config.env or {},
 	}
 
-	-- Add tmux-specific options if configured
+	-- Add tmux-specific options
 	local tmux_config = config.tmux or {}
-	if tmux_config.width then
-		session_opts.width = tmux_config.width
-	end
-	if tmux_config.height then
-		session_opts.height = tmux_config.height
-	end
-	if tmux_config.flags then
-		session_opts.flags = tmux_config.flags
-	end
+	session_opts.width = tmux_config.width or 0.9
+	session_opts.height = tmux_config.height or 0.9
+	session_opts.flags = tmux_config.flags
+	
 	if tmux_config.toggle then
 		session_opts.toggle = tmux_config.toggle
+	end
+	if tmux_config.on_init then
+		session_opts.on_init = tmux_config.on_init
 	end
 
 	return term_config, session_opts
@@ -122,7 +120,7 @@ end
 
 ---Create or toggle a tmux popup terminal
 ---@param terminal_name string The name of the terminal
----@param position string|nil Optional override position (ignored for tmux)
+---@param position string|nil Position parameter (ignored - tmux uses width/height instead)
 ---@return table|nil The tmux session object or nil on failure
 function TmuxTerminal.toggle(terminal_name, position)
 	local term_config, session_opts = resolve_tmux_session_options(terminal_name, position)
@@ -187,7 +185,7 @@ end
 
 ---Get an existing tmux popup terminal or create it
 ---@param terminal_name string The name of the terminal
----@param position string|nil Optional override position (ignored for tmux)
+---@param position string|nil Position parameter (ignored - tmux uses width/height instead)
 ---@return table?, boolean? The terminal object and created flag
 function TmuxTerminal.get(terminal_name, position)
 	local term_config, session_opts = resolve_tmux_session_options(terminal_name, position)
@@ -225,7 +223,7 @@ end
 
 ---Open a tmux popup terminal
 ---@param terminal_name string The name of the terminal
----@param position string|nil Optional override position (ignored for tmux)
+---@param position string|nil Position parameter (ignored - tmux uses width/height instead)
 ---@param callback function|nil Optional callback to execute after opening
 ---@return table?, boolean
 function TmuxTerminal.open(terminal_name, position, callback)
