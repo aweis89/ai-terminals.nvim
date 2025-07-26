@@ -28,7 +28,6 @@ end
 
 ---Send text to a terminal
 ---@param text string The text to send
----@param opts {term?: snacks.win?, submit?: boolean, insert_mode?: boolean}|nil Options: `term` specifies the target terminal, `submit` sends a newline after the text if true, `insert_mode` enters insert mode after sending if true.
 ---@return nil
 function Term.send(text, opts)
 	opts = opts or {} -- Ensure opts is a table
@@ -46,9 +45,12 @@ function Term.send(text, opts)
 		text_to_send = multiline(text)
 	end
 
+	-- Enter insert mode
+	if opts.insert_mode then
+		vim.fn.chansend(job_id, "\27i") -- \27 is ESC then 'i'
+	end
 	-- Send the main text
 	local success = vim.fn.chansend(job_id, text_to_send)
-
 
 	if success == 0 then
 		vim.notify(
@@ -232,13 +234,13 @@ function Term.open(terminal_name, position, callback)
 	term:show() -- Ensure the window is visible after opening/getting
 
 	if callback then
-		-- if created then
-		vim.defer_fn(function()
+		if created then
+			vim.defer_fn(function()
+				callback(term)
+			end, 500)
+		else
 			callback(term)
-		end, 500)
-		-- else
-		-- 	callback(term)
-		-- end
+		end
 	end
 	return term, created or false
 end
