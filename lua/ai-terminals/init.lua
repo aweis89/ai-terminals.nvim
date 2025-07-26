@@ -6,7 +6,14 @@ local TerminalLib = require("ai-terminals.terminal")
 local DiffLib = require("ai-terminals.diff")
 local ConfigLib = require("ai-terminals.config")
 local SelectionLib = require("ai-terminals.selection")
-require("snacks") -- Load snacks.nvim for annotations
+
+-- Conditionally load snacks based on backend configuration
+local function ensure_snacks_loaded()
+	local config = ConfigLib.config
+	if not config.backend or config.backend == "snacks" then
+		require("snacks") -- Load snacks.nvim for annotations
+	end
+end
 
 local function setup_terminal_keymaps()
 	local config = ConfigLib.config
@@ -40,9 +47,16 @@ local function setup_terminal_keymaps()
 					-- Handle string actions
 					if action == "close" then
 						vim.keymap.set(modes, key, function()
-							local term = Snacks.terminal.for_buf(ev.buf)
-							if term then
-								term:close()
+							local config = ConfigLib.config
+							if config.backend == "tmux" then
+								-- For tmux backend, we can't easily close individual terminals
+								-- since they don't map to vim buffers in the same way
+								vim.notify("Terminal close not supported for tmux backend", vim.log.levels.WARN)
+							else
+								local term = Snacks.terminal.for_buf(ev.buf)
+								if term then
+									term:close()
+								end
 							end
 						end, { buffer = ev.buf, desc = description })
 					else
@@ -177,6 +191,32 @@ end
 ---@param user_config ConfigType|nil
 function M.setup(user_config)
 	ConfigLib.config = vim.tbl_deep_extend("force", ConfigLib.config, user_config or {})
+	
+	-- Ensure the appropriate backend is loaded
+	ensure_snacks_loaded()
+	
+	-- Validate tmux backend requirements
+	if ConfigLib.config.backend == "tmux" then
+		if not vim.env.TMUX then
+			vim.notify("Warning: tmux backend selected but not running in tmux session", vim.log.levels.WARN)
+		end
+		
+		-- Setup tmux-toggle-popup with our configuration
+		local ok, tmux_popup = pcall(require, "ai-terminals.vendor.tmux-toggle-popup")
+		if not ok then
+			vim.notify("Error: tmux backend files are missing or corrupted", vim.log.levels.ERROR)
+		else
+			-- Initialize tmux-toggle-popup with our tmux config
+			local tmux_config = ConfigLib.config.tmux or {}
+			-- Enable debug logging to troubleshoot tmux issues
+			tmux_config.log_level = vim.log.levels.DEBUG
+			local setup_ok, _ = pcall(tmux_popup.setup, tmux_config)
+			if not setup_ok then
+				vim.notify("Warning: Failed to setup tmux backend", vim.log.levels.WARN)
+			end
+		end
+	end
+	
 	setup_prompt_keymaps() -- Create keymaps after config is merged
 	setup_terminal_keymaps() -- Setup terminal-specific keymaps
 end
@@ -358,6 +398,12 @@ end
 ---The next toggle/open will create new instances.
 function M.destroy_all()
 	TerminalLib.destroy_all()
+end
+
+---Diagnose tmux backend issues
+function M.diagnose_tmux()
+	local diagnostics = require("ai-terminals.tmux-diagnostics")
+	diagnostics.print_diagnostics()
 end
 
 ---Execute a shell command and send its stdout to the active terminal buffer.
