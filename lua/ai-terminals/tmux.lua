@@ -110,6 +110,13 @@ function TmuxTerminal.send(text, opts)
 			return
 		end
 
+		-- Send right arrow keys equal to the number of characters sent
+		local char_count = string.len(text)
+		for i = 1, char_count do
+			local arrow_cmd = string.format("tmux send-keys -t %s Right", vim.fn.shellescape(session_name))
+			vim.fn.system(arrow_cmd)
+		end
+
 		-- Send newline if submit is requested
 		if opts.submit then
 			local submit_cmd = string.format("tmux send-keys -t %s Enter", vim.fn.shellescape(session_name))
