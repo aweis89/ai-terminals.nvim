@@ -32,14 +32,14 @@ end
 function TmuxTerminal.send(text, opts)
 	opts = opts or {}
 	local session = nil
-	
+
 	-- Extract session from term if provided
 	if opts.term and opts.term.session then
 		session = opts.term.session
 	elseif opts.session then
 		session = opts.session
 	end
-	
+
 	if not session then
 		vim.notify("No tmux session provided for sending text", vim.log.levels.ERROR)
 		return
@@ -48,7 +48,7 @@ function TmuxTerminal.send(text, opts)
 	-- Get session name for tmux commands
 	local tmux_popup = get_tmux_popup()
 	local session_name = tmux_popup.format(session)
-	
+
 	-- Check if session exists and is running
 	local check_cmd = string.format("tmux has-session -t %s", vim.fn.shellescape(session_name))
 	local exit_code = vim.fn.system(check_cmd)
@@ -60,7 +60,7 @@ function TmuxTerminal.send(text, opts)
 	-- Send text to the tmux session
 	local escaped_text = vim.fn.shellescape(text)
 	local send_cmd = string.format("tmux send-keys -t %s %s", vim.fn.shellescape(session_name), escaped_text)
-	
+
 	-- Send the text
 	local result = vim.fn.system(send_cmd)
 	if vim.v.shell_error ~= 0 then
@@ -98,7 +98,7 @@ local function resolve_tmux_session_options(terminal_name, position)
 	-- Build tmux session options
 	local session_opts = {
 		name = terminal_name,
-		command = vim.split(cmd_str, " ", { plain = true }),
+		command = { vim.o.shell, "-c", cmd_str },
 		env = config.env or {},
 	}
 
@@ -107,7 +107,7 @@ local function resolve_tmux_session_options(terminal_name, position)
 	session_opts.width = tmux_config.width or 0.9
 	session_opts.height = tmux_config.height or 0.9
 	session_opts.flags = tmux_config.flags
-	
+
 	if tmux_config.toggle then
 		session_opts.toggle = tmux_config.toggle
 	end
@@ -129,7 +129,7 @@ function TmuxTerminal.toggle(terminal_name, position)
 	end
 
 	local tmux_popup = get_tmux_popup()
-	
+
 	-- Check if we're in tmux
 	if not vim.env.TMUX then
 		vim.notify("Not in a tmux session. Cannot use tmux popup backend.", vim.log.levels.ERROR)
@@ -148,25 +148,25 @@ function TmuxTerminal.toggle(terminal_name, position)
 		session = session_opts,
 		terminal_name = terminal_name,
 		buf = nil, -- tmux doesn't have a vim buffer
-		
+
 		-- Mock methods to match snacks.win interface
 		focus = function()
 			-- Tmux popup steals focus automatically, nothing needed
 		end,
-		
+
 		show = function()
 			-- Already shown when opened
 		end,
-		
+
 		hide = function()
 			-- Close the popup
 			tmux_popup.kill(session_opts)
 		end,
-		
+
 		close = function()
 			tmux_popup.kill(session_opts)
 		end,
-		
+
 		is_floating = function()
 			return true -- tmux popups are always floating
 		end,
@@ -194,7 +194,7 @@ function TmuxTerminal.get(terminal_name, position)
 	end
 
 	local tmux_popup = get_tmux_popup()
-	
+
 	-- Check if session already exists
 	local session_name = tmux_popup.format(session_opts)
 	local check_cmd = string.format("tmux has-session -t %s", vim.fn.shellescape(session_name))
@@ -208,10 +208,18 @@ function TmuxTerminal.get(terminal_name, position)
 			terminal_name = terminal_name,
 			buf = nil,
 			focus = function() end,
-			show = function() tmux_popup.open(session_opts) end,
-			hide = function() tmux_popup.kill(session_opts) end,
-			close = function() tmux_popup.kill(session_opts) end,
-			is_floating = function() return true end,
+			show = function()
+				tmux_popup.open(session_opts)
+			end,
+			hide = function()
+				tmux_popup.kill(session_opts)
+			end,
+			close = function()
+				tmux_popup.kill(session_opts)
+			end,
+			is_floating = function()
+				return true
+			end,
 		}
 		TmuxTerminal._after_terminal_creation(mock_term, terminal_name)
 		return mock_term, false
@@ -248,7 +256,7 @@ end
 ---Destroy all tmux popup terminals
 function TmuxTerminal.destroy_all()
 	local tmux_popup = get_tmux_popup()
-	
+
 	-- Kill all sessions - this is a bit aggressive but matches the interface
 	local ok, result = pcall(tmux_popup.kill_all)
 	if not ok then
@@ -281,7 +289,7 @@ function TmuxTerminal.run_command_and_send_output(cmd, opts)
 	local stdout_lines = {}
 	local stderr_lines = {}
 
-	vim.fn.jobstart(cmd, {
+	vim.fn.jobstart({ vim.o.shell, "-c", cmd }, {
 		stdout_buffered = true,
 		stderr_buffered = true,
 		on_stdout = function(_, data)
@@ -369,7 +377,7 @@ function TmuxTerminal.register_autocmds(term)
 
 	-- Since tmux popups don't have vim buffers, we can't use BufLeave events
 	-- Instead, we'll rely on manual triggering or other events
-	
+
 	-- Set up diffing if enabled
 	if config.enable_diffing then
 		DiffLib.pre_sync_code_base()

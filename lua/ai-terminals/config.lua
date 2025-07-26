@@ -108,7 +108,9 @@ Config.config = {
 		height = 0.85, -- 85% of terminal height (accounts for tmux status bar)
 		flags = {
 			close_on_exit = true, -- Close popup when command exits
-			start_directory = function() return vim.fn.getcwd() end, -- Start in current working directory
+			start_directory = function()
+				return vim.fn.getcwd()
+			end, -- Start in current working directory
 		},
 		-- Disable status bar for clean popup appearance
 		on_init = { "set status off" },
