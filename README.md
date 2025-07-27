@@ -148,6 +148,15 @@ you to define your own terminals or override the default commands and settings.
 
 When using the tmux backend (`backend = "tmux"`), the plugin provides additional configuration options:
 
+**Prerequisites:**
+To use the tmux backend, you need to install the [tmux-toggle-popup](https://github.com/loichyan/tmux-toggle-popup) plugin:
+
+```tmux
+# Add to your tmux.conf
+set -g @plugin "loichyan/tmux-toggle-popup"
+set -g @popup-toggle-mode 'force-close'
+```
+
 **Default Keybinding:** 
 - `C-h` - Hide/toggle the tmux popup when it's in focus
 
