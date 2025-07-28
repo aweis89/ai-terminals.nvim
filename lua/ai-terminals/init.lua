@@ -228,9 +228,8 @@ end
 function M.toggle(terminal_name, position)
 	local term
 	if vim.fn.mode() == "v" or vim.fn.mode() == "V" then
-		local selection = M.get_visual_selection_with_header(0, terminal_name)
-		-- never toggle closed when in visual mode
-		term = TerminalLib.open(terminal_name, position, function(term)
+		M.open(terminal_name, nil, function(term)
+			local selection = M.get_visual_selection_with_header(0, terminal_name)
 			if selection then
 				M.send(selection, { term = term, insert_mode = true })
 			end
