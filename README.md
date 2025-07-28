@@ -146,9 +146,9 @@ your system's `PATH`.
 You can optionally configure the plugin using the `setup` function. This allows
 you to define your own terminals or override the default commands and settings.
 
-### 🖥️ Tmux Backend
+### 🖥️ Tmux Backend (Preferred)
 
-When using the tmux backend (`backend = "tmux"`), the plugin provides additional configuration options:
+The tmux backend is the **preferred approach** for this plugin as it provides better performance and stability. When using the tmux backend (`backend = "tmux"`), the plugin provides additional configuration options:
 
 **Prerequisites:**
 To use the tmux backend, you need to install the [tmux-toggle-popup](https://github.com/loichyan/tmux-toggle-popup) plugin:
