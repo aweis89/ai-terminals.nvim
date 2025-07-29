@@ -164,6 +164,8 @@ set -g @popup-toggle-mode 'force-close'
 
 This keybinding is automatically configured when using the tmux backend and allows you to quickly hide the terminal popup from within tmux.
 
+**Credit:** The tmux nvim bridge implementation is adapted from [tmux-toggle-popup.nvim](https://github.com/cenk1cenk2/tmux-toggle-popup.nvim). The code has been integrated directly into this repository for additional control and to avoid external dependencies.
+
 **Note:** Calling `setup()` is only necessary if you want to customize the
 default configuration (e.g., change terminal commands, window dimensions, or the
 default position). The core functionality, including autocommands for file
