@@ -231,7 +231,7 @@ function M.toggle(terminal_name, position)
 		M.open(terminal_name, nil, function(term)
 			local selection = M.get_visual_selection_with_header(0, terminal_name)
 			if selection then
-				M.send(selection, { term = term, insert_mode = true })
+				M.send(selection .. "\n", { term = term, insert_mode = true })
 			end
 			M.focus(term)
 		end)
