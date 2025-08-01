@@ -276,7 +276,7 @@ end
 ---Open a terminal by name, creating if necessary (delegates to TerminalLib)
 ---@param terminal_name string The name of the terminal (key in M.config.terminals)
 ---@param position "float"|"bottom"|"top"|"left"|"right"|nil Optional: Specify position if needed for matching window dimensions
----@return snacks.win?, boolean
+---@return snacks.win?, boolean?
 function M.open(terminal_name, position, callback)
 	local term, created = TerminalLib.open(terminal_name, position, callback)
 	if not term then
@@ -348,14 +348,13 @@ function M.send_diagnostics(name, opts)
 		return
 	end
 	opts = opts or {}
-	local term = opts.term or M.toggle(name)
-	if not term then
-		vim.notify("Terminal '" .. name .. "' not found or could not be toggled", vim.log.levels.ERROR)
-		return
-	end
+
 	local submit = opts.submit == true -- Default submit to false unless explicitly true
 	local prefix = opts.prefix or "Fix these diagnostic issues:\n"
-	M.send(prefix .. diagnostics, { term = term, submit = submit })
+
+	M.open(name, nil, function(term)
+		M.send(prefix .. diagnostics, { term = term, submit = submit })
+	end)
 end
 
 ---Get formatted diagnostics (delegates to DiagnosticsLib)
