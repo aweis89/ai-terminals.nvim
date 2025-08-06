@@ -231,9 +231,9 @@ function M.toggle(terminal_name, position)
 		M.open(terminal_name, nil, function(term)
 			local selection = M.get_visual_selection_with_header(0, terminal_name)
 			if selection then
-				M.send(selection .. "\n", { term = term, insert_mode = true })
+				term:send(selection .. "\n", { insert_mode = true })
 			end
-			M.focus(term)
+			term:focus()
 		end)
 	else
 		term = TerminalLib.toggle(terminal_name, position)
@@ -256,21 +256,25 @@ function M.get(terminal_name, position)
 		if created then
 			-- Defer send and focus to allow the terminal to initialize
 			vim.defer_fn(function()
-				M.send(selection, { term = term, insert_mode = true })
-				M.focus(term)
+				term:send(selection, { insert_mode = true })
+				term:focus()
 			end, 100) -- 100ms delay
 		else
 			-- If terminal already exists, send and focus immediately
-			M.send(selection, { term = term, insert_mode = true })
-			M.focus(term)
+			term:send(selection, { insert_mode = true })
+			term:focus()
 		end
 	end
 	return term, created
 end
 
----@param term snacks.win|nil
+---@param term TerminalObject|nil
 function M.focus(term)
-	TerminalLib.focus(term)
+	if term then
+		term:focus()
+	else
+		TerminalLib.focus(term)
+	end
 end
 
 ---Open a terminal by name, creating if necessary (delegates to TerminalLib)
@@ -326,9 +330,9 @@ function M.send_term(name, text, opts)
 	}
 
 	local term = M.open(name, nil, function(term)
-		M.send(text, send_opts)
+		term:send(text, send_opts)
 		if opts.focus then -- Only focus if requested
-			M.focus(term)
+			term:focus()
 		end
 	end)
 
@@ -353,7 +357,7 @@ function M.send_diagnostics(name, opts)
 	local prefix = opts.prefix or "Fix these diagnostic issues:\n"
 
 	M.open(name, nil, function(term)
-		M.send(prefix .. diagnostics, { term = term, submit = submit })
+		term:send(prefix .. diagnostics, { submit = submit })
 	end)
 end
 
@@ -483,7 +487,7 @@ function M.add_files_to_terminal(terminal_name, files, opts)
 		if not submit then
 			command = command .. "\n\n"
 		end
-		M.send(command, { term = term, submit = submit })
+		term:send(command, { submit = submit })
 	end)
 end
 
