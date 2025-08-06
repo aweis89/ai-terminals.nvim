@@ -453,16 +453,14 @@ function TmuxBackend:register_autocmds(term)
             group = group_name,
             once = true, -- Fire once then re-register
             callback = function()
-                vim.schedule(function()
-                    self:reload_changes()
-                    if config.enable_diffing and config.show_diffs_on_leave then
-                        local opts = {}
-                        if type(config.show_diffs_on_leave) == "table" then
-                            opts = config.show_diffs_on_leave
-                        end
-                        DiffLib.diff_changes(opts)
+                self:reload_changes()
+                if config.enable_diffing and config.show_diffs_on_leave then
+                    local opts = {}
+                    if type(config.show_diffs_on_leave) == "table" then
+                        opts = config.show_diffs_on_leave
                     end
-                end)
+                    DiffLib.diff_changes(opts)
+                end
             end,
             desc = "Reload buffers when returning to neovim from tmux popup",
         })
