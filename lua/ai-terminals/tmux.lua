@@ -99,14 +99,34 @@ function TmuxTerminal.send(text, opts)
 			text_to_send = TmuxTerminal._multiline(text)
 		end
 
-		-- Send text to the tmux session
-		local escaped_text = vim.fn.shellescape(text_to_send)
-		local send_cmd = string.format("tmux send-keys -t %s %s", vim.fn.shellescape(session_name), escaped_text)
+		-- Use tmux buffers to avoid command line length limits
+		-- Create temporary file
+		local temp_file = vim.fn.tempname()
+		local file = io.open(temp_file, "w")
+		if not file then
+			vim.notify("Failed to create temporary file for text", vim.log.levels.ERROR)
+			return
+		end
+		file:write(text_to_send)
+		file:close()
 
-		-- Send the text
-		local result = vim.fn.system(send_cmd)
+		-- Load text into tmux buffer and paste it
+		local load_cmd =
+			string.format("tmux load-buffer -t %s %s", vim.fn.shellescape(session_name), vim.fn.shellescape(temp_file))
+		local load_result = vim.fn.system(load_cmd)
 		if vim.v.shell_error ~= 0 then
-			vim.notify("Failed to send text to tmux session: " .. result, vim.log.levels.ERROR)
+			vim.fn.delete(temp_file)
+			vim.notify("Failed to load text into tmux buffer: " .. load_result, vim.log.levels.ERROR)
+			return
+		end
+
+		-- Paste the buffer
+		local paste_cmd = string.format("tmux paste-buffer -t %s", vim.fn.shellescape(session_name))
+		local paste_result = vim.fn.system(paste_cmd)
+		vim.fn.delete(temp_file) -- Clean up temp file
+
+		if vim.v.shell_error ~= 0 then
+			vim.notify("Failed to paste text from tmux buffer: " .. paste_result, vim.log.levels.ERROR)
 			return
 		end
 
@@ -452,7 +472,7 @@ function TmuxTerminal.register_autocmds(term)
 	-- Helper function to set up detection autocmds
 	local function setup_detection_autocmds()
 		-- Reload buffers when user interacts with neovim (returning from tmux popup)
-		vim.api.nvim_create_autocmd({ "CursorMoved", "InsertEnter", "CmdlineEnter" }, {
+		vim.api.nvim_create_autocmd({ "CursorHold", "CursorMoved" }, {
 			group = group_name,
 			once = true, -- Fire once then re-register
 			callback = function()
