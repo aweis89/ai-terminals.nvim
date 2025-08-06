@@ -450,10 +450,11 @@ function TmuxBackend:register_autocmds(term)
 	-- Helper function to set up detection autocmds
 	local function setup_detection_autocmds()
 		-- Reload buffers when user interacts with neovim (returning from tmux popup)
-		vim.api.nvim_create_autocmd({ "CursorHold", "FocusGained" }, {
+		vim.api.nvim_create_autocmd({ "FocusGained" }, {
 			group = group_name,
 			once = true, -- Fire once then re-register
 			callback = function()
+				vim.notify("Running tmux callback")
 				self:reload_changes()
 				if config.enable_diffing and config.show_diffs_on_leave then
 					local opts = {}
