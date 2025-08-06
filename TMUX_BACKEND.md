@@ -6,7 +6,6 @@ This plugin now supports an optional tmux backend using [`tmux-toggle-popup.nvim
 
 1. **tmux session**: You must be running inside a tmux session
 2. **tmux-toggle-popup plugin**: Install the tmux plugin as described in [their README](https://github.com/loichyan/tmux-toggle-popup)
-3. **tmux-toggle-popup.nvim**: Install the Neovim plugin
 
 ## Installation
 
