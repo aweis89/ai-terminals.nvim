@@ -167,11 +167,16 @@ function M.open(opts)
 	end
 
 	log.debug("Trying to spawn a new tmux command with: %s", args)
+
+	-- Build the full command for debugging
+	local full_command = table.concat(vim.list_extend({ "#{@popup-toggle}" }, args), " ")
+	vim.notify('Full tmux popup command: tmux run "' .. full_command .. '"', vim.log.levels.DEBUG)
+
 	Job:new({
 		command = "tmux",
 		args = {
 			"run",
-			table.concat(vim.list_extend({ "#{@popup-toggle}" }, args), " "),
+			full_command,
 		},
 		detached = true,
 		on_exit = function(j, code)
