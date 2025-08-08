@@ -215,7 +215,7 @@ function TmuxBackend:_resolve_tmux_session_options(terminal_name, position)
 	-- Build tmux session options
 	local session_opts = {
 		name = terminal_name,
-		command = { vim.o.shell, "-c", cmd_str },
+		command = { vim.o.shell, "-c", vim.fn.shellescape(cmd_str) },
 		env = config.env or {},
 	}
 
@@ -366,7 +366,7 @@ function TmuxBackend:run_command_and_send_output(cmd, opts)
 	local stdout_lines = {}
 	local stderr_lines = {}
 
-	vim.fn.jobstart({ vim.o.shell, "-c", cmd }, {
+	vim.fn.jobstart({ vim.o.shell, "-c", vim.fn.shellescape(cmd) }, {
 		stdout_buffered = true,
 		stderr_buffered = true,
 		on_stdout = function(_, data)

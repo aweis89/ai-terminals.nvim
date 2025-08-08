@@ -113,7 +113,9 @@ Config.config = {
 			end, -- Start in current working directory
 		},
 		-- Disable status bar for clean popup appearance
-		on_init = { "set status off" },
+		on_init = {
+			"set status off",
+		},
 		toggle = {
 			-- this will be a tmux keybinding so it should be in the format that is acceptable to tmux
 			key = "-n C-h",
