@@ -365,17 +365,14 @@ function TmuxBackend:_create_hidden_session(terminal_name, session_opts)
 
 	local tmux_popup = get_tmux_popup()
 	local session_name = tmux_popup.format(session_opts)
-	
+
 	-- Build the command to run in the session
 	local cmd_str = table.concat(session_opts.command, " ")
-	
+
 	-- Create a detached tmux session
-	local create_cmd = string.format(
-		"tmux new-session -d -s %s %s",
-		vim.fn.shellescape(session_name),
-		vim.fn.shellescape(cmd_str)
-	)
-	
+	local create_cmd =
+		string.format("tmux new-session -d -s %s %s", vim.fn.shellescape(session_name), vim.fn.shellescape(cmd_str))
+
 	local result = vim.fn.system(create_cmd)
 	if vim.v.shell_error ~= 0 then
 		vim.notify("Failed to create hidden tmux session: " .. result, vim.log.levels.ERROR)
@@ -531,28 +528,44 @@ function TmuxBackend:register_autocmds(term)
 	local group_name = "AITerminalTmux_" .. terminal_name
 	vim.api.nvim_create_augroup(group_name, { clear = true })
 
-	-- Helper function to set up detection autocmds
-	local function setup_detection_autocmds()
-		-- Reload buffers when user interacts with neovim (returning from tmux popup)
-		vim.api.nvim_create_autocmd({ "FocusGained" }, {
-			group = group_name,
-			once = true, -- Fire once then re-register
-			callback = function()
+	-- Set up file watcher for the current buffer
+	local current_buf = vim.api.nvim_get_current_buf()
+	local current_file = vim.api.nvim_buf_get_name(current_buf)
+
+	-- Only set up file watcher if we have a valid file
+	if current_file and current_file ~= "" then
+		local w = vim.uv.new_fs_event()
+
+		-- Store the watcher to prevent garbage collection
+		if not TmuxBackend._file_watchers then
+			TmuxBackend._file_watchers = {}
+		end
+		TmuxBackend._file_watchers[terminal_name] = w
+
+		-- Watch the file for changes
+		w:start(current_file, {}, function(err, fname, events)
+			if err then
+				return
+			end
+
+			-- Schedule the reload to run in the main loop
+			vim.schedule(function()
 				self:reload_changes()
-				if config.enable_diffing and config.show_diffs_on_leave then
-					local opts = {}
-					if type(config.show_diffs_on_leave) == "table" then
-						opts = config.show_diffs_on_leave
-					end
-					DiffLib.diff_changes(opts)
+			end)
+		end)
+
+		-- Clean up watcher when terminal is closed
+		vim.api.nvim_create_autocmd("VimLeavePre", {
+			group = group_name,
+			callback = function()
+				if TmuxBackend._file_watchers and TmuxBackend._file_watchers[terminal_name] then
+					TmuxBackend._file_watchers[terminal_name]:stop()
+					TmuxBackend._file_watchers[terminal_name] = nil
 				end
 			end,
-			desc = "Reload buffers when returning to neovim from tmux popup",
+			desc = "Clean up file watcher for tmux terminal",
 		})
 	end
-
-	-- Initial setup
-	setup_detection_autocmds()
 
 	-- Set up diffing if enabled
 	if config.enable_diffing then
