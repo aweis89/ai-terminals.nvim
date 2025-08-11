@@ -75,6 +75,19 @@ function Term.get(terminal_name, position)
 	return backend:get(terminal_name, position)
 end
 
+function Term.get_hidden(terminal_name, position)
+	local backend = get_backend()
+	if not backend then
+		return nil, false
+	end
+	-- Fall back to regular get if backend doesn't support get_hidden
+	if backend.get_hidden then
+		return backend:get_hidden(terminal_name, position)
+	else
+		return backend:get(terminal_name, position)
+	end
+end
+
 function Term.open(terminal_name, position, callback)
 	local backend = get_backend()
 	if not backend then
@@ -121,6 +134,14 @@ function Term.register_autocmds(term)
 		return
 	end
 	return backend:register_autocmds(term)
+end
+
+function Term.resolve_terminal_options(terminal_name, position)
+	local backend = get_backend()
+	if not backend then
+		return nil, nil
+	end
+	return backend:_resolve_terminal_options(terminal_name, position)
 end
 
 return Term
