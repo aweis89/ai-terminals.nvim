@@ -192,6 +192,9 @@ end
 function M.setup(user_config)
 	ConfigLib.config = vim.tbl_deep_extend("force", ConfigLib.config, user_config or {})
 
+	-- Enable autoread for automatic file reloading (needed for all backends)
+	vim.o.autoread = true
+
 	-- Ensure the appropriate backend is loaded
 	ensure_snacks_loaded()
 
