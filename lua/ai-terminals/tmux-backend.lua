@@ -235,6 +235,23 @@ function TmuxBackend:_resolve_tmux_session_options(terminal_name, position)
 	return term_config, session_opts
 end
 
+---Resolve terminal command and options based on name and position (compatibility with snacks backend).
+---@param terminal_name string The name of the terminal.
+---@param position string|nil Optional override position (ignored for tmux).
+---@return string?, table? Resolved command string and options table, or nil, nil on failure.
+function TmuxBackend:_resolve_terminal_options(terminal_name, position)
+	local term_config, session_opts = self:_resolve_tmux_session_options(terminal_name, position)
+	if not term_config or not session_opts then
+		return nil, nil
+	end
+
+	-- Extract the command string from the session options
+	local cmd_str = self:resolve_command(term_config.cmd)
+
+	-- Return cmd_str and session_opts to match the interface
+	return cmd_str, session_opts
+end
+
 ---Common setup steps after a terminal is created or retrieved
 ---@param term TmuxTerminalObject The terminal object
 ---@param terminal_name string The name of the terminal
@@ -305,6 +322,73 @@ function TmuxBackend:get(terminal_name, position)
 		local new_term = self:toggle(terminal_name, position)
 		return new_term, true
 	end
+end
+
+---Get or create a terminal without showing it (hidden session creation)
+---@param terminal_name string The name of the terminal
+---@param position string|nil Position parameter (ignored for tmux)
+---@return TmuxTerminalObject|nil, boolean Terminal object and whether it was created
+function TmuxBackend:get_hidden(terminal_name, position)
+	local term_config, session_opts = self:_resolve_tmux_session_options(terminal_name, position)
+	if not term_config then
+		return nil, false
+	end
+
+	local tmux_popup = get_tmux_popup()
+
+	-- Check if session already exists
+	local session_name = tmux_popup.format(session_opts)
+	local check_cmd = string.format("tmux has-session -t %s", vim.fn.shellescape(session_name))
+	local has_session = vim.fn.system(check_cmd)
+	local exists = vim.v.shell_error == 0
+
+	if exists then
+		-- Session exists, create terminal object
+		local term_obj = TmuxTerminalObject.new(session_opts, terminal_name)
+		self:_after_terminal_creation(term_obj, terminal_name)
+		return term_obj, false
+	else
+		-- Create session without showing popup
+		return self:_create_hidden_session(terminal_name, session_opts), true
+	end
+end
+
+---Create a tmux session without showing the popup
+---@param terminal_name string The name of the terminal
+---@param session_opts table The session options
+---@return TmuxTerminalObject|nil Terminal object
+function TmuxBackend:_create_hidden_session(terminal_name, session_opts)
+	if not vim.env.TMUX then
+		vim.notify("Not in a tmux session. Cannot use tmux popup backend.", vim.log.levels.ERROR)
+		return nil
+	end
+
+	local tmux_popup = get_tmux_popup()
+	local session_name = tmux_popup.format(session_opts)
+	
+	-- Build the command to run in the session
+	local cmd_str = table.concat(session_opts.command, " ")
+	
+	-- Create a detached tmux session
+	local create_cmd = string.format(
+		"tmux new-session -d -s %s %s",
+		vim.fn.shellescape(session_name),
+		vim.fn.shellescape(cmd_str)
+	)
+	
+	local result = vim.fn.system(create_cmd)
+	if vim.v.shell_error ~= 0 then
+		vim.notify("Failed to create hidden tmux session: " .. result, vim.log.levels.ERROR)
+		return nil
+	end
+
+	-- Mark this session as newly created for startup delay
+	TmuxBackend._mark_session_as_new(session_name)
+
+	-- Create and return terminal object
+	local term_obj = TmuxTerminalObject.new(session_opts, terminal_name)
+	self:_after_terminal_creation(term_obj, terminal_name)
+	return term_obj
 end
 
 function TmuxBackend:open(terminal_name, position, callback)
@@ -454,7 +538,6 @@ function TmuxBackend:register_autocmds(term)
 			group = group_name,
 			once = true, -- Fire once then re-register
 			callback = function()
-				vim.notify("Running tmux callback")
 				self:reload_changes()
 				if config.enable_diffing and config.show_diffs_on_leave then
 					local opts = {}

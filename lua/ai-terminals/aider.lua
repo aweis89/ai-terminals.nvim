@@ -8,18 +8,11 @@ function Aider.comment(prefix)
 	prefix = prefix or "AI!" -- Default prefix if none provided
 	local bufnr = vim.api.nvim_get_current_buf()
 
-	-- Start terminal in background so it's watching files
-	local cmd_str, opts = Term.resolve_terminal_options("aider")
-	if not cmd_str then
-		return nil -- Error handled in helper
-	end
-	local term, created = Snacks.terminal.get(cmd_str, opts)
+	-- Start terminal in background so it's watching files (don't show popup yet)
+	local term, created = Term.get_hidden("aider")
 	if not term then
-		vim.notify("Unable to toggle terminal: " .. "aider", vim.log.levels.ERROR)
+		vim.notify("Unable to get terminal: aider", vim.log.levels.ERROR)
 		return nil
-	end
-	if created then
-		term:hide()
 	end
 
 	vim.ui.input({ prompt = "Enter comment (" .. prefix .. "): " }, function(comment_text)
@@ -56,8 +49,11 @@ end
 ---@param files string[] List of file paths to add to aider. Paths will be converted to absolute paths.
 ---@param opts? { read_only?: boolean } Options for the command
 function Aider.add_files(files, opts)
-	vim.notify("Aider.add_files is deprecated. Use M.add_files_to_terminal('aider', files, opts) instead.", vim.log.levels.WARN)
-	
+	vim.notify(
+		"Aider.add_files is deprecated. Use M.add_files_to_terminal('aider', files, opts) instead.",
+		vim.log.levels.WARN
+	)
+
 	-- Get the main module to call the new generic function
 	local M = require("ai-terminals")
 	M.add_files_to_terminal("aider", files, opts)
@@ -67,7 +63,7 @@ end
 ---@deprecated Use M.add_buffers_to_terminal("aider", opts) instead
 function Aider.add_buffers()
 	vim.notify("Aider.add_buffers is deprecated. Use M.add_buffers_to_terminal('aider') instead.", vim.log.levels.WARN)
-	
+
 	-- Get the main module to call the new generic function
 	local M = require("ai-terminals")
 	M.add_buffers_to_terminal("aider")
