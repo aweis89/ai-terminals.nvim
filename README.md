@@ -10,21 +10,26 @@ plugins for each tool.
 
 ## 🤔 Motivation
 
-While many Neovim plugins offer deep integration with *specific* AI services or
-models, `ai-terminals.nvim` takes a different approach. It focuses on leveraging
-the power and flexibility of existing **command-line AI tools**. By providing a
-unified interface to manage and interact with these tools within Neovim
-terminals, it offers:
+Most Neovim AI plugins implement editor-specific functionality for modifying files
+and interacting with LLMs directly. `ai-terminals.nvim` takes a fundamentally 
+different approach: it focuses on the generic features of pre-existing terminal 
+CLI tools and integrates them into Neovim by creating a bridge to send data over.
 
-* **Flexibility:** Easily switch between or use multiple AI agents (Aider,
-  Claude CLI, custom scripts, etc.) without needing separate plugins for each.
-* **Future-Proofing:** As new CLI tools emerge, integrating them is often as
-  simple as adding a new entry to your configuration.
-* **Consistency:** Provides a consistent workflow (sending selections/diagnostics, diffing, reversing changes, creating prompts) across different tools.
-* **Leverages Existing Tools:** Benefits from the features and updates of the
-  underlying CLI tools themselves.
-* **Stdin Integration:** CLI tools provide a straightforward API for sending input via `stdin`.
-* This plugin utilizes that capability by exposing functions like `send`, enabling a wide range of custom integrations. For example, when toggling any terminal from visual mode, the code will get added to the prompt with the file path. You can also send diagnostics or command outputs. The `send` function can also be used to create custom prompts or functions like pulling in Jira ticket details or reviewing PRs.
+Rather than reimplementing AI functionality within Neovim, this plugin leverages
+the robust ecosystems that already exist in terminal-based AI tools. It acts as
+a communication layer, providing:
+
+* **Universal CLI Integration:** Works with any terminal-based AI tool that accepts
+  stdin input - from Aider and Claude CLI to custom scripts and future tools.
+* **Data Bridge Architecture:** Creates a seamless bridge between your editor 
+  context (code selections, diagnostics, file paths) and terminal AI agents.
+* **Tool Agnostic:** Instead of locking you into specific AI services, it lets
+  you use whatever CLI tools work best for your workflow.
+* **Stdin as API:** Leverages the universal stdin interface that all CLI tools
+  provide, making integration straightforward and reliable.
+* **Composable Functions:** Exposes core functions like `send`, `toggle`, and
+  `send_diagnostics` that can be combined to create custom workflows - from
+  sending Jira tickets to reviewing PRs to running tests and analyzing output.
 
 This plugin is ideal for users who prefer terminal-based AI interaction and
 want a single, configurable way to manage them within Neovim.

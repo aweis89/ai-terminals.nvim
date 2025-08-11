@@ -548,8 +548,8 @@ function TmuxBackend:register_autocmds(term)
 				return
 			end
 
-			-- Schedule the reload to run in the main loop
 			vim.schedule(function()
+				vim.notify("Reloading: " .. (fname or current_file), vim.log.levels.DEBUG)
 				self:reload_changes()
 			end)
 		end)
