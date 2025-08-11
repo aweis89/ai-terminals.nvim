@@ -37,25 +37,19 @@ want a single, configurable way to manage them within Neovim.
   various AI CLI tools (e.g., Claude, Goose, Aider, custom scripts)
   through a simple configuration table. Uses `Snacks` for terminal window
   management.
-* **🔄 Diff View & Revert:**
-  * **Track Changes:** See modifications made to your project files in the last AI terminal session.
-  * **How it Works:** When `enable_diffing = true`, the plugin
-    maintains a persistent backup of your project using `rsync`. This backup is
-    synced *every time* you open an AI terminal, capturing the state *before*
-    the current AI interaction begins.
-  * **View Differences:**
-    * `diff_changes()`: Opens modified files in Neovim's built-in `vimdiff`.
-      Use standard commands like `:diffget`, `:diffput`.
-    * `diff_changes({ delta = true })`: Shows a unified diff using the
-      [delta](https://github.com/dandavison/delta) tool in a terminal buffer
-      (requires `delta` installed). Offers advanced highlighting but no
-      `:diffget`/`:diffput`.
-  * **Revert Changes:** `revert_changes()` reverses the changes in the diff view.
-  * **Quick Close:** Press `q` in any vimdiff window or the delta terminal
-    buffer to close the diff view (this mapping is added automatically).
 * **🔃 Automatic File Reloading:** When you switch focus away from the AI
   terminal window, all listed buffers in Neovim are checked for modifications
   and reloaded if necessary, ensuring you see the latest changes made by the AI.
+* **🔍 Git Integration Recommendation:** For tracking changes made by AI tools,
+  we recommend using established git plugins:
+  * **[gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim):** Shows git
+    changes in the sign column and provides inline diff views
+  * **[telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) with
+    git pickers:** Browse and review git status, commits, and changes
+  * **[diffview.nvim](https://github.com/sindrets/diffview.nvim):** Comprehensive
+    git diff viewer with side-by-side comparisons
+  * **[fugitive.vim](https://github.com/tpope/vim-fugitive):** Full git integration
+    with `:Gdiff`, `:Gstatus`, and more
 * **📋 Send Visual Selection:** Send the currently selected text (visual mode) to
   the AI terminal, automatically wrapped in a markdown code block with the file
   path and language type included. Each terminal can have a custom path header
@@ -131,7 +125,6 @@ Here are links to some of the tools mentioned in the default configuration:
 * **AI Chat:** [AI Chat](https://github.com/sigoden/aichat)
 * **Codex:** [Codex CLI](https://github.com/openai/codex)
 
-* **Delta (Optional, for diffing):** [Delta](https://github.com/dandavison/delta)
 
 Make sure these (or your chosen alternatives) are installed and accessible in
 your system's `PATH`.
@@ -214,18 +207,6 @@ require("ai-terminals").setup({
     PAGER = "cat", -- Example: Set PAGER to cat
     -- MY_API_KEY = os.getenv("MY_SECRET_API_KEY"), -- Example: Pass an env var
   },
-  -- Enable/disable the diffing feature (default: false)
-  -- When enabled, a backup sync runs on terminal entry, allowing
-  -- `diff_changes` and `close_diff` to work.
-  -- Disabling this (`false`) skips the backup sync and prevents diff commands
-  -- from functioning.
-  enable_diffing = true,
-  -- Automatically show diffs (if present) when leaving the terminal.
-  -- Set to `false` or `nil` to disable.
-  -- Set to `{ delta = true }` to automatically use delta instead of vimdiff.
-  show_diffs_on_leave = true, -- Default: true
-  -- Keymapping used within diff views (vimdiff or delta terminal) to close the diff.
-  diff_close_keymap = "q", -- Default: "q"
   -- Define keymaps that only apply within terminal buffers
   terminal_keymaps = {
     { key = "<C-w>q", action = "close", desc = "Close terminal window", modes = "t" },
@@ -314,22 +295,6 @@ return {
     },
     dependencies = { "folke/snacks.nvim" },
     keys = {
-      -- Diff Tools
-      {
-        "<leader>dvo",
-        function() require("ai-terminals").diff_changes() end,
-        desc = "Show diff (vimdiff)",
-      },
-      {
-        "<leader>dvD",
-        function() require("ai-terminals").diff_changes({ delta = true }) end,
-        desc = "Show diff (delta)",
-      },
-      {
-        "<leader>dvr",
-        function() require("ai-terminals").revert_changes() end,
-        desc = "Revert changes from backup",
-      },
       -- Example Keymaps (using default terminal names: 'claude', 'goose',
       -- 'aider', 'aichat')
       -- Claude Keymaps
@@ -492,14 +457,6 @@ return {
         require("ai-terminals").setup(opts)
         -- Define your keymaps here or in a separate keymap file
 
-        -- Diff Tools
-        vim.keymap.set("n", "<leader>dvo", function() require("ai-terminals").diff_changes() end, { desc = "Show diff (vimdiff)" })
-        vim.keymap.set("n", "<leader>dvD", function() require("ai-terminals").diff_changes({ delta = true }) end, { desc = "Show diff (delta)" })
-        vim.keymap.set("n", "<leader>dvr", function() require("ai-terminals").revert_changes() end, { desc = "Revert changes from backup" })
-        -- Note: 'q' closes diff views automatically, so a dedicated close
-        -- mapping might be redundant.
-        -- vim.keymap.set("n", "<leader>dvc", function() require("ai-terminals").close_diff() end, { desc = "Close all diff views (and wipeout buffers)" })
-
         -- Claude Keymaps
         vim.keymap.set({"n", "v"}, "<leader>atc", function() require("ai-terminals").toggle("claude") end, { desc = "Toggle Claude terminal (sends selection in visual mode)" })
         vim.keymap.set({"n", "v"}, "<leader>adc", function() require("ai-terminals").send_diagnostics("claude") end, { desc = "Send diagnostics to Claude" })
@@ -555,14 +512,6 @@ use({
     })
 
     -- Define your keymaps here or in a separate keymap file
-
-    -- Diff Tools
-    vim.keymap.set("n", "<leader>dvo", function() require("ai-terminals").diff_changes() end, { desc = "Show diff (vimdiff)" })
-    vim.keymap.set("n", "<leader>dvD", function() require("ai-terminals").diff_changes({ delta = true }) end, { desc = "Show diff (delta)" })
-    vim.keymap.set("n", "<leader>dvr", function() require("ai-terminals").revert_changes() end, { desc = "Revert changes from backup" })
-    -- Note: 'q' closes diff views automatically, so a dedicated close
-    -- mapping might be redundant.
-    -- vim.keymap.set("n", "<leader>dvc", function() require("ai-terminals").close_diff() end, { desc = "Close all diff views (and wipeout buffers)" })
 
     -- Claude Keymaps
     vim.keymap.set({"n", "v"}, "<leader>atc", function() require("ai-terminals").toggle("claude") end, { desc = "Toggle Claude terminal (sends selection)" })
