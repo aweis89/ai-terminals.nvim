@@ -155,11 +155,6 @@ Options: ~
 	If `false`, |ai-terminals.diff_changes()| and |ai-terminals.revert_changes()|
 	will not work.
 
-*ai-terminals-config-show_diffs_on_leave*
-`show_diffs_on_leave`
-	Boolean or table (default: `true`). Automatically show diffs (if present)
-	when leaving the terminal window. Set to `false` or `nil` to disable. Set to
-	`{ delta = true }` to automatically use delta instead of vimdiff.
 
 *ai-terminals-config-prompts*
 `prompts`

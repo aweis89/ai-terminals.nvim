@@ -4,7 +4,6 @@ ai-terminals-config-default_position	ai-terminals.txt	/*ai-terminals-config-defa
 ai-terminals-config-enable_diffing	ai-terminals.txt	/*ai-terminals-config-enable_diffing*
 ai-terminals-config-prompt-keymaps	ai-terminals.txt	/*ai-terminals-config-prompt-keymaps*
 ai-terminals-config-prompts	ai-terminals.txt	/*ai-terminals-config-prompts*
-ai-terminals-config-show_diffs_on_leave	ai-terminals.txt	/*ai-terminals-config-show_diffs_on_leave*
 ai-terminals-config-terminals	ai-terminals.txt	/*ai-terminals-config-terminals*
 ai-terminals-config-window_dimensions	ai-terminals.txt	/*ai-terminals-config-window_dimensions*
 ai-terminals-configuration	ai-terminals.txt	/*ai-terminals-configuration*
