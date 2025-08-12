@@ -47,12 +47,11 @@ want a single, configurable way to manage them within Neovim.
   we recommend using established git plugins:
   * **[gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim):** Shows git
     changes in the sign column and provides inline diff views
-  * **[telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) with
-    git pickers:** Browse and review git status, commits, and changes
+  * **[telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) or
+    [snacks.nvim](https://github.com/folke/snacks.nvim) git pickers:** Browse git
+    status with custom actions for staging, discarding, or viewing changes
   * **[diffview.nvim](https://github.com/sindrets/diffview.nvim):** Comprehensive
     git diff viewer with side-by-side comparisons
-  * **[fugitive.vim](https://github.com/tpope/vim-fugitive):** Full git integration
-    with `:Gdiff`, `:Gstatus`, and more
 * **📋 Send Visual Selection:** Send the currently selected text (visual mode) to
   the AI terminal, automatically wrapped in a markdown code block with the file
   path and language type included. Each terminal can have a custom path header
@@ -107,6 +106,7 @@ terminals = {
 The plugin includes some additional convenience functions:
 
 * **💬 Add Comments (Aider):** Insert comments above the current line with a custom prefix (e.g., `AI!`, `AI?`) and automatically start the Aider terminal if not already running (`:h ai-terminals.aider_comment`).
+* **🔄 Diff Changes:** View changes made by AI tools in vim diff tabs. Requires `enable_diffing = true` in your config. Each changed file opens in its own tab for review. Re-opening the terminal window resets the changes. See `:help diff-mode` for vim's diff commands like `:diffput` and `:diffget` to manipulate changes. Alternatively, use `diff_changes({ delta = true })` to view changes with the delta diff viewer in a terminal. Note: Git-based diff tools (like gitsigns.nvim or fugitive.vim) provide more feature-rich diff management and are recommended for most workflows (`:h ai-terminals.diff_changes`).
 
 #### Deprecated Functions
 
@@ -439,6 +439,12 @@ return {
         function() require("ai-terminals").focus() end,
         desc = "Focus the last used AI terminal window",
       },
+      -- Diff Changes (requires enable_diffing = true in config)
+      {
+        "<leader>ad", -- Mnemonic: AI Diff
+        function() require("ai-terminals").diff_changes() end,
+        desc = "Show vim diff of all changed files in tabs",
+      },
     },
   },
 }
@@ -491,6 +497,9 @@ return {
 
         -- Focus Terminal
         vim.keymap.set("n", "<leader>af", function() require("ai-terminals").focus() end, { desc = "Focus the last used AI terminal window" })
+
+        -- Diff Changes (requires enable_diffing = true in config)
+        vim.keymap.set("n", "<leader>ad", function() require("ai-terminals").diff_changes() end, { desc = "Show vim diff of all changed files in tabs" })
       end,
     }
     ```
@@ -550,6 +559,9 @@ use({
 
    -- Focus Terminal
    vim.keymap.set("n", "<leader>af", function() require("ai-terminals").focus() end, { desc = "Focus the last used AI terminal window" })
+
+   -- Diff Changes (requires enable_diffing = true in config)
+   vim.keymap.set("n", "<leader>ad", function() require("ai-terminals").diff_changes() end, { desc = "Show vim diff of all changed files in tabs" })
   end,
 })
 ```
