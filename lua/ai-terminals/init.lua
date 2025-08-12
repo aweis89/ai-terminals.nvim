@@ -236,7 +236,6 @@ function M.toggle(terminal_name, position)
 			if selection then
 				term:send(selection .. "\n", { insert_mode = true })
 			end
-			term:focus()
 		end)
 	else
 		term = TerminalLib.toggle(terminal_name, position)
@@ -485,12 +484,13 @@ function M.add_files_to_terminal(terminal_name, files, opts)
 		command = string.format(template, files_str)
 	end
 
-	-- Send to terminal
+	-- Use open function which handles timing properly
 	return M.open(terminal_name, nil, function(term)
 		if not submit then
 			command = command .. "\n\n"
 		end
 		term:send(command, { submit = submit })
+		-- Terminal is already shown by M.open, no need to call term:show()
 	end)
 end
 
