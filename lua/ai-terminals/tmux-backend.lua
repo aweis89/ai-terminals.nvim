@@ -319,8 +319,8 @@ function TmuxBackend:get(terminal_name, position)
 		self:_after_terminal_creation(term_obj, terminal_name)
 		return term_obj, false
 	else
-		-- Create new session
-		local new_term = self:toggle(terminal_name, position)
+		-- Create new session without showing it (to avoid double popup)
+		local new_term = self:_create_hidden_session(terminal_name, session_opts)
 		return new_term, true
 	end
 end
