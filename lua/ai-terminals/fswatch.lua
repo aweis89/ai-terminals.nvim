@@ -67,10 +67,10 @@ function FileWatcher.setup_watchers(terminal_name, reload_callback)
 	end
 
 	-- Single notification with all watched files
-	if #watched_files > 0 then
-		local message = "Setting up file watchers for:\n" .. table.concat(watched_files, "\n")
-		vim.notify(message)
-	end
+	-- if #watched_files > 0 then
+	-- 	local message = "Setting up file watchers for:\n" .. table.concat(watched_files, "\n")
+	-- 	vim.notify(message)
+	-- end
 end
 
 ---Create cleanup autocmd for when vim exits
@@ -125,15 +125,15 @@ function FileWatcher.reload_changes()
 		end
 
 		-- Single notification with all reloaded files
-		if #reloaded_files > 0 then
-			local message = string.format(
-				"Reloaded %d file%s:\n%s",
-				#reloaded_files,
-				#reloaded_files > 1 and "s" or "",
-				table.concat(reloaded_files, "\n")
-			)
-			vim.notify(message, vim.log.levels.INFO)
-		end
+		-- if #reloaded_files > 0 then
+		-- 	local message = string.format(
+		-- 		"Reloaded %d file%s:\n%s",
+		-- 		#reloaded_files,
+		-- 		#reloaded_files > 1 and "s" or "",
+		-- 		table.concat(reloaded_files, "\n")
+		-- 	)
+		-- 	vim.notify(message, vim.log.levels.INFO)
+		-- end
 	end)
 end
 
