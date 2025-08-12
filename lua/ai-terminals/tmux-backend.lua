@@ -1,4 +1,5 @@
 local DiffLib = require("ai-terminals.diff")
+local FileWatcher = require("ai-terminals.fswatch")
 
 ---@class TmuxTerminalObject : TerminalObject
 ---@field session table Tmux session configuration
@@ -503,9 +504,7 @@ function TmuxBackend:run_command_and_send_output(cmd, opts)
 end
 
 function TmuxBackend:reload_changes()
-	vim.schedule(function()
-		vim.cmd.checktime()
-	end)
+	FileWatcher.reload_changes()
 end
 
 function TmuxBackend:register_autocmds(term)
@@ -515,59 +514,26 @@ function TmuxBackend:register_autocmds(term)
 	end
 
 	local terminal_name = term.terminal_name
-	if registered_terminals[terminal_name] then
-		return -- Already registered
-	else
-		registered_terminals[terminal_name] = true
-	end
-
 	local config = require("ai-terminals.config").config
 
-	-- Since tmux popups don't have vim buffers, we can't use BufLeave events
-	-- Instead, we'll set up cursor movement detection to reload buffers when returning to neovim
-	local group_name = "AITerminalTmux_" .. terminal_name
-	vim.api.nvim_create_augroup(group_name, { clear = true })
-
-	-- Set up file watcher for the current buffer
-	local current_buf = vim.api.nvim_get_current_buf()
-	local current_file = vim.api.nvim_buf_get_name(current_buf)
-
-	-- Only set up file watcher if we have a valid file
-	if current_file and current_file ~= "" then
-		local w = vim.uv.new_fs_event()
-
-		-- Store the watcher to prevent garbage collection
-		if not TmuxBackend._file_watchers then
-			TmuxBackend._file_watchers = {}
-		end
-		TmuxBackend._file_watchers[terminal_name] = w
-
-		-- Watch the file for changes
-		w:start(current_file, {}, function(err, fname, events)
-			if err then
-				return
-			end
-
+	-- Set up diffing callback if enabled
+	local diff_callback = nil
+	if config.enable_diffing and config.show_diffs_on_leave then
+		diff_callback = function()
 			vim.schedule(function()
-				vim.notify("Reloading: " .. (fname or current_file), vim.log.levels.DEBUG)
-				self:reload_changes()
-			end)
-		end)
-
-		-- Clean up watcher when terminal is closed
-		vim.api.nvim_create_autocmd("VimLeavePre", {
-			group = group_name,
-			callback = function()
-				if TmuxBackend._file_watchers and TmuxBackend._file_watchers[terminal_name] then
-					TmuxBackend._file_watchers[terminal_name]:stop()
-					TmuxBackend._file_watchers[terminal_name] = nil
+				local opts = {}
+				if type(config.show_diffs_on_leave) == "table" then
+					opts = config.show_diffs_on_leave
 				end
-			end,
-			desc = "Clean up file watcher for tmux terminal",
-		})
+				DiffLib.diff_changes(opts)
+			end)
+		end
 	end
 
-	-- Set up diffing if enabled
+	-- Use unified file watching
+	FileWatcher.setup_unified_watching(terminal_name, diff_callback)
+
+	-- Set up diffing pre-sync if enabled (backend-specific responsibility)
 	if config.enable_diffing then
 		DiffLib.pre_sync_code_base()
 	end

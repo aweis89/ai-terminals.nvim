@@ -40,9 +40,9 @@ want a single, configurable way to manage them within Neovim.
   various AI CLI tools (e.g., Claude, Goose, Aider, custom scripts)
   through a simple configuration table. Uses `Snacks` for terminal window
   management.
-* **🔃 Automatic File Reloading:** When you switch focus away from the AI
-  terminal window, all listed buffers in Neovim are checked for modifications
-  and reloaded if necessary, ensuring you see the latest changes made by the AI.
+* **🔃 Automatic File Reloading:** Real-time file reloading using file watchers
+  automatically detects and reloads changes made by AI tools instantly,
+  ensuring you see the latest modifications as they happen.
 * **🔍 Git Integration Recommendation:** For tracking changes made by AI tools,
   we recommend using established git plugins:
   * **[gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim):** Shows git
