@@ -70,7 +70,6 @@ describe("ai-terminals.terminal", function()
 				float = { height = 20, width = 80 },
 			},
 			enable_diffing = false, -- Default to false unless testing diff features
-			show_diffs_on_leave = false,
 		}
 	end)
 

@@ -31,7 +31,6 @@ local Config = {}
 ---@field default_position string|nil
 ---@field enable_diffing boolean|nil
 ---@field env table|nil
----@field show_diffs_on_leave boolean|table|nil
 ---@field diff_close_keymap string|nil Default: "q"
 ---@field prompts table<string, string | fun(): string>|nil A table of reusable prompt texts, keyed by a name. Values can be strings or functions returning strings (evaluated at runtime).
 ---@field prompt_keymaps {key: string, term: string, prompt: string, desc: string, include_selection?: boolean, submit?: boolean}[]|nil Keymaps for prompts (array of tables). `include_selection` (optional, boolean, default: true): If true, the keymap works in normal & visual modes (prefixing selection in visual). If false, it only works in normal mode (no selection). `submit` (optional, boolean, default: true): If true, sends a newline after the prompt.
@@ -123,8 +122,6 @@ Config.config = {
 		},
 	},
 
-	-- auto show diffs (if present) when leaving terminal (set to false or nil to disable)
-	show_diffs_on_leave = true,
 	-- Define reusable prompts
 	prompts = {
 		explain_code = "Explain the selected code snippet.",

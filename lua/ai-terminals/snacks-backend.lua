@@ -403,17 +403,6 @@ function SnacksBackend:register_autocmds(term)
 
 	-- Set up diffing callback if enabled
 	local diff_callback = nil
-	if config.enable_diffing and config.show_diffs_on_leave then
-		diff_callback = function()
-			vim.schedule(function()
-				local opts = {}
-				if type(config.show_diffs_on_leave) == "table" then
-					opts = config.show_diffs_on_leave
-				end
-				DiffLib.diff_changes(opts)
-			end)
-		end
-	end
 
 	-- Use unified file watching instead of BufLeave events
 	FileWatcher.setup_unified_watching(term.terminal_name, diff_callback)
