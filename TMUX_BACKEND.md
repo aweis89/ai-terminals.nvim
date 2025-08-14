@@ -25,19 +25,6 @@ bind C-a run "#{@popup-toggle} --name scratch -Ed'#{pane_current_path}' -w95% -h
 run '~/.config/tmux/plugins/tpm/tpm'
 ```
 
-### 2. Install Neovim plugin
-
-With lazy.nvim:
-
-```lua
-{
-  "cenk1cenk2/tmux-toggle-popup.nvim",
-  dependencies = {
-    "nvim-lua/plenary.nvim",
-  },
-}
-```
-
 ## Configuration
 
 The tmux backend is **automatically enabled** when running Neovim inside a tmux session. You can also explicitly set the backend:
