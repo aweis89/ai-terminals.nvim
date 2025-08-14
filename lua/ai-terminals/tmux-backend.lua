@@ -95,6 +95,7 @@ function TmuxTerminalObject:send(text, opts)
 	-- Check if session needs startup delay
 	local TmuxBackend = require("ai-terminals.tmux-backend")
 	if TmuxBackend._needs_startup_delay(session_name) then
+		vim.notify("Tmux: deferring send 1000ms for new session " .. session_name, vim.log.levels.INFO)
 		vim.defer_fn(send_text, 1000)
 	else
 		send_text()
@@ -155,6 +156,7 @@ end
 ---@param session_name string The tmux session name
 function TmuxBackend._mark_session_as_new(session_name)
 	newly_created_sessions[session_name] = vim.loop.hrtime()
+	vim.notify("Tmux: marked session as new: " .. session_name, vim.log.levels.DEBUG)
 	-- Auto-cleanup after 5 seconds
 	vim.defer_fn(function()
 		newly_created_sessions[session_name] = nil
@@ -279,6 +281,12 @@ function TmuxBackend:toggle(terminal_name, position)
 		return nil
 	end
 
+	-- Determine if the session already exists before toggling
+	local session_name = tmux_popup.format(session_opts)
+	local pre_check_cmd = string.format("tmux has-session -t %s", vim.fn.shellescape(session_name))
+	vim.fn.system(pre_check_cmd)
+	local existed_before = (vim.v.shell_error == 0)
+
 	-- Try to open/toggle the popup
 	local ok, result = pcall(tmux_popup.open, session_opts)
 	if not ok then
@@ -286,9 +294,13 @@ function TmuxBackend:toggle(terminal_name, position)
 		return nil
 	end
 
-	-- Mark this session as newly created for startup delay
-	local session_name = tmux_popup.format(session_opts)
-	TmuxBackend._mark_session_as_new(session_name)
+	-- Only mark as newly created if it did not exist before
+	if not existed_before then
+		TmuxBackend._mark_session_as_new(session_name)
+		vim.notify("Tmux: marked session as new: " .. session_name, vim.log.levels.DEBUG)
+	else
+		vim.notify("Tmux: session already existed, not marking as new: " .. session_name, vim.log.levels.DEBUG)
+	end
 
 	local term_obj = TmuxTerminalObject.new(session_opts, terminal_name)
 	self:_after_terminal_creation(term_obj, terminal_name)
