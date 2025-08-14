@@ -1,5 +1,8 @@
 local DiffLib = require("ai-terminals.diff")
 local FileWatcher = require("ai-terminals.fswatch")
+-- Forward declarations for tmux popup helper
+local tmux_popup
+local get_tmux_popup
 
 ---@class TmuxTerminalObject : TerminalObject
 ---@field session table Tmux session configuration
@@ -18,13 +21,11 @@ end
 
 function TmuxTerminalObject:send(text, opts)
 	opts = opts or {}
-	local tmux_popup = require("ai-terminals.vendor.tmux-toggle-popup")
-	local session_name = tmux_popup.format(self.session)
+	local TmuxBackend = require("ai-terminals.tmux-backend")
+	local session_name = TmuxBackend._session_name(self.session)
 
 	-- Check if session exists
-	local check_cmd = string.format("tmux has-session -t %s", vim.fn.shellescape(session_name))
-	local exit_code = vim.fn.system(check_cmd)
-	if vim.v.shell_error ~= 0 then
+	if not TmuxBackend._has_session(session_name) then
 		vim.notify("Tmux session does not exist: " .. session_name, vim.log.levels.ERROR)
 		return
 	end
@@ -93,7 +94,6 @@ function TmuxTerminalObject:send(text, opts)
 	end
 
 	-- Check if session needs startup delay
-	local TmuxBackend = require("ai-terminals.tmux-backend")
 	if TmuxBackend._needs_startup_delay(session_name) then
 		vim.notify("Tmux: deferring send 1000ms for new session " .. session_name, vim.log.levels.INFO)
 		vim.defer_fn(send_text, 1000)
@@ -103,13 +103,13 @@ function TmuxTerminalObject:send(text, opts)
 end
 
 function TmuxTerminalObject:show()
-	local tmux_popup = require("ai-terminals.vendor.tmux-toggle-popup")
-	tmux_popup.open(self.session)
+	local TmuxBackend = require("ai-terminals.tmux-backend")
+	TmuxBackend._open_popup(self.session)
 end
 
 function TmuxTerminalObject:hide()
-	local tmux_popup = require("ai-terminals.vendor.tmux-toggle-popup")
-	tmux_popup.kill(self.session)
+	local TmuxBackend = require("ai-terminals.tmux-backend")
+	TmuxBackend._kill_popup(self.session)
 end
 
 function TmuxTerminalObject:focus()
@@ -117,8 +117,8 @@ function TmuxTerminalObject:focus()
 end
 
 function TmuxTerminalObject:close()
-	local tmux_popup = require("ai-terminals.vendor.tmux-toggle-popup")
-	tmux_popup.kill(self.session)
+	local TmuxBackend = require("ai-terminals.tmux-backend")
+	TmuxBackend._kill_popup(self.session)
 end
 
 function TmuxTerminalObject:is_floating()
@@ -144,12 +144,63 @@ local newly_created_sessions = {}
 local registered_terminals = {}
 
 -- Lazy initialization of tmux-toggle-popup
-local tmux_popup = nil
-local function get_tmux_popup()
+tmux_popup = nil
+function get_tmux_popup()
 	if not tmux_popup then
 		tmux_popup = require("ai-terminals.vendor.tmux-toggle-popup")
 	end
 	return tmux_popup
+end
+
+---Format a tmux session name from options
+---@param session_opts table
+---@return string session_name
+function TmuxBackend._session_name(session_opts)
+	return get_tmux_popup().format(session_opts)
+end
+
+---Open the tmux popup for a session
+---@param session_opts table
+---@return boolean ok
+function TmuxBackend._open_popup(session_opts)
+	local ok, result = pcall(get_tmux_popup().open, session_opts)
+	if not ok then
+		vim.notify("Failed to open tmux popup: " .. tostring(result), vim.log.levels.ERROR)
+		return false
+	end
+	return true
+end
+
+---Kill the tmux popup for a session
+---@param session_opts table
+---@return boolean ok
+function TmuxBackend._kill_popup(session_opts)
+	local ok, result = pcall(get_tmux_popup().kill, session_opts)
+	if not ok then
+		vim.notify("Failed to kill tmux popup: " .. tostring(result), vim.log.levels.ERROR)
+		return false
+	end
+	return true
+end
+
+---Kill all tmux popups/sessions managed by the plugin
+---@return boolean ok
+function TmuxBackend._kill_all()
+	local ok, result = pcall(get_tmux_popup().kill_all)
+	if not ok then
+		vim.notify("Failed to destroy all tmux sessions: " .. tostring(result), vim.log.levels.ERROR)
+		return false
+	end
+	return true
+end
+
+---Check if a tmux session exists by name
+---@param session_name string The tmux session name
+---@return boolean True if the session exists
+function TmuxBackend._has_session(session_name)
+	local check_cmd = string.format("tmux has-session -t %s", vim.fn.shellescape(session_name))
+	vim.fn.system(check_cmd)
+	return vim.v.shell_error == 0
 end
 
 ---Mark a session as newly created
@@ -282,15 +333,12 @@ function TmuxBackend:toggle(terminal_name, position)
 	end
 
 	-- Determine if the session already exists before toggling
-	local session_name = tmux_popup.format(session_opts)
-	local pre_check_cmd = string.format("tmux has-session -t %s", vim.fn.shellescape(session_name))
-	vim.fn.system(pre_check_cmd)
-	local existed_before = (vim.v.shell_error == 0)
+	local session_name = TmuxBackend._session_name(session_opts)
+	local existed_before = TmuxBackend._has_session(session_name)
 
 	-- Try to open/toggle the popup
-	local ok, result = pcall(tmux_popup.open, session_opts)
-	if not ok then
-		vim.notify("Failed to open tmux popup: " .. tostring(result), vim.log.levels.ERROR)
+	local opened = TmuxBackend._open_popup(session_opts)
+	if not opened then
 		return nil
 	end
 
@@ -320,10 +368,8 @@ function TmuxBackend:get(terminal_name, position)
 	local tmux_popup = get_tmux_popup()
 
 	-- Check if session already exists
-	local session_name = tmux_popup.format(session_opts)
-	local check_cmd = string.format("tmux has-session -t %s", vim.fn.shellescape(session_name))
-	local has_session = vim.fn.system(check_cmd)
-	local exists = vim.v.shell_error == 0
+	local session_name = TmuxBackend._session_name(session_opts)
+	local exists = TmuxBackend._has_session(session_name)
 
 	if exists then
 		-- Session exists, create terminal object
@@ -350,10 +396,8 @@ function TmuxBackend:get_hidden(terminal_name, position)
 	local tmux_popup = get_tmux_popup()
 
 	-- Check if session already exists
-	local session_name = tmux_popup.format(session_opts)
-	local check_cmd = string.format("tmux has-session -t %s", vim.fn.shellescape(session_name))
-	local has_session = vim.fn.system(check_cmd)
-	local exists = vim.v.shell_error == 0
+	local session_name = TmuxBackend._session_name(session_opts)
+	local exists = TmuxBackend._has_session(session_name)
 
 	if exists then
 		-- Session exists, create terminal object
@@ -377,7 +421,7 @@ function TmuxBackend:_create_hidden_session(terminal_name, session_opts)
 	end
 
 	local tmux_popup = get_tmux_popup()
-	local session_name = tmux_popup.format(session_opts)
+	local session_name = TmuxBackend._session_name(session_opts)
 
 	-- Build the command to run in the session
 	local cmd_str = table.concat(session_opts.command, " ")
@@ -421,13 +465,8 @@ function TmuxBackend:open(terminal_name, position, callback)
 end
 
 function TmuxBackend:destroy_all()
-	local tmux_popup = get_tmux_popup()
-
 	-- Kill all sessions - this is a bit aggressive but matches the interface
-	local ok, result = pcall(tmux_popup.kill_all)
-	if not ok then
-		vim.notify("Failed to destroy all tmux sessions: " .. tostring(result), vim.log.levels.ERROR)
-	end
+	TmuxBackend._kill_all()
 end
 
 function TmuxBackend:send(text, opts)
