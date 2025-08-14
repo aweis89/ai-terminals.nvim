@@ -125,7 +125,6 @@ Here are links to some of the tools mentioned in the default configuration:
 * **Aider:** [Aider](https://github.com/paul-gauthier/aider)
 * **Claude CLI:** [Claude CLI](https://github.com/anthropics/claude-cli)
 * **Goose:** [Goose](https://github.com/aweis89/goose)
-* **AI Chat:** [AI Chat](https://github.com/sigoden/aichat)
 * **Codex:** [Codex CLI](https://github.com/openai/codex)
 
 
@@ -271,13 +270,9 @@ return {
           end,
           path_header_template = "@%s", -- Default: @ prefix
         },
-        aichat = {
+        codex = {
           cmd = function()
-            return string.format(
-              "AICHAT_LIGHT_THEME=%s aichat -r %%functions%% --session",
-              -- Convert boolean to string "true" or "false"
-              tostring(vim.o.background == "light")
-            )
+            return "codex"
           end,
           path_header_template = "@%s", -- Default: @ prefix
         },
@@ -299,7 +294,7 @@ return {
     dependencies = { "folke/snacks.nvim" },
     keys = {
       -- Example Keymaps (using default terminal names: 'claude', 'goose',
-      -- 'aider', 'aichat')
+      -- 'aider', 'codex')
       -- Claude Keymaps
       {
         "<leader>atc", -- Mnemonic: AI Terminal Claude
@@ -396,18 +391,18 @@ return {
         mode = { "n", "v" },
         desc = "Send diagnostics to Aider",
       },
-      -- aichat Keymaps
+      -- Codex Keymaps
       {
-        "<leader>ati",
-        function() require("ai-terminals").toggle("aichat") end,
+        "<leader>atd",
+        function() require("ai-terminals").toggle("codex") end,
         mode = { "n", "v" },
-        desc = "Toggle AI Chat terminal (sends selection in visual mode)",
+        desc = "Toggle Codex terminal (sends selection in visual mode)",
       },
       {
-        "<leader>adi",
-        function() require("ai-terminals").send_diagnostics("aichat") end,
+        "<leader>add",
+        function() require("ai-terminals").send_diagnostics("codex") end,
         mode = { "n", "v" },
-        desc = "Send diagnostics to AI Chat",
+        desc = "Send diagnostics to Codex",
       },
       -- Run Command and Send Output
       {
@@ -483,9 +478,9 @@ return {
         vim.keymap.set("n", "<leader>ar", function() require("ai-terminals").add_files_to_terminal("aider", {vim.fn.expand("%")}, { read_only = true }) end, { desc = "Add current file to Aider (read-only)" })
         vim.keymap.set({"n", "v"}, "<leader>ada", function() require("ai-terminals").send_diagnostics("aider") end, { desc = "Send diagnostics to Aider" })
 
-        -- aichat Keymaps
-        vim.keymap.set({"n", "v"}, "<leader>ati", function() require("ai-terminals").toggle("aichat") end, { desc = "Toggle AI Chat terminal (sends selection in visual mode)" })
-        vim.keymap.set({"n", "v"}, "<leader>adi", function() require("ai-terminals").send_diagnostics("aichat") end, { desc = "Send diagnostics to AI Chat" })
+        -- Codex Keymaps
+        vim.keymap.set({"n", "v"}, "<leader>atd", function() require("ai-terminals").toggle("codex") end, { desc = "Toggle Codex terminal (sends selection in visual mode)" })
+        vim.keymap.set({"n", "v"}, "<leader>add", function() require("ai-terminals").send_diagnostics("codex") end, { desc = "Send diagnostics to Codex" })
 
         -- Run Command and Send Output
         vim.keymap.set("n", "<leader>ar", function() require("ai-terminals").send_command_output("aider") end, { desc = "Run command (prompts) and send output to Aider terminal" })
@@ -545,9 +540,9 @@ use({
     vim.keymap.set("n", "<leader>ar", function() require("ai-terminals").add_files_to_terminal("aider", {vim.fn.expand("%")}, { read_only = true }) end, { desc = "Add current file to Aider (read-only)" })
     vim.keymap.set({"n", "v"}, "<leader>ada", function() require("ai-terminals").send_diagnostics("aider") end, { desc = "Send diagnostics to Aider" })
 
-    -- aichat Keymaps
-    vim.keymap.set({"n", "v"}, "<leader>ati", function() require("ai-terminals").toggle("aichat") end, { desc = "Toggle AI Chat terminal (sends selection)" })
-    vim.keymap.set({"n", "v"}, "<leader>adi", function() require("ai-terminals").send_diagnostics("aichat") end, { desc = "Send diagnostics to AI Chat" })
+    -- Codex Keymaps
+    vim.keymap.set({"n", "v"}, "<leader>atd", function() require("ai-terminals").toggle("codex") end, { desc = "Toggle Codex terminal (sends selection)" })
+    vim.keymap.set({"n", "v"}, "<leader>add", function() require("ai-terminals").send_diagnostics("codex") end, { desc = "Send diagnostics to Codex" })
 
     -- Example: Run a command and send output to a specific terminal
     vim.keymap.set("n", "<leader>ar", function() require("ai-terminals").send_command_output("aider") end, { desc = "Run command (prompts) and send output to Aider" })

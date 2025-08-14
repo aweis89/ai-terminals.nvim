@@ -56,15 +56,6 @@ Config.config = {
 			end,
 			path_header_template = "@%s",
 		},
-		aichat = {
-			cmd = function()
-				return string.format(
-					"AICHAT_LIGHT_THEME=%s aichat -r %%functions%% --session",
-					tostring(vim.o.background == "light") -- Convert boolean to string "true" or "false"
-				)
-			end,
-			path_header_template = "@%s",
-		},
 		claude = {
 			cmd = function()
 				return string.format("claude config set -g theme %s && claude", vim.o.background)
@@ -188,9 +179,9 @@ Config.config = {
 		-- Example using the function prompt (normal mode only)
 		-- {
 		-- 	key = "<leader>asf",
-		-- 	term = "aichat",
+		-- 	term = "codex",
 		-- 	prompt = "summarize_file",
-		-- 	desc = "Aichat: Summarize current file",
+		-- 	desc = "Codex: Summarize current file",
 		-- 	include_selection = false,
 		-- },
 	},
