@@ -108,8 +108,15 @@ Config.config = {
 		flags = {
 			close_on_exit = true, -- Close popup when command exits
 			start_directory = function()
-				return vim.fn.getcwd()
-			end, -- Start in current working directory
+				-- Try to find git root directory first, fallback to current working directory
+				local git_root_cmd = "git rev-parse --show-toplevel 2>/dev/null"
+				local git_root = vim.fn.system(git_root_cmd):gsub("\n", "")
+				if vim.v.shell_error == 0 and git_root ~= "" then
+					return git_root
+				else
+					return vim.fn.getcwd()
+				end
+			end, -- Start in git repo root or current working directory
 		},
 		-- Disable status bar for clean popup appearance
 		on_init = {
