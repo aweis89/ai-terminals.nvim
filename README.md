@@ -438,6 +438,19 @@ return {
         mode = { "n", "v" },
         desc = "Send diagnostics to Codex",
       },
+      -- Gemini Keymaps
+      {
+        "<leader>atm",
+        function() require("ai-terminals").toggle("gemini") end,
+        mode = { "n", "v" },
+        desc = "Toggle Gemini terminal (sends selection in visual mode)",
+      },
+      {
+        "<leader>adm",
+        function() require("ai-terminals").send_diagnostics("gemini") end,
+        mode = { "n", "v" },
+        desc = "Send diagnostics to Gemini",
+      },
       -- Run Command and Send Output
       {
         "<leader>ar", -- Mnemonic: AI Run command (prompts)
@@ -520,6 +533,10 @@ return {
         vim.keymap.set({"n", "v"}, "<leader>atd", function() require("ai-terminals").toggle("codex") end, { desc = "Toggle Codex terminal (sends selection in visual mode)" })
         vim.keymap.set({"n", "v"}, "<leader>add", function() require("ai-terminals").send_diagnostics("codex") end, { desc = "Send diagnostics to Codex" })
 
+        -- Gemini Keymaps
+        vim.keymap.set({"n", "v"}, "<leader>atm", function() require("ai-terminals").toggle("gemini") end, { desc = "Toggle Gemini terminal (sends selection in visual mode)" })
+        vim.keymap.set({"n", "v"}, "<leader>adm", function() require("ai-terminals").send_diagnostics("gemini") end, { desc = "Send diagnostics to Gemini" })
+
         -- Run Command and Send Output
         vim.keymap.set("n", "<leader>ar", function() require("ai-terminals").send_command_output("aider") end, { desc = "Run command (prompts) and send output to Aider terminal" })
         -- Or use a fixed command like:
@@ -585,6 +602,10 @@ use({
     -- Codex Keymaps
     vim.keymap.set({"n", "v"}, "<leader>atd", function() require("ai-terminals").toggle("codex") end, { desc = "Toggle Codex terminal (sends selection)" })
     vim.keymap.set({"n", "v"}, "<leader>add", function() require("ai-terminals").send_diagnostics("codex") end, { desc = "Send diagnostics to Codex" })
+
+    -- Gemini Keymaps
+    vim.keymap.set({"n", "v"}, "<leader>atm", function() require("ai-terminals").toggle("gemini") end, { desc = "Toggle Gemini terminal (sends selection)" })
+    vim.keymap.set({"n", "v"}, "<leader>adm", function() require("ai-terminals").send_diagnostics("gemini") end, { desc = "Send diagnostics to Gemini" })
 
     -- Example: Run a command and send output to a specific terminal
     vim.keymap.set("n", "<leader>ar", function() require("ai-terminals").send_command_output("aider") end, { desc = "Run command (prompts) and send output to Aider" })
