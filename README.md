@@ -26,6 +26,7 @@ Here are links to some of the tools mentioned in the default configuration:
 * **Goose:** [Goose](https://github.com/block/goose)
 * **Codex:** [Codex](https://github.com/openai/codex)
 * **Cursor CLI:** [Cursor CLI](https://cursor.com/en/cli)
+* **Gemini CLI:** [Gemini CLI](https://cloud.google.com/gemini/docs/codeassist/gemini-cli)
 
 If you choose to use any of these, make sure they are installed and accessible
 in your system's `PATH`.
