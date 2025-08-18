@@ -77,6 +77,10 @@ Config.config = {
 			cmd = "codex",
 			path_header_template = "@%s",
 		},
+		cursor = {
+			cmd = "cursor-agent",
+			path_header_template = "@%s",
+		},
 		gemini = {
 			cmd = "gemini -p",
 			path_header_template = "@%s",
