@@ -1,5 +1,22 @@
 <img width="1512" height="949" alt="Screenshot 2025-07-27 at 11 04 59 AM" src="https://github.com/user-attachments/assets/4353b150-78bc-46ac-a1b7-f34b28738305" />
 
+## 🔌 Integrations
+
+This plugin integrates with existing command-line AI tools. These CLIs are
+optional — install only the ones you plan to use. If you don't intend to use a
+given tool, you do not need to install it.
+
+Here are links to some of the tools mentioned in the default configuration:
+
+* **Aider:** [Aider](https://github.com/paul-gauthier/aider)
+* **Claude Code:** [Claude Code](https://www.anthropic.com/claude-code)
+* **Goose:** [Goose](https://github.com/aweis89/goose)
+* **Codex:** [Codex CLI](https://github.com/openai/codex)
+* **Cursor CLI:** [Cursor CLI](https://cursor.com/en/cli) (provides `cursor-agent`)
+
+If you choose to use any of these, make sure they are installed and accessible
+in your system's `PATH`.
+
 # 🤖 AI Terminals Neovim Plugin
 This plugin **seamlessly integrates any command-line (CLI) AI coding agents**
 into Neovim. It provides a unified workflow for interacting with AI assistants
@@ -114,24 +131,6 @@ These functions still work but are deprecated in favor of the generic file manag
 
 * **➕ Add Files:** *(Deprecated)* Use `add_files_to_terminal("aider", files, opts)` instead (`:h ai-terminals.aider_add_files`).
 * **➕ Add Buffers:** *(Deprecated)* Use `add_buffers_to_terminal("aider", opts)` instead (`:h ai-terminals.aider_add_buffers`).
-
-## ⚠️ Prerequisites
-
-This plugin integrates with existing command-line AI tools. These CLIs are
-optional — install only the ones you plan to use. If you don't intend to use a
-given tool, you do not need to install it.
-
-Here are links to some of the tools mentioned in the default configuration:
-
-* **Aider:** [Aider](https://github.com/paul-gauthier/aider)
-* **Claude Code:** [Claude Code](https://www.anthropic.com/claude-code)
-* **Goose:** [Goose](https://github.com/aweis89/goose)
-* **Codex:** [Codex CLI](https://github.com/openai/codex)
-* **Cursor CLI:** [Cursor CLI](https://cursor.com/en/cli) (provides `cursor-agent`)
-
-
-If you choose to use any of these, make sure they are installed and accessible
-in your system's `PATH`.
 
 ## 🔗 Dependencies
 
