@@ -6,6 +6,13 @@ This plugin integrates with existing command-line AI tools. These CLIs are
 optional — install only the ones you plan to use. If you don't intend to use a
 given tool, you do not need to install it.
 
+The tools below are preconfigured out of the box. If they are installed and on
+your `PATH`, you can use them immediately. You can also add your own custom
+REPLs/CLIs — the plugin communicates via a PTY (Neovim terminal channels) and
+tmux `send-keys`, so any interactive process that reads from the terminal/STDIN
+will work. See the Configuration section for the `terminals` table to add your
+own entries.
+
 Here are links to some of the tools mentioned in the default configuration:
 
 * **Aider:** [Aider](https://github.com/paul-gauthier/aider)
