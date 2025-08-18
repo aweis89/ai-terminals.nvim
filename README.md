@@ -124,7 +124,7 @@ given tool, you do not need to install it.
 Here are links to some of the tools mentioned in the default configuration:
 
 * **Aider:** [Aider](https://github.com/paul-gauthier/aider)
-* **Claude CLI:** [Claude CLI](https://github.com/anthropics/claude-cli)
+* **Claude Code:** [Claude Code](https://www.anthropic.com/claude-code)
 * **Goose:** [Goose](https://github.com/aweis89/goose)
 * **Codex:** [Codex CLI](https://github.com/openai/codex)
 * **Cursor CLI:** [Cursor CLI](https://cursor.com/en/cli) (provides `cursor-agent`)
