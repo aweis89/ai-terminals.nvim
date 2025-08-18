@@ -21,9 +21,9 @@ own entries.
 
 Here are links to some of the tools mentioned in the default configuration:
 
-* **Aider:** [Aider](https://github.com/paul-gauthier/aider)
+* **Aider:** [Aider](https://aider.chat)
 * **Claude Code:** [Claude Code](https://www.anthropic.com/claude-code)
-* **Goose:** [Goose](https://github.com/aweis89/goose)
+* **Goose:** [Goose](https://github.com/block/goose)
 * **Codex:** [Codex CLI](https://github.com/openai/codex)
 * **Cursor CLI:** [Cursor CLI](https://cursor.com/en/cli) (provides `cursor-agent`)
 
