@@ -37,7 +37,7 @@ want a single, configurable way to manage them within Neovim.
 ### ⚙️ Generic Features (Works with any terminal-based AI agent)
 
 * **🔌 Configurable Terminal Integration:** Define and manage terminals for
-  various AI CLI tools (e.g., Claude, Goose, Aider, custom scripts)
+  various AI CLI tools (e.g., Claude, Goose, Cursor, Aider, custom scripts)
   through a simple configuration table. Uses `Snacks` for terminal window
   management.
 * **🔃 Automatic File Reloading:** Real-time file reloading using file watchers
@@ -117,8 +117,9 @@ These functions still work but are deprecated in favor of the generic file manag
 
 ## ⚠️ Prerequisites
 
-This plugin integrates with existing command-line AI tools. You need to install
-the specific tools you want to use *before* configuring them in this plugin.
+This plugin integrates with existing command-line AI tools. These CLIs are
+optional — install only the ones you plan to use. If you don't intend to use a
+given tool, you do not need to install it.
 
 Here are links to some of the tools mentioned in the default configuration:
 
@@ -126,15 +127,22 @@ Here are links to some of the tools mentioned in the default configuration:
 * **Claude CLI:** [Claude CLI](https://github.com/anthropics/claude-cli)
 * **Goose:** [Goose](https://github.com/aweis89/goose)
 * **Codex:** [Codex CLI](https://github.com/openai/codex)
+* **Cursor CLI:** [Cursor CLI](https://cursor.com/en/cli) (provides `cursor-agent`)
 
 
-Make sure these (or your chosen alternatives) are installed and accessible in
-your system's `PATH`.
+If you choose to use any of these, make sure they are installed and accessible
+in your system's `PATH`.
 
 ## 🔗 Dependencies
 
 * [Snacks.nvim](https://github.com/folke/snacks.nvim): Required for terminal
   window management. 🍬
+* Optional CLI tools (install on demand):
+  [Aider](https://github.com/paul-gauthier/aider),
+  [Claude CLI](https://github.com/anthropics/claude-cli),
+  [Goose](https://github.com/aweis89/goose),
+  [Codex CLI](https://github.com/openai/codex),
+  [Cursor CLI](https://cursor.com/en/cli)
 
 ## 🔧 Configuration
 
@@ -270,6 +278,12 @@ return {
           end,
           path_header_template = "@%s", -- Default: @ prefix
         },
+        cursor = {
+          cmd = function()
+            return "cursor-agent"
+          end,
+          path_header_template = "@%s", -- Default: @ prefix
+        },
         codex = {
           cmd = function()
             return "codex"
@@ -294,7 +308,7 @@ return {
     dependencies = { "folke/snacks.nvim" },
     keys = {
       -- Example Keymaps (using default terminal names: 'claude', 'goose',
-      -- 'aider', 'codex')
+      -- 'cursor', 'aider', 'codex')
       -- Claude Keymaps
       {
         "<leader>atc", -- Mnemonic: AI Terminal Claude
@@ -320,6 +334,19 @@ return {
         function() require("ai-terminals").send_diagnostics("goose") end,
         mode = { "n", "v" },
         desc = "Send diagnostics to Goose",
+      },
+      -- Cursor Keymaps
+      {
+        "<leader>atr",
+        function() require("ai-terminals").toggle("cursor") end,
+        mode = { "n", "v" },
+        desc = "Toggle Cursor terminal (sends selection in visual mode)",
+      },
+      {
+        "<leader>adr",
+        function() require("ai-terminals").send_diagnostics("cursor") end,
+        mode = { "n", "v" },
+        desc = "Send diagnostics to Cursor",
       },
       -- Aider Keymaps
       {
@@ -469,6 +496,10 @@ return {
         vim.keymap.set({"n", "v"}, "<leader>atg", function() require("ai-terminals").toggle("goose") end, { desc = "Toggle Goose terminal (sends selection in visual mode)" })
         vim.keymap.set({"n", "v"}, "<leader>adg", function() require("ai-terminals").send_diagnostics("goose") end, { desc = "Send diagnostics to Goose" })
 
+        -- Cursor Keymaps
+        vim.keymap.set({"n", "v"}, "<leader>atr", function() require("ai-terminals").toggle("cursor") end, { desc = "Toggle Cursor terminal (sends selection in visual mode)" })
+        vim.keymap.set({"n", "v"}, "<leader>adr", function() require("ai-terminals").send_diagnostics("cursor") end, { desc = "Send diagnostics to Cursor" })
+
         -- Aider Keymaps
         vim.keymap.set({"n", "v"}, "<leader>ata", function() require("ai-terminals").toggle("aider") end, { desc = "Toggle Aider terminal (sends selection in visual mode)" })
         vim.keymap.set("n", "<leader>ac", function() require("ai-terminals").aider_comment("AI!") end, { desc = "Add 'AI!' comment above line" })
@@ -527,6 +558,10 @@ use({
     -- Goose Keymaps
     vim.keymap.set({"n", "v"}, "<leader>atg", function() require("ai-terminals").toggle("goose") end, { desc = "Toggle Goose terminal (sends selection)" })
     vim.keymap.set({"n", "v"}, "<leader>adg", function() require("ai-terminals").send_diagnostics("goose") end, { desc = "Send diagnostics to Goose" })
+
+    -- Cursor Keymaps
+    vim.keymap.set({"n", "v"}, "<leader>atr", function() require("ai-terminals").toggle("cursor") end, { desc = "Toggle Cursor terminal (sends selection)" })
+    vim.keymap.set({"n", "v"}, "<leader>adr", function() require("ai-terminals").send_diagnostics("cursor") end, { desc = "Send diagnostics to Cursor" })
 
     -- Aider Keymaps
     vim.keymap.set({"n", "v"}, "<leader>ata", function() require("ai-terminals").toggle("aider") end, { desc = "Toggle Aider terminal (sends selection)" })
