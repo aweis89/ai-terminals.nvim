@@ -365,14 +365,22 @@ function SnacksBackend:run_command_and_send_output(cmd, opts)
 					vim.notify("Command failed and produced no output: " .. cmd, vim.log.levels.WARN)
 				end
 
-				if opts and opts.term then
+				-- Open terminal with callback to send the message
+				if opts and opts.terminal_name then
+					self:open(opts.terminal_name, nil, function(term)
+						if term then
+							term:send(message_to_send, { submit = opts.submit or false })
+							term:focus()
+						end
+					end)
+				elseif opts and opts.term then
 					self:send(message_to_send, opts)
 				elseif vim.b.terminal_job_id then
 					self:send(message_to_send, opts)
 					vim.notify("Command exit code and output sent to terminal.", vim.log.levels.INFO)
 				else
 					vim.notify(
-						"Current buffer is not an active AI terminal and no terminal options as passed. "
+						"Current buffer is not an active AI terminal and no terminal name provided. "
 							.. "Cannot send command exit code and output.",
 						vim.log.levels.ERROR
 					)
