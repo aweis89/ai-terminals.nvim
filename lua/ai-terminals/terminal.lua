@@ -48,7 +48,6 @@ function Term.resolve_command(cmd_config)
 	return backend:resolve_command(cmd_config)
 end
 
-
 -- Public API - delegates to active backend
 
 function Term.toggle(terminal_name, position)
@@ -113,11 +112,111 @@ function Term.send(text, opts)
 end
 
 function Term.run_command_and_send_output(cmd, opts)
-	local backend = get_backend()
-	if not backend then
+	if cmd == "" or cmd == nil then
+		local cwd = vim.fn.getcwd()
+		local home = vim.fn.expand("~")
+		local display_cwd = cwd
+		if string.find(cwd, home .. "/", 1, true) == 1 then
+			display_cwd = "~/" .. string.sub(cwd, string.len(home) + 2)
+		elseif cwd == home then
+			display_cwd = "~"
+		end
+		local prompt = string.format("Shell (in %s)", display_cwd)
+		cmd = vim.fn.input(prompt, "", "shellcmd")
+	end
+	if cmd == "" then
+		vim.notify("No command entered.", vim.log.levels.WARN)
 		return
 	end
-	return backend:run_command_and_send_output(cmd, opts)
+
+	local stdout_lines = {}
+	local stderr_lines = {}
+
+	-- Use the shell command approach from tmux backend for consistency
+	local job_cmd = cmd
+	if type(cmd) == "string" then
+		job_cmd = { vim.o.shell, "-c", cmd }
+	end
+
+	vim.fn.jobstart(job_cmd, {
+		stdout_buffered = true,
+		stderr_buffered = true,
+		on_stdout = function(_, data)
+			if data then
+				for _, line in ipairs(data) do
+					if line ~= "" then
+						table.insert(stdout_lines, line)
+					end
+				end
+			end
+		end,
+		on_stderr = function(_, data)
+			if data then
+				for _, line in ipairs(data) do
+					if line ~= "" then
+						table.insert(stderr_lines, line)
+					end
+				end
+			end
+		end,
+		on_exit = function(_, exit_code)
+			vim.schedule(function()
+				local output = table.concat(stdout_lines, "\n")
+				local errors = table.concat(stderr_lines, "\n")
+
+				local message_to_send = string.format("Command exited with code: %d\n", exit_code)
+
+				if output ~= "" then
+					message_to_send = message_to_send .. "Output:\n```\n" .. output .. "\n```\n"
+				end
+				if errors ~= "" then
+					message_to_send = message_to_send .. "Errors:\n```\n" .. errors .. "\n```\n"
+				end
+
+				if exit_code ~= 0 then
+					local error_msg = string.format("Command failed with exit code %d: %s", exit_code, cmd)
+					if errors ~= "" then
+						error_msg = error_msg .. "\nErrors: " .. errors
+					end
+					vim.notify(error_msg, vim.log.levels.WARN)
+				end
+
+				if output == "" and errors == "" and exit_code == 0 then
+					vim.notify("Command succeeded but produced no output: " .. cmd, vim.log.levels.INFO)
+				elseif output == "" and errors == "" and exit_code ~= 0 then
+					vim.notify("Command failed and produced no output: " .. cmd, vim.log.levels.WARN)
+				end
+
+				-- Delegate terminal opening and message sending to backend
+				local backend = get_backend()
+				if not backend then
+					vim.notify("No backend available to send command output", vim.log.levels.ERROR)
+					return
+				end
+
+				if opts and opts.terminal_name then
+					Term.open(opts.terminal_name, nil, function(term)
+						if term then
+							Term.send(message_to_send, { term = term, submit = opts.submit or false })
+							Term.focus(term)
+						end
+					end)
+				elseif opts and opts.term then
+					Term.send(message_to_send, opts)
+				elseif vim.b.terminal_job_id then
+					-- For snacks backend fallback
+					Term.send(message_to_send, opts)
+					vim.notify("Command exit code and output sent to terminal.", vim.log.levels.INFO)
+				else
+					vim.notify(
+						"Current buffer is not an active AI terminal and no terminal name provided. "
+							.. "Cannot send command exit code and output.",
+						vim.log.levels.ERROR
+					)
+				end
+			end)
+		end,
+	})
 end
 
 function Term.reload_changes()
