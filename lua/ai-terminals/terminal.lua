@@ -164,7 +164,7 @@ function Term.run_command_and_send_output(cmd, opts)
 				local output = table.concat(stdout_lines, "\n")
 				local errors = table.concat(stderr_lines, "\n")
 
-				local message_to_send = string.format("Command exited with code: %d\n", exit_code)
+				local message_to_send = string.format("Command: %s\nExited with code: %d\n", cmd, exit_code)
 
 				if output ~= "" then
 					message_to_send = message_to_send .. "Output:\n```\n" .. output .. "\n```\n"
