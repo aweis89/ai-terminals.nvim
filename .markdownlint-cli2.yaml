@@ -1,0 +1,24 @@
+# markdownlint-cli2 configuration for ai-terminals.nvim
+# See: https://github.com/DavidAnson/markdownlint-cli2#configuration
+
+config:
+  # Allow inline HTML for images and other necessary HTML elements in README
+  MD033:
+    allowed_elements:
+      - "img"
+  
+  # Allow first line to be an image instead of heading (common in README files)
+  MD041: false
+  
+  # Allow longer lines for specific cases (like image URLs and long code examples)
+  MD013:
+    # Set line length to 200 to accommodate GitHub image URLs
+    line_length: 200
+    # Ignore tables, code blocks, and headings which often need longer lines
+    tables: false
+    code_blocks: false
+    headings: false
+
+# Only lint the README.md file
+globs:
+  - "README.md"
