@@ -149,6 +149,8 @@ terminals = {
 }
 ```
 
+**File Picker Integration:** These functions integrate seamlessly with file pickers like Snacks.nvim. You can configure picker actions to add selected files directly to any terminal with keymaps like `<localleader>aa` for Aider or `<localleader>cc` for Claude. See this [example configuration](https://github.com/aweis89/dotfiles/blob/main/dot_config/nvim/lua/plugins/snacks.lua#L5-L5) and the [picker integration recipe](recipes/picker_integration.md) for complete setup details.
+
 ### 🔥 Additional Features
 
 The plugin includes some additional convenience functions:
