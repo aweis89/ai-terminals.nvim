@@ -418,25 +418,9 @@ end
 function M.send_command_output(term_name, cmd, opts)
 	term_name = term_name or vim.b[0].term_title
 	opts = opts or {}
+	opts.terminal_name = term_name
 
-	local function send_output(term)
-		opts.term = term
-		TerminalLib.run_command_and_send_output(cmd, opts) -- Call TerminalLib directly
-	end
-
-	local term, created = M.open(term_name, nil, send_output)
-
-	if not term then
-		vim.notify(
-			"Terminal '" .. term_name .. "' not found or could not be opened for command output",
-			vim.log.levels.ERROR
-		)
-		return
-	end
-
-	if not created then
-		send_output(term)
-	end
+	TerminalLib.run_command_and_send_output(cmd, opts)
 end
 
 ---Send files to a terminal using its configured file commands
