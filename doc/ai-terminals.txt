@@ -325,9 +325,32 @@ Public Lua functions available under `require("ai-terminals")`:
 	- `{term_name}`: string, the name of the target terminal.
 	- `{cmd}`: string|nil. The shell command to execute. If `nil` or an empty
 	  string, prompts the user to enter a command using |vim.ui.input()|.
-	- `{opts}`: table|nil, options passed to the internal send function:
-		- `term`: |snacks.win| object (optional). Explicit target terminal.
-		- `submit`: boolean (optional, default `true`). Submit the output message?
+  - `{opts}`: table|nil, options passed to the internal send function:
+      - `term`: |snacks.win| object (optional). Explicit target terminal.
+      - `submit`: boolean (optional, default `true`). Submit the output message?
+
+*ai-terminals.add_files_to_terminal()*
+`add_files_to_terminal({terminal_name}, {files}, {opts})`
+	Sends a tool-specific file add command to the named terminal, using its
+	configured templates if available, otherwise a generic fallback.
+	- `{terminal_name}`: string. Key from the `terminals` table.
+	- `{files}`: string[]. List of file paths; converted to absolute paths.
+	- `{opts}`: table|nil. Options:
+		- `read_only`: boolean (optional). If `true`, uses the
+		  `add_files_readonly` template when available (e.g., Aider `/read-only`).
+
+	Behavior:
+	- When the target terminal defines `file_commands` in configuration, uses
+	  `add_files` or `add_files_readonly` templates and respects `submit`.
+	- Otherwise falls back to a generic `@path1 @path2` format without submission.
+
+*ai-terminals.add_buffers_to_terminal()*
+`add_buffers_to_terminal({terminal_name}, {opts})`
+	Collects all currently listed, valid, modifiable buffers and delegates to
+	|ai-terminals.add_files_to_terminal()| with their file paths.
+	- `{terminal_name}`: string. Key from the `terminals` table.
+	- `{opts}`: table|nil. Options forwarded to
+	  |ai-terminals.add_files_to_terminal()|.
 
 *ai-terminals.destroy_all()*
 `destroy_all()`
