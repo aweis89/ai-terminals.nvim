@@ -79,7 +79,7 @@ local function setup_auto_terminal_keymaps()
 
 	local auto_config = config.auto_terminal_keymaps
 	local prefix = auto_config.prefix or "<leader>at"
-	
+
 	if not auto_config.terminals or #auto_config.terminals == 0 then
 		return -- No terminals configured for auto keymaps
 	end
@@ -508,7 +508,7 @@ function M.add_files_to_terminal(terminal_name, files, opts)
 	-- Convert all file paths to absolute paths
 	local absolute_files = {}
 	for _, file in ipairs(files) do
-		local absolute = vim.uv.fs_realpath(file)
+		local absolute = vim.fn.fnamemodify(file, ":p")
 		table.insert(absolute_files, absolute)
 	end
 
