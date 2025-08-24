@@ -95,6 +95,10 @@ Config.config = {
 			cmd = "gemini -p",
 			path_header_template = "@%s",
 		},
+		opencode = {
+			cmd = "opencode",
+			path_header_template = "@%s",
+		},
 	},
 	window_dimensions = {
 		float = { width = 0.9, height = 0.9 },
