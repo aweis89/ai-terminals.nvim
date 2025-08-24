@@ -29,12 +29,12 @@ Try it
 
 ## Public API
 
-- `toggle(name, position?)`: open/toggle a terminal; sends visual selection if active.
-- `send_diagnostics(name, opts?)`: send formatted diagnostics; opts `{ submit?, prefix? }`.
-- `add_files_to_terminal(name, files, opts?)`: add files; opts `{ read_only? }` (e.g., Aider `/read-only`).
-- `send_command_output(name, cmd?, opts?)`: run a shell command and send stdout/exit code.
-- `open(name, position?, callback?)`: open a terminal and optionally run a callback with it.
-- `setup(opts)`: initialize and merge configuration with sensible defaults.
+- `toggle(name, position?)`: open/toggle a terminal; sends visual selection if active. See `:h ai-terminals.toggle()`.
+- `send_diagnostics(name, opts?)`: send formatted diagnostics; opts `{ submit?, prefix? }`. See `:h ai-terminals.send_diagnostics()`.
+- `add_files_to_terminal(name, files, opts?)`: add files; opts `{ read_only? }` (e.g., Aider `/read-only`). See `:h ai-terminals-api`.
+- `send_command_output(name, cmd?, opts?)`: run a shell command and send stdout/exit code. See `:h ai-terminals.send_command_output()`.
+- `open(name, position?, callback?)`: open a terminal and optionally run a callback with it. See `:h ai-terminals.open()`.
+- `setup(opts)`: initialize and merge configuration with sensible defaults. See `:h ai-terminals-configuration`.
 
 ## 🔌 Integrations
 
@@ -127,7 +127,7 @@ want a single, configurable way to manage them within Neovim.
   (`:h ai-terminals.add_files_to_terminal`,
   `:h ai-terminals.add_buffers_to_terminal`). Works with all terminals, with
   fallback behavior for terminals without specific file commands configured.
-* **📝 Prompt Keymaps:** Define custom keymaps (`:h ai-terminals.config`) to
+* **📝 Prompt Keymaps:** Define custom keymaps (`:h ai-terminals-config-prompt-keymaps`) to
   send pre-defined prompts to specific terminals.
   * **Selection Handling:** Configure whether the keymap includes visual
     selection (`include_selection` option, defaults to `true`).
@@ -139,8 +139,8 @@ want a single, configurable way to manage them within Neovim.
   * **Dynamic Prompts:** Prompt text can be a string or a function that returns
     a string. Functions are evaluated when the keymap is triggered, allowing
     dynamic content (e.g., current file path). See example in
-    `:h ai-terminals.config`.
-* **⌨️ Terminal Keymaps:** Define custom keymaps (`:h ai-terminals.config`)
+    `:h ai-terminals-configuration`.
+* **⌨️ Terminal Keymaps:** Define custom keymaps (`:h ai-terminals-configuration`)
   that only apply within the AI terminal buffers. **Note: Only works with the
   snacks backend** - tmux terminals cannot execute Neovim functions.
   * **Modes:** Specify which modes the keymap applies to (e.g., "t" for
@@ -148,7 +148,7 @@ want a single, configurable way to manage them within Neovim.
   * **Actions:** Actions can be functions or strings (e.g., to close the
     terminal or send keys).
 * **🚀 Auto Terminal Keymaps:** Automatically generate consistent keymaps for
-  all your configured terminals (`:h ai-terminals.config`).
+  all your configured terminals (`:h ai-terminals-configuration`).
   * **Consistent Patterns:** Creates standardized keymaps following a common
     pattern for each terminal (toggle, diagnostics, add files, etc.).
   * **Customizable:** Configure key suffixes, display names, and enable/disable
