@@ -7,6 +7,35 @@ into Neovim. It provides a unified workflow for interacting with AI assistants
 directly within your editor, reducing the need for specific, dedicated AI
 plugins for each tool.
 
+Note: Backend defaults — when Neovim runs inside tmux, the tmux backend is used by default; otherwise the Snacks backend is used.
+
+## ⚡ Quick Start
+
+Using lazy.nvim
+
+```lua
+{
+  "aweis89/ai-terminals.nvim",
+  dependencies = { "folke/snacks.nvim" },
+  opts = {}, -- uses sensible defaults; tmux backend auto-selected in tmux
+}
+```
+
+Try it
+
+- Visual select code, then: `:lua require("ai-terminals").toggle("aider")`
+- Send diagnostics: `:lua require("ai-terminals").send_diagnostics("aider")`
+- Add current file: `:lua require("ai-terminals").add_files_to_terminal("aider", { vim.fn.expand("%") })`
+
+## Public API
+
+- `toggle(name, position?)`: open/toggle a terminal; sends visual selection if active.
+- `send_diagnostics(name, opts?)`: send formatted diagnostics; opts `{ submit?, prefix? }`.
+- `add_files_to_terminal(name, files, opts?)`: add files; opts `{ read_only? }` (e.g., Aider `/read-only`).
+- `send_command_output(name, cmd?, opts?)`: run a shell command and send stdout/exit code.
+- `open(name, position?, callback?)`: open a terminal and optionally run a callback with it.
+- `setup(opts)`: initialize and merge configuration with sensible defaults.
+
 ## 🔌 Integrations
 
 This plugin integrates with existing command-line AI tools. These CLIs are
