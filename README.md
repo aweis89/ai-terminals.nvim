@@ -307,15 +307,6 @@ paths are formatted when sending visual selections. This allows different AI
 terminals to receive path information in their preferred format without
 requiring additional tool calls.
 
-**Key Benefits:**
-
-* **Automatic Context:** File paths are automatically included with code
-  selections, giving AI tools immediate context about the file being discussed
-* **Format Flexibility:** Each terminal can use its own preferred path format
-  (e.g., `@filename` for some tools, `` `filename` `` for others)
-* **No Extra Steps:** No need for separate commands to provide file context -
-  it's included automatically
-
 **Default Templates:**
 
 * **Aider:** `` `%s` `` (wrapped in backticks for Aider's file reference format)
