@@ -71,6 +71,68 @@ local function setup_terminal_keymaps()
 	})
 end
 
+local function setup_auto_terminal_keymaps()
+	local config = ConfigLib.config
+	if not config.auto_terminal_keymaps then
+		return -- Feature not configured
+	end
+
+	local auto_config = config.auto_terminal_keymaps
+	local prefix = auto_config.prefix or "<leader>at"
+	
+	if not auto_config.terminals or #auto_config.terminals == 0 then
+		return -- No terminals configured for auto keymaps
+	end
+
+	for i, terminal_entry in ipairs(auto_config.terminals) do
+		local name = terminal_entry.name
+		local key = terminal_entry.key
+		local display_name = name:gsub("^%l", string.upper) -- Capitalize first letter
+		local enabled = terminal_entry.enabled ~= false -- Default to true
+
+		-- Skip if this terminal keymap is disabled
+		if not enabled then
+			goto continue
+		end
+
+		-- Validate terminal name exists in config
+		if not config.terminals or not config.terminals[name] then
+			vim.notify(
+				string.format("AI Terminals: Invalid terminal name '%s' in auto_terminal_keymaps #%d", name, i),
+				vim.log.levels.WARN
+			)
+			goto continue
+		end
+
+		-- Toggle terminal keymap
+		vim.keymap.set({ "n", "v" }, prefix .. key, function()
+			require("ai-terminals").toggle(name)
+		end, { desc = "Toggle " .. display_name .. " terminal" })
+
+		-- Send diagnostics keymap
+		vim.keymap.set({ "n", "v" }, "<leader>ad" .. key, function()
+			require("ai-terminals").send_diagnostics(name)
+		end, { desc = "Send diagnostics to " .. display_name })
+
+		-- Add current file keymap
+		vim.keymap.set("n", "<leader>al" .. key, function()
+			require("ai-terminals").add_files_to_terminal(name, { vim.fn.expand("%") })
+		end, { desc = "Add current file to " .. display_name })
+
+		-- Add all buffers keymap
+		vim.keymap.set("n", "<leader>aL" .. key, function()
+			require("ai-terminals").add_buffers_to_terminal(name)
+		end, { desc = "Add all buffers to " .. display_name })
+
+		-- Send command output keymap
+		vim.keymap.set("n", "<leader>ar" .. key, function()
+			require("ai-terminals").send_command_output(name)
+		end, { desc = "Run command and send output to " .. display_name })
+
+		::continue::
+	end
+end
+
 local function setup_prompt_keymaps()
 	local config = ConfigLib.config
 	if not config.prompt_keymaps or not config.prompts then
@@ -222,6 +284,7 @@ function M.setup(user_config)
 
 	setup_prompt_keymaps() -- Create keymaps after config is merged
 	setup_terminal_keymaps() -- Setup terminal-specific keymaps
+	setup_auto_terminal_keymaps() -- Setup auto-generated terminal keymaps
 end
 
 ---Create or toggle a terminal by name with specified position (delegates to TerminalLib)
@@ -445,7 +508,8 @@ function M.add_files_to_terminal(terminal_name, files, opts)
 	-- Convert all file paths to absolute paths
 	local absolute_files = {}
 	for _, file in ipairs(files) do
-		table.insert(absolute_files, vim.fn.fnamemodify(file, ":p"))
+		local absolute = vim.uv.fs_realpath(file)
+		table.insert(absolute_files, absolute)
 	end
 
 	-- Get file commands config or use defaults

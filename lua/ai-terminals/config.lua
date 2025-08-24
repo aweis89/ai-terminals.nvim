@@ -25,6 +25,15 @@ local Config = {}
 ---@field toggle? table Tmux toggle keymap configuration
 ---@field on_init? string[] Tmux commands to run after popup creation
 
+---@class AutoTerminalKeymapEntry
+---@field name string Terminal name (must match key in terminals config)
+---@field key string Single character key suffix for keymaps
+---@field enabled? boolean Whether to generate keymaps for this terminal (default: true)
+
+---@class AutoTerminalKeymapsConfig
+---@field prefix? string Base prefix for all keymaps (default: "<leader>at")
+---@field terminals? AutoTerminalKeymapEntry[] List of terminals to generate keymaps for
+
 ---@class ConfigType
 ---@field terminals TerminalsMap|nil
 ---@field window_dimensions WindowDimensionsMap|nil
@@ -37,6 +46,7 @@ local Config = {}
 ---@field terminal_keymaps {key: string, action: string | fun(), desc: string, modes?: string | string[]}[]|nil Keymaps that only apply within terminal buffers (array of tables). `modes` (optional, string or array of strings, default: "t"): Specifies the modes for the keymap.
 ---@field backend "snacks"|"tmux"|nil Terminal backend to use. "snacks" uses snacks.nvim terminal (default), "tmux" uses tmux-toggle-popup.nvim
 ---@field tmux TmuxConfig|nil Configuration for tmux backend when backend="tmux"
+---@field auto_terminal_keymaps AutoTerminalKeymapsConfig|nil Auto-generated keymaps for all configured terminals
 
 ---@type ConfigType
 Config.config = {
