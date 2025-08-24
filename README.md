@@ -886,5 +886,3 @@ check the [issues page](https://github.com/aweis89/ai-terminals.nvim/issues).
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE)
 file for details.
-yes
-yes
