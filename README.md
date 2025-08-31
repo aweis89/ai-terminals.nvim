@@ -27,8 +27,9 @@ Try it
 ## Public API
 
 - `toggle(name, position?)`: open/toggle a terminal; sends visual selection if active. See `:h ai-terminals.toggle()`.
+- `send_term(name, text, opts?)`: send text to a specific named terminal; opts `{ submit?, focus? }`. See `:h ai-terminals.send_term()`.
 - `send_diagnostics(name, opts?)`: send formatted diagnostics; opts `{ submit?, prefix? }`. See `:h ai-terminals.send_diagnostics()`.
-- `add_files_to_terminal(name, files, opts?)`: add files; opts `{ read_only? }` (e.g., Aider `/read-only`). See `:h ai-terminals-api`.
+- `add_files_to_terminal(name, files, opts?)`: add files to terminal. See [Snacks Picker Integration](#-snacks-picker-integration) for picker examples.
 - `send_command_output(name, cmd?, opts?)`: run a shell command and send stdout/exit code. See `:h ai-terminals.send_command_output()`.
 - `open(name, position?, callback?)`: open a terminal and optionally run a callback with it. See `:h ai-terminals.open()`.
 - `setup(opts)`: initialize and merge configuration with sensible defaults. See `:h ai-terminals-configuration`.
