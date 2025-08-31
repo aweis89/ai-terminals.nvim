@@ -4,10 +4,7 @@
 
 This plugin **seamlessly integrates any command-line (CLI) AI coding agents**
 into Neovim. It provides a unified workflow for interacting with AI assistants
-directly within your editor, reducing the need for specific, dedicated AI
-plugins for each tool.
-
-Note: Backend defaults — when Neovim runs inside tmux, the tmux backend is used by default; otherwise the Snacks backend is used.
+directly within your editor, enabling seamless integration of terminal AI agents.
 
 ## ⚡ Quick Start
 
@@ -23,9 +20,9 @@ Using lazy.nvim
 
 Try it
 
-- Visual select code, then: `:lua require("ai-terminals").toggle("aider")`
-- Send diagnostics: `:lua require("ai-terminals").send_diagnostics("aider")`
-- Add current file: `:lua require("ai-terminals").add_files_to_terminal("aider", { vim.fn.expand("%") })`
+- Visual select code, then: `:lua require("ai-terminals").toggle("claude")`
+- Send diagnostics: `:lua require("ai-terminals").send_diagnostics("claude")`
+- Add current file: `:lua require("ai-terminals").add_files_to_terminal("claude", { vim.fn.expand("%") })`
 
 ## Public API
 
