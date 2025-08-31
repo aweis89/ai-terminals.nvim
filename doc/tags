@@ -21,6 +21,8 @@ ai-terminals-installation	ai-terminals.txt	/*ai-terminals-installation*
 ai-terminals-introduction	ai-terminals.txt	/*ai-terminals-introduction*
 ai-terminals-prerequisites	ai-terminals.txt	/*ai-terminals-prerequisites*
 ai-terminals-usage	ai-terminals.txt	/*ai-terminals-usage*
+ai-terminals.add_buffers_to_terminal()	ai-terminals.txt	/*ai-terminals.add_buffers_to_terminal()*
+ai-terminals.add_files_to_terminal()	ai-terminals.txt	/*ai-terminals.add_files_to_terminal()*
 ai-terminals.aider_add_buffers()	ai-terminals.txt	/*ai-terminals.aider_add_buffers()*
 ai-terminals.aider_add_files()	ai-terminals.txt	/*ai-terminals.aider_add_files()*
 ai-terminals.aider_comment()	ai-terminals.txt	/*ai-terminals.aider_comment()*
