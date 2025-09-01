@@ -127,7 +127,12 @@ function M.open(opts)
 	end
 
 	if opts.toggle and opts.toggle.key then
-		vim.list_extend(args, { "--toggle-key", utils.escape(opts.toggle.key) })
+		-- Handle both single key (string) and multiple keys (table)
+		local keys = type(opts.toggle.key) == "table" and opts.toggle.key or { opts.toggle.key }
+		
+		for _, key in ipairs(keys) do
+			vim.list_extend(args, { "--toggle-key", utils.escape(key) })
+		end
 
 		if opts.toggle.mode then
 			vim.list_extend(args, { "--toggle-mode", opts.toggle.mode })

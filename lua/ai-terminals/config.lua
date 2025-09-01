@@ -133,7 +133,7 @@ Config.config = {
 		},
 		toggle = {
 			-- this will be a tmux keybinding so it should be in the format that is acceptable to tmux
-			key = "-n C-h",
+			key = { "-n C-h", "-n Escape" },
 			mode = "force-close",
 		},
 	},
