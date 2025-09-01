@@ -254,6 +254,7 @@ set -g @popup-toggle-mode 'force-close'
 **Default Keybinding:**
 
 * `C-h` - Hide/toggle the tmux popup when it's in focus
+* `Escape` - Hide/toggle the tmux popup when it's in focus
 
 This keybinding is automatically configured when using the tmux backend and
 allows you to quickly hide the terminal popup from within tmux.
