@@ -37,7 +37,7 @@ function Diagnostics.get_formatted()
 			-- Filter diagnostics to only include those within the visual selection
 			local all_diags = vim.diagnostic.get(bufnr)
 			for _, diag in ipairs(all_diags) do
-				if diag.lnum >= selection_start_line - 1 and diag.lnum < selection_end_line then
+				if diag.lnum >= selection_start_line - 1 and diag.lnum <= selection_end_line - 1 then
 					table.insert(diagnostics, diag)
 				end
 			end
