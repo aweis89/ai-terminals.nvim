@@ -279,6 +279,11 @@ function TmuxBackend:_resolve_tmux_session_options(terminal_name, position)
 	session_opts.height = tmux_config.height or 0.9
 	session_opts.flags = tmux_config.flags
 
+	-- Use custom id_format with resolved path to handle symlinks properly
+	-- This ensures the same session is used whether accessing via symlink or real path
+	local resolved_cwd = vim.fn.resolve(vim.fn.getcwd())
+	session_opts.id_format = string.format("#{session_name}/nvim/%s/{popup_name}", resolved_cwd)
+
 	if tmux_config.toggle then
 		session_opts.toggle = tmux_config.toggle
 	end
@@ -477,7 +482,6 @@ function TmuxBackend:send(text, opts)
 		vim.notify("No tmux terminal provided for sending text", vim.log.levels.ERROR)
 	end
 end
-
 
 function TmuxBackend:reload_changes()
 	FileWatcher.reload_changes()
