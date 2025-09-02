@@ -1,5 +1,6 @@
 # 🤖 AI Terminals Neovim Plugin
 
+[![StandWithPalestine](https://raw.githubusercontent.com/Safouene1/support-palestine-banner/master/StandWithPalestine.svg)](https://github.com/Safouene1/support-palestine-banner/blob/master/Markdown-pages/Support.md)
 [![test](https://github.com/aweis89/ai-terminals.nvim/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/aweis89/ai-terminals.nvim/actions/workflows/test.yml)
 [![lint-test](https://github.com/aweis89/ai-terminals.nvim/actions/workflows/lint-test.yml/badge.svg?branch=master)](https://github.com/aweis89/ai-terminals.nvim/actions/workflows/lint-test.yml)
 
