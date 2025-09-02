@@ -18,5 +18,10 @@ jobs:
           neovim: true
           version: ${{ matrix.nvim-versions }}
 
+      - name: install luarocks
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y luarocks
+
       - name: run tests
         run: make test
