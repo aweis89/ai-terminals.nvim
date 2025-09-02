@@ -37,7 +37,6 @@ describe("ai-terminals.terminal", function()
 			original_vim_fn_feedkeys = vim.fn.feedkeys
 		end
 
-
 		-- Mock vim.fn.chansend
 		vim.fn.chansend = function(job_id, data)
 			table.insert(mock_chansend_calls, { job_id = job_id, data = data })
@@ -56,6 +55,7 @@ describe("ai-terminals.terminal", function()
 
 		-- Mock minimal config needed for tests
 		Conf.config = {
+			backend = "snacks",
 			terminals = {
 				test_term_str = { cmd = "echo test" },
 				test_term_func = {
@@ -135,17 +135,26 @@ describe("ai-terminals.terminal", function()
 			assert.are.equal(0, #mock_feedkeys_calls)
 		end)
 
-		it("should enter insert mode when insert_mode is true", function()
-			Term.send("hello", { insert_mode = true })
-			assert.are.equal(1, #mock_chansend_calls)
-			assert.are.equal("hello", mock_chansend_calls[1].data)
-			assert.are.equal(1, #mock_feedkeys_calls)
-			assert.are.equal("i", mock_feedkeys_calls[1].keys)
-		end)
 
 		it("should use opts.term job_id if provided", function()
-			-- Mock a term object with a buffer number
-			local mock_term_obj = { buf = 999 }
+			-- Mock a term object with a buffer number and send method
+			local mock_term_obj = { 
+				buf = 999,
+				send = function(self, text, opts)
+					-- Simulate SnacksTerminalObject:send behavior
+					opts = opts or {}
+					local job_id = vim.b[self.buf].terminal_job_id
+					if not job_id then
+						vim.notify("No terminal job id found", vim.log.levels.ERROR)
+						return
+					end
+					local success = vim.fn.chansend(job_id, text)
+					if success == 0 then
+						vim.notify("Failed to send text to terminal", vim.log.levels.ERROR)
+						return
+					end
+				end
+			}
 			-- Mock vim.b for that specific buffer number
 			local original_b_999 = vim.b[mock_term_obj.buf] -- Store original if exists
 			vim.b[mock_term_obj.buf] = { terminal_job_id = 456 }

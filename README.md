@@ -88,12 +88,12 @@ own entries.
 
 Here are links to some of the tools mentioned in the default configuration:
 
-* **Aider:** [Aider](https://aider.chat)
-* **Claude Code:** [Claude Code](https://www.anthropic.com/claude-code)
-* **Goose:** [Goose](https://github.com/block/goose)
-* **Codex:** [Codex](https://github.com/openai/codex)
-* **Cursor CLI:** [Cursor CLI](https://cursor.com/en/cli)
-* **Gemini CLI:** [Gemini CLI](https://cloud.google.com/gemini/docs/codeassist/gemini-cli)
+- **Aider:** [Aider](https://aider.chat)
+- **Claude Code:** [Claude Code](https://www.anthropic.com/claude-code)
+- **Goose:** [Goose](https://github.com/block/goose)
+- **Codex:** [Codex](https://github.com/openai/codex)
+- **Cursor CLI:** [Cursor CLI](https://cursor.com/en/cli)
+- **Gemini CLI:** [Gemini CLI](https://cloud.google.com/gemini/docs/codeassist/gemini-cli)
 
 If you choose to use any of these, make sure they are installed and accessible
 in your system's `PATH`.
@@ -109,15 +109,15 @@ Rather than reimplementing AI functionality within Neovim, this plugin leverages
 the robust ecosystems that already exist in terminal-based AI tools. It acts as
 a communication layer, providing:
 
-* **Universal CLI Integration:** Works with any terminal-based AI tool that accepts
+- **Universal CLI Integration:** Works with any terminal-based AI tool that accepts
   stdin input - from Aider and Claude CLI to custom scripts and future tools.
-* **Data Bridge Architecture:** Creates a seamless bridge between your editor
+- **Data Bridge Architecture:** Creates a seamless bridge between your editor
   context (code selections, diagnostics, file paths) and terminal AI agents.
-* **Tool Agnostic:** Instead of locking you into specific AI services, it lets
+- **Tool Agnostic:** Instead of locking you into specific AI services, it lets
   you use whatever CLI tools work best for your workflow.
-* **Stdin as API:** Leverages the universal stdin interface that all CLI tools
+- **Stdin as API:** Leverages the universal stdin interface that all CLI tools
   provide, making integration straightforward and reliable.
-* **Composable Functions:** Exposes core functions like `send`, `toggle`, and
+- **Composable Functions:** Exposes core functions like `send`, `toggle`, and
   `send_diagnostics` that can be combined to create custom workflows - from
   sending Jira tickets to reviewing PRs to running tests and analyzing output.
 
@@ -128,85 +128,85 @@ want a single, configurable way to manage them within Neovim.
 
 ### ⚙️ Generic Features (Works with any terminal-based AI agent)
 
-* **🔌 Configurable Terminal Integration:** Define and manage terminals for
+- **🔌 Configurable Terminal Integration:** Define and manage terminals for
   various AI CLI tools (e.g., Claude, Goose, Cursor, Aider, custom scripts)
   through a simple configuration table. Uses `Snacks` for terminal window
   management.
-* **🔃 Automatic File Reloading:** Real-time file reloading using file watchers
+- **🔃 Automatic File Reloading:** Real-time file reloading using file watchers
   automatically detects and reloads changes made by AI tools instantly,
   ensuring you see the latest modifications as they happen.
-* **🔍 Git Integration Recommendation:** For tracking changes made by AI tools,
+- **🔍 Git Integration Recommendation:** For tracking changes made by AI tools,
   we recommend using established git plugins:
-  * **[gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim):** Shows git
+  - **[gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim):** Shows git
     changes in the sign column and provides inline diff views
-  * **[telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) or
+  - **[telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) or
     [snacks.nvim](https://github.com/folke/snacks.nvim) git pickers:** Browse git
     status with custom actions for staging, discarding, or viewing changes
-  * **[diffview.nvim](https://github.com/sindrets/diffview.nvim):** Comprehensive
+  - **[diffview.nvim](https://github.com/sindrets/diffview.nvim):** Comprehensive
     git diff viewer with side-by-side comparisons
-* **📋 Send Visual Selection:** Send the currently selected text (visual mode) to
+- **📋 Send Visual Selection:** Send the currently selected text (visual mode) to
   the AI terminal, automatically wrapped in a markdown code block with the file
   path and language type included. Each terminal can have a custom path header
   template to format file paths according to the AI tool's preferences (e.g.,
   `@filename` or `` `filename` ``).
 
-* **🩺 Send Diagnostics:** Send diagnostics (errors, warnings, etc.) for the
+- **🩺 Send Diagnostics:** Send diagnostics (errors, warnings, etc.) for the
   current buffer or visual selection to the AI terminal
   (`:h ai-terminals.send_diagnostics`), formatted with severity, line/column
   numbers, messages, and the corresponding source code lines.
-* **🚀 Run Command and Send Output:** Execute an arbitrary shell command and
+- **🚀 Run Command and Send Output:** Execute an arbitrary shell command and
   send its standard output and exit code to the active AI terminal
   (`:h ai-terminals.send_command_output`). Useful for running tests, linters,
   or even fetching information from other CLIs (e.g.,
   `jira issue view MYTICKET-123`) and feeding results to the AI.
-* **📁 File Management:** Generic functions to add files or buffers to any
+- **📁 File Management:** Generic functions to add files or buffers to any
   terminal using configurable commands
   (`:h ai-terminals.add_files_to_terminal`,
   `:h ai-terminals.add_buffers_to_terminal`). Works with all terminals, with
   fallback behavior for terminals without specific file commands configured.
-* **📝 Prompt Keymaps:** Define custom keymaps (`:h ai-terminals-config-prompt-keymaps`) to
+- **📝 Prompt Keymaps:** Define custom keymaps (`:h ai-terminals-config-prompt-keymaps`) to
   send pre-defined prompts to specific terminals.
-  * **Selection Handling:** Configure whether the keymap includes visual
+  - **Selection Handling:** Configure whether the keymap includes visual
     selection (`include_selection` option, defaults to `true`).
-    * If `true`, the keymap works in normal and visual modes. In visual mode,
+    - If `true`, the keymap works in normal and visual modes. In visual mode,
       the selection is prefixed to the prompt.
-    * If `false`, the keymap works only in normal mode and sends just the prompt.
-  * **Submission Control:** Configure whether a newline is sent after the
+    - If `false`, the keymap works only in normal mode and sends just the prompt.
+  - **Submission Control:** Configure whether a newline is sent after the
     prompt (`submit` option, defaults to `true`).
-  * **Dynamic Prompts:** Prompt text can be a string or a function that returns
+  - **Dynamic Prompts:** Prompt text can be a string or a function that returns
     a string. Functions are evaluated when the keymap is triggered, allowing
     dynamic content (e.g., current file path). See example in
     `:h ai-terminals-configuration`.
-* **⌨️ Terminal Keymaps:** Define custom keymaps (`:h ai-terminals-configuration`)
+- **⌨️ Terminal Keymaps:** Define custom keymaps (`:h ai-terminals-configuration`)
   that only apply within the AI terminal buffers. **Note: Only works with the
   snacks backend** - tmux terminals cannot execute Neovim functions.
-  * **Modes:** Specify which modes the keymap applies to (e.g., "t" for
+  - **Modes:** Specify which modes the keymap applies to (e.g., "t" for
     terminal mode, "n" for normal mode within the terminal). Defaults to "t".
-  * **Actions:** Actions can be functions or strings (e.g., to close the
+  - **Actions:** Actions can be functions or strings (e.g., to close the
     terminal or send keys).
-* **🚀 Auto Terminal Keymaps:** Automatically generate consistent keymaps for
+- **🚀 Auto Terminal Keymaps:** Automatically generate consistent keymaps for
   all your configured terminals (`:h ai-terminals-configuration`).
-  * **Consistent Patterns:** Creates standardized keymaps following a common
+  - **Consistent Patterns:** Creates standardized keymaps following a common
     pattern for each terminal (toggle, diagnostics, add files, etc.).
-  * **Customizable:** Configure key suffixes, display names, and enable/disable
+  - **Customizable:** Configure key suffixes, display names, and enable/disable
     individual terminals.
-  * **Global Control:** Enable or disable the entire feature with a single flag.
+  - **Global Control:** Enable or disable the entire feature with a single flag.
 
 ### 📁 File Management
 
 The plugin provides generic file management functions that work with any terminal:
 
-* **📂 Add Files to Terminal:** `add_files_to_terminal(terminal_name, files, opts)`
-  * Send files to any terminal using its configured file commands
-  * **Terminals with file_commands:** Uses configured templates (e.g., Aider
+- **📂 Add Files to Terminal:** `add_files_to_terminal(terminal_name, files, opts)`
+  - Send files to any terminal using its configured file commands
+  - **Terminals with file_commands:** Uses configured templates (e.g., Aider
     uses `/add` or `/read-only` commands with automatic submission)
-  * **Other terminals:** Uses fallback `@file1 @file2` format without submission
-  * **Options:** `{ read_only = true }` for read-only mode (Aider only)
+  - **Other terminals:** Uses fallback `@file1 @file2` format without submission
+  - **Options:** `{ read_only = true }` for read-only mode (Aider only)
   
-* **📋 Add Buffers to Terminal:** `add_buffers_to_terminal(terminal_name, opts)`
-  * Add all currently listed buffers to any terminal
-  * Filters out invalid, unloaded, or non-modifiable buffers
-  * Uses the same command templates as `add_files_to_terminal`
+- **📋 Add Buffers to Terminal:** `add_buffers_to_terminal(terminal_name, opts)`
+  - Add all currently listed buffers to any terminal
+  - Filters out invalid, unloaded, or non-modifiable buffers
+  - Uses the same command templates as `add_files_to_terminal`
 
 **Configuration:** Add `file_commands` to your terminal config to customize:
 
@@ -226,7 +226,7 @@ terminals = {
 **File Picker Integration:** These functions integrate seamlessly with file
 pickers like Snacks.nvim. You can configure picker actions to add selected files
 directly to any terminal with keymaps like `<localleader>aa` for Aider or
-`<localleader>cc` for Claude. See the [Snacks Picker Integration](#-snacks-picker-integration) 
+`<localleader>cc` for Claude. See the [Snacks Picker Integration](#-snacks-picker-integration)
 section below for a complete working example and the
 [picker integration recipe](recipes/picker_integration.md) for additional approaches.
 
@@ -234,10 +234,10 @@ section below for a complete working example and the
 
 The plugin includes some additional convenience functions:
 
-* **💬 Add Comments (Aider):** Insert comments above the current line with a
+- **💬 Add Comments (Aider):** Insert comments above the current line with a
   custom prefix (e.g., `AI!`, `AI?`) and automatically start the Aider terminal
   if not already running (`:h ai-terminals.aider_comment`).
-* **🔄 Diff Changes:** View changes made by AI tools in vim diff tabs.
+- **🔄 Diff Changes:** View changes made by AI tools in vim diff tabs.
   Requires `enable_diffing = true` in your config. Each changed file opens in
   its own tab for review. Re-opening the terminal window resets the changes.
   See `:help diff-mode` for vim's diff commands like `:diffput` and `:diffget`
@@ -251,18 +251,18 @@ The plugin includes some additional convenience functions:
 
 These functions still work but are deprecated in favor of the generic file management:
 
-* **➕ Add Files:** *(Deprecated)* Use
+- **➕ Add Files:** *(Deprecated)* Use
   `add_files_to_terminal("aider", files, opts)` instead
   (`:h ai-terminals.aider_add_files`).
-* **➕ Add Buffers:** *(Deprecated)* Use
+- **➕ Add Buffers:** *(Deprecated)* Use
   `add_buffers_to_terminal("aider", opts)` instead
   (`:h ai-terminals.aider_add_buffers`).
 
 ## 🔗 Dependencies
 
-* [Snacks.nvim](https://github.com/folke/snacks.nvim): Required for terminal
+- [Snacks.nvim](https://github.com/folke/snacks.nvim): Required for terminal
   window management. 🍬
-* Optional CLI tools (install on demand):
+- Optional CLI tools (install on demand):
   [Aider](https://github.com/paul-gauthier/aider),
   [Claude CLI](https://github.com/anthropics/claude-cli),
   [Goose](https://github.com/aweis89/goose),
@@ -292,8 +292,8 @@ set -g @popup-toggle-mode 'force-close'
 
 **Default Keybinding:**
 
-* `C-h` - Hide/toggle the tmux popup when it's in focus
-* `Escape` - Hide/toggle the tmux popup when it's in focus
+- `C-h` - Hide/toggle the tmux popup when it's in focus
+- `Escape` - Hide/toggle the tmux popup when it's in focus
 
 This keybinding is automatically configured when using the tmux backend and
 allows you to quickly hide the terminal popup from within tmux.
@@ -376,8 +376,8 @@ requiring additional tool calls.
 
 **Default Templates:**
 
-* **Aider:** `` `%s` `` (wrapped in backticks for Aider's file reference format)
-* **All other terminals:** `@%s` (prefixed with @ symbol)
+- **Aider:** `` `%s` `` (wrapped in backticks for Aider's file reference format)
+- **All other terminals:** `@%s` (prefixed with @ symbol)
 
 **Custom Template Example:**
 
@@ -393,13 +393,15 @@ terminals = {
 When you send a visual selection from `src/main.js` to a terminal, the path
 header will be formatted according to that terminal's template:
 
-* Aider receives: `` `src/main.js` ``
-* Claude receives: `@src/main.js`
-* Custom tool receives: `File: src/main.js`
+- Aider receives: `` `src/main.js` ``
+- Claude receives: `@src/main.js`
+- Custom tool receives: `File: src/main.js`
 
 ## 🔌 Snacks Picker Integration
 
-The plugin integrates seamlessly with [Snacks.nvim](https://github.com/folke/snacks.nvim) pickers, allowing you to add selected files from any picker directly to your AI terminals. Here's a complete working example:
+The plugin integrates seamlessly with [Snacks.nvim](https://github.com/folke/snacks.nvim)
+pickers, allowing you to add selected files from any picker directly to your AI
+terminals. Here's a complete working example:
 
 ```lua
 -- Helper function to extract files from a snacks picker and send them to ai-terminals
@@ -482,6 +484,7 @@ return {
 ```
 
 **Usage:**
+
 1. Open any Snacks picker (files, git_files, git_status, etc.)
 2. Select one or more files using `<Tab>` or navigate to the file you want
 3. Use the keymaps to add files to your AI terminals:
@@ -490,7 +493,9 @@ return {
    - `<localleader>ac` - Add to Claude
    - `<localleader>ad` - Add to Codex
 
-This integration works with all Snacks pickers that show files and uses the modern generic `add_files_to_terminal()` function, which automatically handles the appropriate file commands for each terminal type.
+This integration works with all Snacks pickers that show files and uses the modern
+generic `add_files_to_terminal()` function, which automatically handles the
+appropriate file commands for each terminal type.
 
 ### 📋 Example Usage
 
