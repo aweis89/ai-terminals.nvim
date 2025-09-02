@@ -185,7 +185,8 @@ describe("ai-terminals.selection", function()
 			local expected_selection = { "first line", "secon" }
 			local expected_text = table.concat(expected_selection, "\n")
 			-- Corrected expected output format (no double newline at the end)
-			local expected_output = string.format("\n# Path: %s\n```%s\n%s\n```\n", _TEST_FILENAME, mock_bo.filetype, expected_text)
+			local expected_output =
+				string.format("\n# Path: %s\n```%s\n%s\n```\n", _TEST_FILENAME, mock_bo.filetype, expected_text)
 
 			assert.are.equal(expected_output, result)
 		end)

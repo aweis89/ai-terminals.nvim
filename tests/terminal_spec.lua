@@ -135,10 +135,9 @@ describe("ai-terminals.terminal", function()
 			assert.are.equal(0, #mock_feedkeys_calls)
 		end)
 
-
 		it("should use opts.term job_id if provided", function()
 			-- Mock a term object with a buffer number and send method
-			local mock_term_obj = { 
+			local mock_term_obj = {
 				buf = 999,
 				send = function(self, text, opts)
 					-- Simulate SnacksTerminalObject:send behavior
@@ -153,7 +152,7 @@ describe("ai-terminals.terminal", function()
 						vim.notify("Failed to send text to terminal", vim.log.levels.ERROR)
 						return
 					end
-				end
+				end,
 			}
 			-- Mock vim.b for that specific buffer number
 			local original_b_999 = vim.b[mock_term_obj.buf] -- Store original if exists
