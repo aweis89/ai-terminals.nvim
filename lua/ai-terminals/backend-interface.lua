@@ -79,6 +79,6 @@ function TerminalObject:close() end
 function TerminalObject:is_floating() end
 
 return {
-    TerminalBackend = TerminalBackend,
-    TerminalObject = TerminalObject,
+	TerminalBackend = TerminalBackend,
+	TerminalObject = TerminalObject,
 }

@@ -18,8 +18,8 @@
 
 ---@class tmux-toggle-popup.Logger
 local M = {
-  ---@diagnostic disable-next-line: missing-fields
-  p = {},
+	---@diagnostic disable-next-line: missing-fields
+	p = {},
 }
 
 ---@class tmux-toggle-popup.LoggerConfig
@@ -33,15 +33,15 @@ local M = {
 
 ---@type tmux-toggle-popup.LoggerConfig
 M.config = {
-  level = vim.log.levels.INFO,
-  plugin = "tmux-toggle-popup.nvim",
-  modes = {
-    { name = "trace", level = vim.log.levels.TRACE },
-    { name = "debug", level = vim.log.levels.DEBUG },
-    { name = "info", level = vim.log.levels.INFO },
-    { name = "warn", level = vim.log.levels.WARN },
-    { name = "error", level = vim.log.levels.ERROR },
-  },
+	level = vim.log.levels.INFO,
+	plugin = "tmux-toggle-popup.nvim",
+	modes = {
+		{ name = "trace", level = vim.log.levels.TRACE },
+		{ name = "debug", level = vim.log.levels.DEBUG },
+		{ name = "info", level = vim.log.levels.INFO },
+		{ name = "warn", level = vim.log.levels.WARN },
+		{ name = "error", level = vim.log.levels.ERROR },
+	},
 }
 
 ---@class tmux-toggle-popup.LoggerSetup
@@ -51,54 +51,54 @@ M.config = {
 
 ---@type tmux-toggle-popup.LoggerSetupFn
 function M.setup(config)
-  M.config.level = config.level or M.config.level
+	M.config.level = config.level or M.config.level
 
-  local log = function(mode, sprintf, ...)
-    if mode.level < M.config.level then
-      return
-    end
+	local log = function(mode, sprintf, ...)
+		if mode.level < M.config.level then
+			return
+		end
 
-    local console = string.format("[%-5s]: %s", mode.name:upper(), sprintf(...))
+		local console = string.format("[%-5s]: %s", mode.name:upper(), sprintf(...))
 
-    for _, line in ipairs(vim.split(console, "\n")) do
-      vim.notify(([[[%s] %s]]):format(M.config.plugin, line), mode.level)
-    end
-  end
+		for _, line in ipairs(vim.split(console, "\n")) do
+			vim.notify(([[[%s] %s]]):format(M.config.plugin, line), mode.level)
+		end
+	end
 
-  for _, mode in pairs(M.config.modes) do
-    ---@diagnostic disable-next-line: assign-type-mismatch
-    M[mode.name] = function(...)
-      return log(mode, function(...)
-        local passed = { ... }
-        local fmt = table.remove(passed, 1)
-        local inspected = {}
+	for _, mode in pairs(M.config.modes) do
+		---@diagnostic disable-next-line: assign-type-mismatch
+		M[mode.name] = function(...)
+			return log(mode, function(...)
+				local passed = { ... }
+				local fmt = table.remove(passed, 1)
+				local inspected = {}
 
-        for _, v in ipairs(passed) do
-          table.insert(inspected, vim.inspect(v))
-        end
+				for _, v in ipairs(passed) do
+					table.insert(inspected, vim.inspect(v))
+				end
 
-        return fmt:format(unpack(inspected))
-      end, ...)
-    end
+				return fmt:format(unpack(inspected))
+			end, ...)
+		end
 
-    ---@diagnostic disable-next-line: assign-type-mismatch
-    M.p[mode.name] = function(...)
-      return log(mode, function(...)
-        local passed = { ... }
-        local fmt = table.remove(passed, 1)
+		---@diagnostic disable-next-line: assign-type-mismatch
+		M.p[mode.name] = function(...)
+			return log(mode, function(...)
+				local passed = { ... }
+				local fmt = table.remove(passed, 1)
 
-        return fmt
-      end, ...)
-    end
-  end
+				return fmt
+			end, ...)
+		end
+	end
 
-  return M
+	return M
 end
 
 --- Sets the log level of the logger.
 ---@param level integer
 function M.set_log_level(level)
-  M.config.level = level
+	M.config.level = level
 end
 
 return M
