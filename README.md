@@ -2,7 +2,7 @@
 
 [![StandWithPalestine](https://raw.githubusercontent.com/Safouene1/support-palestine-banner/master/StandWithPalestine.svg)](https://github.com/Safouene1/support-palestine-banner/blob/master/Markdown-pages/Support.md)
 [![test](https://github.com/aweis89/ai-terminals.nvim/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/aweis89/ai-terminals.nvim/actions/workflows/test.yml)
-[![lint-test](https://github.com/aweis89/ai-terminals.nvim/actions/workflows/lint-test.yml/badge.svg?branch=master)](https://github.com/aweis89/ai-terminals.nvim/actions/workflows/lint-test.yml)
+[![lint](https://github.com/aweis89/ai-terminals.nvim/actions/workflows/lint-test.yml/badge.svg?branch=master)](https://github.com/aweis89/ai-terminals.nvim/actions/workflows/lint-test.yml)
 
 <img width="1512" height="949" alt="Screenshot 2025-07-27 at 11 04 59 AM" src="https://github.com/user-attachments/assets/4353b150-78bc-46ac-a1b7-f34b28738305" />
 
