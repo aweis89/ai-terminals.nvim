@@ -49,6 +49,10 @@ function SnacksTerminalObject:send(text, opts)
 			return
 		end
 	end
+
+	if opts.insert_mode then
+		vim.cmd("startinsert")
+	end
 end
 
 function SnacksTerminalObject:show()
@@ -294,7 +298,6 @@ function SnacksBackend:send(text, opts)
 		end
 	end
 end
-
 
 function SnacksBackend:reload_changes()
 	FileWatcher.reload_changes()
