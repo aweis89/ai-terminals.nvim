@@ -1,5 +1,8 @@
 # 🤖 AI Terminals Neovim Plugin
 
+[![test](https://github.com/aweis89/ai-terminals.nvim/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/aweis89/ai-terminals.nvim/actions/workflows/test.yml)
+[![lint-test](https://github.com/aweis89/ai-terminals.nvim/actions/workflows/lint-test.yml/badge.svg?branch=master)](https://github.com/aweis89/ai-terminals.nvim/actions/workflows/lint-test.yml)
+
 <img width="1512" height="949" alt="Screenshot 2025-07-27 at 11 04 59 AM" src="https://github.com/user-attachments/assets/4353b150-78bc-46ac-a1b7-f34b28738305" />
 
 This plugin **seamlessly integrates any command-line (CLI) AI coding agents**
