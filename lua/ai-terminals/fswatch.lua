@@ -6,6 +6,51 @@ local FileWatcher = {}
 -- Storage for active watchers by terminal name
 local _file_watchers = {}
 
+-- Guard: tracks files we intentionally write so fs_event callbacks ignore them
+local _internal_writes = {}
+local INTERNAL_WRITE_TTL_MS = 800
+
+local function _mark_internal_write(path)
+	if not path or path == "" then
+		return
+	end
+	_internal_writes[path] = true
+	-- Clear the mark shortly after to allow future external edits to be seen
+	vim.defer_fn(function()
+		_internal_writes[path] = nil
+	end, INTERNAL_WRITE_TTL_MS)
+end
+
+local function _is_internal_write(path)
+	return path and _internal_writes[path] == true
+end
+
+-- Save the buffer owning `path`, firing BufWritePre/Post as usual
+local function _save_buffer_for(path, force)
+	if not path or path == "" then
+		return
+	end
+	local bufnr = vim.fn.bufnr(path)
+	if bufnr == -1 then
+		return
+	end
+	if not vim.api.nvim_buf_is_loaded(bufnr) then
+		pcall(vim.fn.bufload, bufnr)
+	end
+	vim.api.nvim_buf_call(bufnr, function()
+		_mark_internal_write(path)
+		local ok, err
+		if force then
+			ok, err = pcall(vim.cmd, "silent keepalt write")
+		else
+			ok, err = pcall(vim.cmd, "silent keepalt update")
+		end
+		if not ok and err then
+			vim.notify("ai-terminals: write failed for " .. path .. "\n" .. tostring(err), vim.log.levels.WARN)
+		end
+	end)
+end
+
 ---Initialize watchers storage for a terminal
 ---@param terminal_name string The name of the terminal
 function FileWatcher.init_watchers(terminal_name)
@@ -59,18 +104,24 @@ function FileWatcher.setup_watchers(terminal_name, reload_callback)
 					return
 				end
 
+				-- Ignore events caused by our own writes
+				if _is_internal_write(file_path) or _is_internal_write(fname) then
+					return
+				end
+
 				vim.schedule(function()
-					reload_callback()
+					vim.notify("Calling realod for: " .. (fname or file_path), vim.log.levels.INFO)
+					reload_callback(file_path)
 				end)
 			end)
 		end
 	end
 
 	-- Single notification with all watched files
-	-- if #watched_files > 0 then
-	-- 	local message = "Setting up file watchers for:\n" .. table.concat(watched_files, "\n")
-	-- 	vim.notify(message)
-	-- end
+	if #watched_files > 0 then
+		local message = "Setting up file watchers for:\n" .. table.concat(watched_files, "\n")
+		vim.notify(message)
+	end
 end
 
 ---Create cleanup autocmd for when vim exits
@@ -91,9 +142,11 @@ end
 ---@param diff_callback function? Optional callback to trigger when files change (for diffing)
 function FileWatcher.setup_unified_watching(terminal_name, diff_callback)
 	-- Set up file watching for immediate reload
-	FileWatcher.setup_watchers(terminal_name, function()
+	FileWatcher.setup_watchers(terminal_name, function(path)
 		FileWatcher.reload_changes()
 
+		-- Save the actual buffer to trigger BufWritePre/Post and format-on-save
+		_save_buffer_for(path, true)
 		-- Trigger optional diff callback if provided
 		if diff_callback then
 			diff_callback()
