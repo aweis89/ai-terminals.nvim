@@ -404,12 +404,7 @@ function FileWatcher.setup_dir_watcher(terminal_name, reload_callback)
 		if not rel_cwd and not rel_root then
 			return false
 		end
-		-- Ask git directly first; this covers nested .gitignore and complex rules
-		local git_answer = git_check_ignore(fullpath)
-		if git_answer ~= nil then
-			return git_answer
-		end
-		-- Fast path: always ignore .git directory and its contents
+		-- Fast path: always ignore .git directory and its contents, regardless of git's answer
 		local function is_dot_git(p)
 			if not p or p == "" then
 				return false
@@ -418,6 +413,12 @@ function FileWatcher.setup_dir_watcher(terminal_name, reload_callback)
 		end
 		if is_dot_git(rel_cwd) or is_dot_git(rel_root) then
 			return true
+		end
+
+		-- Ask git only after the hard-coded .git exclusion; this covers nested .gitignore and complex rules
+		local git_answer = git_check_ignore(fullpath)
+		if git_answer ~= nil then
+			return git_answer
 		end
 		-- Unignore (negations) take precedence
 		for _, reg in ipairs(unignore_globs_git) do
