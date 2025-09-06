@@ -6,13 +6,13 @@
 
 <img width="1512" height="949" alt="Screenshot 2025-07-27 at 11 04 59 AM" src="https://github.com/user-attachments/assets/4353b150-78bc-46ac-a1b7-f34b28738305" />
 
-This plugin **seamlessly integrates any command-line (CLI) AI coding agents**
+This plugin integrates command-line (CLI) AI coding agents
 into Neovim. It provides a unified workflow for interacting with AI assistants
-directly within your editor, enabling seamless integration of terminal AI agents.
+directly in your editor.
 
 ## ⚡ Quick Start
 
-Using lazy.nvim
+Using lazy.nvim:
 
 ```lua
 {
@@ -22,7 +22,7 @@ Using lazy.nvim
 }
 ```
 
-Try it
+Try it:
 
 - Visual select code, then: `:lua require("ai-terminals").toggle("claude")`
 - Send diagnostics: `:lua require("ai-terminals").send_diagnostics("claude")`
@@ -53,7 +53,7 @@ require("ai-terminals").setup({
 For each enabled terminal, the following keymaps are automatically created:
 
 - `<prefix><key>` - Toggle terminal (normal/visual modes)
-- `<leader>ad<key>` - Send diagnostics to terminal (normal/visual modes)  
+- `<leader>ad<key>` - Send diagnostics to terminal (normal/visual modes)
 - `<leader>al<key>` - Add current file to terminal (normal mode)
 - `<leader>aL<key>` - Add all buffers to terminal (normal mode)
 - `<leader>ar<key>` - Run command and send output to terminal (normal mode)
@@ -83,10 +83,10 @@ This plugin integrates with existing command-line AI tools. These CLIs are
 optional — install only the ones you plan to use. If you don't intend to use a
 given tool, you do not need to install it.
 
-The tools below are preconfigured out of the box. If they are installed and on
+The tools below are preconfigured and ready to use. If they are installed and on
 your `PATH`, you can use them immediately. You can also add your own custom
 REPLs/CLIs — the plugin communicates via a PTY (Neovim terminal channels) and
-tmux `send-keys`, so any interactive process that reads from the terminal/STDIN
+ tmux `send-keys`, so any interactive process that reads from the terminal/stdin
 will work. See the Configuration section for the `terminals` table to add your
 own entries.
 
@@ -114,12 +114,12 @@ the robust ecosystems that already exist in terminal-based AI tools. It acts as
 a communication layer, providing:
 
 - **Universal CLI Integration:** Works with any terminal-based AI tool that accepts
-  stdin input - from Aider and Claude CLI to custom scripts and future tools.
-- **Data Bridge Architecture:** Creates a seamless bridge between your editor
+  stdin — from Aider and Claude CLI to custom scripts and future tools.
+- **Data Bridge Architecture:** Creates a bridge between your editor
   context (code selections, diagnostics, file paths) and terminal AI agents.
 - **Tool Agnostic:** Instead of locking you into specific AI services, it lets
   you use whatever CLI tools work best for your workflow.
-- **Stdin as API:** Leverages the universal stdin interface that all CLI tools
+- **stdin as API:** Leverages the universal stdin interface that all CLI tools
   provide, making integration straightforward and reliable.
 - **Composable Functions:** Exposes core functions like `send`, `toggle`, and
   `send_diagnostics` that can be combined to create custom workflows - from
@@ -183,7 +183,7 @@ want a single, configurable way to manage them within Neovim.
     `:h ai-terminals-configuration`.
 - **⌨️ Terminal Keymaps:** Define custom keymaps (`:h ai-terminals-configuration`)
   that only apply within the AI terminal buffers. **Note: Only works with the
-  snacks backend** - tmux terminals cannot execute Neovim functions.
+  Snacks backend** - tmux terminals cannot execute Neovim functions.
   - **Modes:** Specify which modes the keymap applies to (e.g., "t" for
     terminal mode, "n" for normal mode within the terminal). Defaults to "t".
   - **Actions:** Actions can be functions or strings (e.g., to close the
@@ -227,7 +227,7 @@ terminals = {
 }
 ```
 
-**File Picker Integration:** These functions integrate seamlessly with file
+**File Picker Integration:** These functions integrate with file
 pickers like Snacks.nvim. You can configure picker actions to add selected files
 directly to any terminal with keymaps like `<localleader>aa` for Aider or
 `<localleader>cc` for Claude. See the [Snacks Picker Integration](#-snacks-picker-integration)
@@ -243,13 +243,46 @@ The plugin includes some additional convenience functions:
   if not already running (`:h ai-terminals.aider_comment`).
 - **🔄 Diff Changes:** View changes made by AI tools in vim diff tabs.
   Requires `enable_diffing = true` in your config. Each changed file opens in
-  its own tab for review. Re-opening the terminal window resets the changes.
+  its own tab for review. Reopening the terminal window resets the changes.
   See `:help diff-mode` for vim's diff commands like `:diffput` and `:diffget`
   to manipulate changes. Alternatively, use `diff_changes({ delta = true })` to
   view changes with the delta diff viewer in a terminal. Note: Git-based diff
   tools (like gitsigns.nvim or fugitive.vim) provide more feature-rich diff
   management and are recommended for most workflows
   (`:h ai-terminals.diff_changes`).
+
+### 🧼 Format On External Change
+
+Automatically format buffers when the AI agent modifies them.
+
+- Default: disabled
+- Provider order when enabled:
+  - [conform.nvim](https://github.com/stevearc/conform.nvim) (if installed)
+  - none-ls/null-ls
+  - any attached LSP
+- Formatting runs asynchronously.
+
+Enable via `setup` (auto-detects the provider in the order above):
+
+```lua
+require("ai-terminals").setup({
+  trigger_formatting = {
+    enabled = true,
+  },
+})
+```
+
+Conform first, then LSP fallback (this is the default behavior):
+
+```lua
+require("ai-terminals").setup({
+  trigger_formatting = { enabled = true, timeout_ms = 5000 },
+})
+  -- Internally tries: require("conform").format({ lsp_format = "never" })
+  -- If conform.nvim isn't available, tries none-ls/null-ls, then any LSP.
+```
+
+Note: If conform.nvim is not installed or has no formatter for the filetype, it falls back to any attached LSP automatically. Formatting runs asynchronously (non-blocking).
 
 #### Deprecated Functions
 
@@ -310,7 +343,7 @@ control and to avoid external dependencies.
 **Note:** Calling `setup()` is only necessary if you want to customize the
 default configuration (e.g., change terminal commands, window dimensions, or the
 default position). The core functionality, including autocommands for file
-reloading and backup syncing, works out-of-the-box without calling `setup()`.
+reloading and backup syncing, works out of the box without calling `setup()`.
 
 ```lua
 -- In your Neovim configuration (e.g., lua/plugins/ai-terminals.lua)
@@ -403,7 +436,7 @@ header will be formatted according to that terminal's template:
 
 ## 🔌 Snacks Picker Integration
 
-The plugin integrates seamlessly with [Snacks.nvim](https://github.com/folke/snacks.nvim)
+The plugin integrates with [Snacks.nvim](https://github.com/folke/snacks.nvim)
 pickers, allowing you to add selected files from any picker directly to your AI
 terminals. Here's a complete working example:
 

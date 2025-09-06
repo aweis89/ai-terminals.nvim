@@ -1,8 +1,5 @@
 local DiffLib = require("ai-terminals.diff")
 local FileWatcher = require("ai-terminals.fswatch")
--- Forward declarations for tmux popup helper
-local tmux_popup
-local get_tmux_popup
 
 ---@class TmuxTerminalObject : TerminalObject
 ---@field session table Tmux session configuration
@@ -71,7 +68,7 @@ function TmuxTerminalObject:send(text, opts)
 		if newline_count > 0 or string.len(text) > 0 then
 			if newline_count > 0 then
 				local down_keys = {}
-				for i = 1, newline_count do
+				for _ = 1, newline_count do
 					table.insert(down_keys, "Down")
 				end
 				local down_cmd = string.format(
@@ -95,7 +92,7 @@ function TmuxTerminalObject:send(text, opts)
 
 	-- Check if session needs startup delay
 	if TmuxBackend._needs_startup_delay(session_name) then
-		vim.notify("Tmux: deferring send 1000ms for new session " .. session_name, vim.log.levels.INFO)
+		vim.notify("Tmux: deferring send 1000ms for new session " .. session_name, vim.log.levels.DEBUG)
 		vim.defer_fn(send_text, 1000)
 	else
 		send_text()
@@ -140,12 +137,9 @@ local TmuxBackend = {
 -- Track newly created sessions that need startup delay
 local newly_created_sessions = {}
 
--- Keep track of registered terminals for autocmd setup
-local registered_terminals = {}
-
 -- Lazy initialization of tmux-toggle-popup
-tmux_popup = nil
-function get_tmux_popup()
+local tmux_popup = nil
+local function get_tmux_popup()
 	if not tmux_popup then
 		tmux_popup = require("ai-terminals.vendor.tmux-toggle-popup")
 	end
@@ -253,7 +247,7 @@ end
 ---@param terminal_name string The name of the terminal
 ---@param position string|nil Position parameter (ignored - tmux uses width/height instead)
 ---@return table?, table?
-function TmuxBackend:_resolve_tmux_session_options(terminal_name, position)
+function TmuxBackend:_resolve_tmux_session_options(terminal_name, _position)
 	local config = require("ai-terminals.config").config
 	local term_config = config.terminals[terminal_name]
 	if not term_config then
@@ -329,7 +323,7 @@ function TmuxBackend:toggle(terminal_name, position)
 		return nil
 	end
 
-	local tmux_popup = get_tmux_popup()
+	get_tmux_popup()
 
 	-- Check if we're in tmux
 	if not vim.env.TMUX then
@@ -338,11 +332,11 @@ function TmuxBackend:toggle(terminal_name, position)
 	end
 
 	-- Determine if the session already exists before toggling
-	local session_name = TmuxBackend._session_name(session_opts)
+	local session_name = TmuxBackend._session_name(session_opts or {})
 	local existed_before = TmuxBackend._has_session(session_name)
 
 	-- Try to open/toggle the popup
-	local opened = TmuxBackend._open_popup(session_opts)
+	local opened = TmuxBackend._open_popup(session_opts or {})
 	if not opened then
 		return nil
 	end
@@ -360,7 +354,7 @@ function TmuxBackend:toggle(terminal_name, position)
 	return term_obj
 end
 
-function TmuxBackend:focus(term)
+function TmuxBackend:focus()
 	-- Tmux popups automatically steal focus when opened, no additional action needed
 end
 
@@ -370,10 +364,10 @@ function TmuxBackend:get(terminal_name, position)
 		return nil, false
 	end
 
-	local tmux_popup = get_tmux_popup()
+	get_tmux_popup()
 
 	-- Check if session already exists
-	local session_name = TmuxBackend._session_name(session_opts)
+	local session_name = TmuxBackend._session_name(session_opts or {})
 	local exists = TmuxBackend._has_session(session_name)
 
 	if exists then
@@ -383,7 +377,7 @@ function TmuxBackend:get(terminal_name, position)
 		return term_obj, false
 	else
 		-- Create new session without showing it (to avoid double popup)
-		local new_term = self:_create_hidden_session(terminal_name, session_opts)
+		local new_term = self:_create_hidden_session(terminal_name, session_opts or {})
 		return new_term, true
 	end
 end
@@ -398,9 +392,14 @@ function TmuxBackend:get_hidden(terminal_name, position)
 		return nil, false
 	end
 
-	local tmux_popup = get_tmux_popup()
+	get_tmux_popup()
 
 	-- Check if session already exists
+	if not session_opts then
+		-- Type guard for diagnostics; should not happen if term_config is valid
+		return nil, false
+	end
+
 	local session_name = TmuxBackend._session_name(session_opts)
 	local exists = TmuxBackend._has_session(session_name)
 
@@ -425,7 +424,7 @@ function TmuxBackend:_create_hidden_session(terminal_name, session_opts)
 		return nil
 	end
 
-	local tmux_popup = get_tmux_popup()
+	get_tmux_popup()
 	local session_name = TmuxBackend._session_name(session_opts)
 
 	-- Build the command to run in the session
@@ -496,11 +495,8 @@ function TmuxBackend:register_autocmds(term)
 	local terminal_name = term.terminal_name
 	local config = require("ai-terminals.config").config
 
-	-- Set up diffing callback if enabled
-	local diff_callback = nil
-
 	-- Use unified file watching
-	FileWatcher.setup_unified_watching(terminal_name, diff_callback)
+	FileWatcher.setup_unified_watching(terminal_name)
 
 	-- Set up diffing pre-sync if enabled (backend-specific responsibility)
 	if config.enable_diffing then

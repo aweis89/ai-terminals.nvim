@@ -179,7 +179,7 @@ Backend differences:
 
 - Registration:
   - SnacksBackend.register_autocmds(term) and TmuxBackend.register_autocmds(term) call:
-    - FileWatcher.setup_unified_watching(terminal_name, diff_callback=nil).
+    - FileWatcher.setup_unified_watching(terminal_name).
     - If Config.enable_diffing: Diff.pre_sync_code_base() now (and for Snacks, BufEnter on terminal to keep it fresh).
 
 - Diff.pre_sync_code_base()
@@ -202,7 +202,7 @@ Backend differences:
 
 ### 9) File Watching and Reload
 
-- FileWatcher.setup_unified_watching(terminal_name, diff_callback?)
+- FileWatcher.setup_unified_watching(terminal_name)
   - For all windows in current tab, if buffer has a real file, set libuv fs_event watchers.
   - On changes: FileWatcher.reload_changes() → iterate loaded buffers and :checktime each readable file.
   - Adds VimLeavePre autocmd to stop watchers for the terminal.

@@ -3,6 +3,8 @@
 ---and reloading buffers across different terminal backends
 local FileWatcher = {}
 
+local Config = require("ai-terminals.config")
+
 -- Storage for active watchers by terminal name
 local _file_watchers = {}
 
@@ -88,16 +90,10 @@ end
 
 ---Unified setup for file watching with optional diffing callback
 ---@param terminal_name string The name of the terminal
----@param diff_callback function? Optional callback to trigger when files change (for diffing)
-function FileWatcher.setup_unified_watching(terminal_name, diff_callback)
+function FileWatcher.setup_unified_watching(terminal_name)
 	-- Set up file watching for immediate reload
 	FileWatcher.setup_watchers(terminal_name, function()
 		FileWatcher.reload_changes()
-
-		-- Trigger optional diff callback if provided
-		if diff_callback then
-			diff_callback()
-		end
 	end)
 
 	-- Set up cleanup
@@ -125,16 +121,93 @@ function FileWatcher.reload_changes()
 		end
 
 		-- Single notification with all reloaded files
-		-- if #reloaded_files > 0 then
-		-- 	local message = string.format(
-		-- 		"Reloaded %d file%s:\n%s",
-		-- 		#reloaded_files,
-		-- 		#reloaded_files > 1 and "s" or "",
-		-- 		table.concat(reloaded_files, "\n")
-		-- 	)
-		-- 	vim.notify(message, vim.log.levels.INFO)
-		-- end
+		if #reloaded_files > 0 then
+			local message = string.format(
+				"Reloaded %d file%s:\n%s",
+				#reloaded_files,
+				#reloaded_files > 1 and "s" or "",
+				table.concat(reloaded_files, "\n")
+			)
+			vim.notify(message, vim.log.levels.DEBUG)
+		end
 	end)
 end
+
+-- Returns true if any attached client matches one of the given names
+-- and (optionally) supports `textDocument/formatting`.
+local function has_client(bufnr, names, require_format_capability)
+	local method = require_format_capability and "textDocument/formatting" or nil
+	local clients = vim.lsp.get_clients({ bufnr = bufnr, method = method })
+	if not names or #names == 0 then
+		return #clients > 0
+	end
+	local set = {}
+	for _, n in ipairs(names) do
+		set[n] = true
+	end
+	for _, c in ipairs(clients) do
+		if set[c.name] then
+			return true
+		end
+	end
+	return false
+end
+
+local function format_on_external_change(args)
+	local cfg = Config.config.trigger_formatting
+	if not cfg.enabled then
+		return
+	end
+
+	local bufnr = args.buf
+	if not vim.api.nvim_buf_is_loaded(bufnr) then
+		return
+	end
+	if not vim.bo[bufnr].modifiable or vim.bo[bufnr].readonly then
+		return
+	end
+
+	local timeout = cfg.timeout_ms or 5000
+
+	local log = function(msg, level)
+		if Config.config.trigger_formatting and Config.config.trigger_formatting.notify == false then
+			return
+		end
+		local file = vim.api.nvim_buf_get_name(bufnr)
+		file = vim.fn.fnamemodify(file, ":t")
+		vim.notify(msg .. ": " .. file, level or vim.log.levels.INFO, { title = "FormatOnExternalChange" })
+	end
+
+	-- Always asynchronous: conform.nvim → none-ls/null-ls → any LSP
+	local ok, conform = pcall(require, "conform")
+	if ok then
+		log("formatting with conform.nvim")
+		conform.format({ bufnr = bufnr, async = true, timeout_ms = timeout, lsp_format = "never" })
+		return
+	end
+	if has_client(bufnr, { "none-ls", "null-ls" }, true) then
+		log("formatting with none-ls/null-ls")
+		vim.lsp.buf.format({
+			bufnr = bufnr,
+			async = true,
+			timeout_ms = timeout,
+			filter = function(c)
+				return (c.name == "none-ls" or c.name == "null-ls")
+			end,
+		})
+		return
+	elseif has_client(bufnr, {}, true) then
+		log("formatting with LSP")
+		vim.lsp.buf.format({ bufnr = bufnr, async = true, timeout_ms = timeout })
+		return
+	else
+		log("no formatter attached; skipping", vim.log.levels.DEBUG)
+	end
+end
+
+vim.api.nvim_create_autocmd("FileChangedShellPost", {
+	group = vim.api.nvim_create_augroup("FormatOnExternalChange", { clear = true }),
+	callback = format_on_external_change,
+})
 
 return FileWatcher

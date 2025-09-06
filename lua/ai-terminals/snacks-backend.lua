@@ -318,11 +318,8 @@ function SnacksBackend:register_autocmds(term)
 
 	local config = require("ai-terminals.config").config
 
-	-- Set up diffing callback if enabled
-	local diff_callback = nil
-
 	-- Use unified file watching instead of BufLeave events
-	FileWatcher.setup_unified_watching(term.terminal_name, diff_callback)
+	FileWatcher.setup_unified_watching(term.terminal_name)
 
 	-- Set up diffing pre-sync if enabled (backend-specific responsibility)
 	if config.enable_diffing then
