@@ -122,7 +122,7 @@ Config.config = {
 		-- Note: Directory patterns should be recursive globs. For convenience,
 		-- values ending with "/" are treated as that directory and all
 		-- descendants (e.g., ".git/" becomes ".git/**").
-		ignore = { "**/.git/**" },
+		ignore = {},
 		-- When true, also read ignore patterns from <git root>/.gitignore
 		-- and merge them. Negations (!) are honored. Patterns are interpreted
 		-- relative to the git root. Default: false
