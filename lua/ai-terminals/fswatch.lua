@@ -5,33 +5,6 @@ local FileWatcher = {}
 
 local Config = require("ai-terminals.config")
 
--- Tracks files we're intentionally writing so our fs watcher
--- doesn't react to our own save events and loop
-local _suppress_events = {}
-
----Suppress fs events for a path for a short window
----@param path string
----@param ms integer|nil  Duration in milliseconds (default 500)
----@return boolean suppressed  True if a suppression window is already active
-local function suppress_path_for(path, ms)
-	if not path or path == "" then
-		return false
-	end
-
-	-- If already suppressed, signal caller to skip any write
-	if _suppress_events[path] then
-		return true
-	end
-
-	-- Start a new suppression window and allow caller to proceed
-	_suppress_events[path] = true
-	vim.defer_fn(function()
-		_suppress_events[path] = nil
-	end, ms or 500)
-
-	return false
-end
-
 -- Storage for active watchers by terminal name
 local _file_watchers = {}
 
