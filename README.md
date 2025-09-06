@@ -470,7 +470,6 @@ requiring additional tool calls.
 ```lua
 terminals = {
   my_ai_tool = {
-    cmd = "my-ai-cli",
     path_header_template = "File: %s", -- Custom format
   },
 }
@@ -992,4 +991,3 @@ check the [issues page](https://github.com/aweis89/ai-terminals.nvim/issues).
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE)
 file for details.
-return FileWatcher
