@@ -140,7 +140,7 @@ function FileWatcher.reload_changes()
 end
 
 local function has_client(bufnr, names)
-	local clients = vim.lsp.get_active_clients({ bufnr = bufnr })
+	local clients = vim.lsp.get_clients({ bufnr = bufnr })
 	local set = {}
 	for _, n in ipairs(names) do
 		set[n] = true
