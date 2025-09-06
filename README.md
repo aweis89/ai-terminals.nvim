@@ -284,6 +284,56 @@ require("ai-terminals").setup({
 
 Note: If conform.nvim is not installed or has no formatter for the filetype, it falls back to any attached LSP automatically. Formatting runs asynchronously (non-blocking).
 
+### 👀 Directory Watch Mode (Optional)
+
+Control what gets watched for external edits made by your AI agent.
+
+- Default: disabled (`watch_cwd.enabled = false`).
+- When enabled, the plugin watches the current working directory recursively and will:
+  - Load files changed by the agent even if they were not previously open in Neovim.
+  - Reload and (if `trigger_formatting.enabled = true`) format those files after edits.
+- When disabled, only files that were already open in Neovim are reloaded/formatted.
+
+Enable in setup:
+
+```lua
+require("ai-terminals").setup({
+  watch_cwd = { enabled = true },      -- watch entire CWD (recursively)
+  trigger_formatting = { enabled = true }, -- optional: auto-format on reload
+})
+```
+
+#### Ignore Patterns (Globs)
+
+You can exclude paths from directory watching using glob patterns.
+
+- Examples: `"**/.git/**"`, `"**/node_modules/**"`, `"**/.venv/**"`, `"**/*.log"`
+- Matching is performed against the path relative to your current working directory.
+- Ignored files will not be loaded into Neovim nor formatted when changed by the agent.
+
+```lua
+require("ai-terminals").setup({
+  watch_cwd = {
+    enabled = true,
+    ignore = {
+      "**/.git/**",
+      "**/node_modules/**",
+      "**/.venv/**",
+      "**/*.log",
+    },
+    -- Also merge ignore rules from <git root>/.gitignore
+    -- Negations (!) are supported; patterns are evaluated relative to repo root
+    gitignore = true,
+  },
+  trigger_formatting = { enabled = true },
+})
+```
+
+Notes
+- .gitignore semantics supported: comments (#), negation (!), root-anchored patterns (leading “/”), directory-only (trailing “/”), and “**”.
+- Only the repository root .gitignore is read; per-directory .gitignore files are not currently merged.
+- Matching uses paths relative to the git root for .gitignore rules, and paths relative to your current working directory for `watch_cwd.ignore`.
+
 #### Deprecated Functions
 
 These functions still work but are deprecated in favor of the generic file management:
@@ -340,7 +390,6 @@ allows you to quickly hide the terminal popup from within tmux.
 The code has been integrated directly into this repository for additional
 control and to avoid external dependencies.
 
-**Note:** Calling `setup()` is only necessary if you want to customize the
 default configuration (e.g., change terminal commands, window dimensions, or the
 default position). The core functionality, including autocommands for file
 reloading and backup syncing, works out of the box without calling `setup()`.
@@ -943,3 +992,4 @@ check the [issues page](https://github.com/aweis89/ai-terminals.nvim/issues).
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE)
 file for details.
+return FileWatcher

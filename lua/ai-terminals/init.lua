@@ -520,10 +520,12 @@ function M.add_files_to_terminal(terminal_name, files, opts)
 	local command
 	-- Use fallback template if none configured
 	if not template then
-		-- Default fallback: "@<path-a> @<path-b>"
+		-- Fallback: format each path using the terminal's path_header_template
+		-- to keep behavior consistent with visual selection handling.
+		local path_tmpl = terminal_config.path_header_template or "@%s"
 		local formatted_files = {}
 		for _, file in ipairs(absolute_files) do
-			table.insert(formatted_files, "@" .. file)
+			table.insert(formatted_files, string.format(path_tmpl, file))
 		end
 		command = table.concat(formatted_files, " ")
 	else

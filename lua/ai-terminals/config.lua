@@ -42,6 +42,7 @@ local Config = {}
 ---@field env table|nil
 ---@field diff_close_keymap string|nil Default: "q"
 ---@field trigger_formatting { enabled?: boolean, timeout_ms?: integer, notify?: boolean }
+---@field watch_cwd { enabled?: boolean, ignore?: string[], gitignore?: boolean }|nil When enabled, watch the current working directory (recursively) instead of only open files. `ignore` is a list of glob patterns to exclude (e.g., "**/node_modules/**"). If `gitignore` is true, globs are read from the repository's .gitignore and merged.
 ---@field prompts table<string, string | fun(): string>|nil A table of reusable prompt texts, keyed by a name. Values can be strings or functions returning strings (evaluated at runtime).
 ---@field prompt_keymaps {key: string, term: string, prompt: string, desc: string, include_selection?: boolean, submit?: boolean}[]|nil Keymaps for prompts (array of tables). `include_selection` (optional, boolean, default: true): If true, the keymap works in normal & visual modes (prefixing selection in visual). If false, it only works in normal mode (no selection). `submit` (optional, boolean, default: true): If true, sends a newline after the prompt.
 ---@field terminal_keymaps {key: string, action: string | fun(), desc: string, modes?: string | string[]}[]|nil Keymaps that only apply within terminal buffers (array of tables). `modes` (optional, string or array of strings, default: "t"): Specifies the modes for the keymap.
@@ -86,7 +87,7 @@ Config.config = {
 		},
 		codex = {
 			cmd = "codex",
-			path_header_template = "@%s",
+			path_header_template = "%s",
 		},
 		cursor = {
 			cmd = "cursor-agent",
@@ -111,6 +112,19 @@ Config.config = {
 	default_position = "right", -- Default position if none is specified in toggle/open/get
 	enable_diffing = false, -- Enable backup sync and diff commands. Disabling this prevents `diff_changes` and `close_diff` from working.
 	backend = vim.env.TMUX and "tmux" or "snacks", -- Auto-detect: use tmux backend if in tmux session, otherwise snacks
+
+	-- Watch strategy: when enabled, watch the entire current working directory
+	-- recursively instead of only the files open in the current tab. Defaults to false.
+	watch_cwd = {
+		enabled = false,
+		-- Glob patterns to ignore when watching the directory recursively.
+		-- Examples: "**/.git/**", "**/node_modules/**", "**/.venv/**", "**/*.log"
+		ignore = {},
+		-- When true, also read ignore patterns from <git root>/.gitignore
+		-- and merge them. Negations (!) are honored. Patterns are interpreted
+		-- relative to the git root. Default: false
+		gitignore = false,
+	},
 
 	-- Trigger formatting on external file changes (FileChangedShellPost)
 	-- Default disabled. When enabled, automatically formats the reloaded buffer.

@@ -33,7 +33,20 @@ end
 ---Set up file watchers for all files in the current tabpage
 ---@param terminal_name string The name of the terminal
 ---@param reload_callback function Function to call when files change
+
 function FileWatcher.setup_watchers(terminal_name, reload_callback)
+	local watch_cwd = (Config.config and Config.config.watch_cwd) or { enabled = false }
+	if watch_cwd.enabled then
+		FileWatcher.setup_dir_watcher(terminal_name, reload_callback)
+	else
+		FileWatcher.file_watchers(terminal_name, reload_callback)
+	end
+end
+
+---Set up file watchers for all files in the current tabpage
+---@param terminal_name string The name of the terminal
+---@param reload_callback function Function to call when files change
+function FileWatcher.file_watchers(terminal_name, reload_callback)
 	-- Clean up old watchers before setting up new ones
 	FileWatcher.cleanup_watchers(terminal_name)
 	FileWatcher.init_watchers(terminal_name)
@@ -175,7 +188,7 @@ local function format_on_external_change(args)
 		end
 		local file = vim.api.nvim_buf_get_name(bufnr)
 		file = vim.fn.fnamemodify(file, ":t")
-		vim.notify(msg .. ": " .. file, level or vim.log.levels.INFO, { title = "FormatOnExternalChange" })
+		vim.notify(msg .. ": " .. file, level or vim.log.levels.DEBUG, { title = "FormatOnExternalChange" })
 	end
 
 	-- Always asynchronous: conform.nvim → none-ls/null-ls → any LSP
@@ -209,5 +222,172 @@ vim.api.nvim_create_autocmd("FileChangedShellPost", {
 	group = vim.api.nvim_create_augroup("FormatOnExternalChange", { clear = true }),
 	callback = format_on_external_change,
 })
+
+---@param terminal_name string The name of the terminal
+---@param reload_callback function Function to call when files change
+function FileWatcher.setup_dir_watcher(terminal_name, reload_callback)
+	-- Clean up old watchers before setting up new ones
+	FileWatcher.cleanup_watchers(terminal_name)
+	FileWatcher.init_watchers(terminal_name)
+
+	local watch = vim.uv.new_fs_event()
+	if not watch then
+		vim.notify("Failed to create fs_event watcher", vim.log.levels.ERROR)
+		return
+	end
+	-- Store the directory watcher to prevent garbage collection and allow cleanup
+	table.insert(_file_watchers[terminal_name], watch)
+	local dir = vim.fn.getcwd()
+
+	-- Helper to get repo root (if any)
+	local function get_git_root()
+		local root = vim.fn.system("git rev-parse --show-toplevel 2>/dev/null"):gsub("\n", "")
+		if vim.v.shell_error == 0 and root ~= "" then
+			return root
+		end
+		return nil
+	end
+
+	local git_root = get_git_root()
+
+	local function relpath(base, path)
+		if not base or base == "" or not path or path == "" then
+			return path
+		end
+		base = base:gsub("/+%$", ""):gsub("/+", "/")
+		path = path:gsub("/+", "/")
+		if path:sub(1, #base) == base then
+			local rest = path:sub(#base + 1)
+			if rest:sub(1, 1) == "/" then
+				rest = rest:sub(2)
+			end
+			return rest
+		end
+		return path
+	end
+
+	-- Prepare ignore patterns (globs -> vim regex) once
+	local ignore_globs_user = {}
+	local ignore_globs_git = {}
+	local unignore_globs_git = {}
+	local cfg = (Config.config and Config.config.watch_cwd) or {}
+	if type(cfg.ignore) == "table" then
+		for _, pat in ipairs(cfg.ignore) do
+			if type(pat) == "string" and pat ~= "" then
+				local ok, reg = pcall(vim.fn.glob2regpat, pat)
+				if ok and type(reg) == "string" and reg ~= "" then
+					table.insert(ignore_globs_user, reg)
+				end
+			end
+		end
+	end
+
+	-- Optionally read patterns from .gitignore at repo root
+	if cfg.gitignore then
+		local root = git_root or dir
+		local gitignore_path = root .. "/.gitignore"
+		if vim.fn.filereadable(gitignore_path) == 1 then
+			local lines = vim.fn.readfile(gitignore_path)
+			for _, line in ipairs(lines) do
+				local pat = tostring(line)
+				-- Trim whitespace
+				pat = pat:gsub("^%s+", ""):gsub("%s+$", "")
+				if pat ~= "" and not pat:match("^#") then
+					local is_unignore = false
+					if pat:sub(1, 1) == "!" then
+						is_unignore = true
+						pat = pat:sub(2)
+					end
+					-- Convert .gitignore semantics to globs relative to git root
+					local anchored = pat:sub(1, 1) == "/"
+					if anchored then
+						pat = pat:sub(2)
+					else
+						-- Unanchored: match anywhere under root
+						pat = "**/" .. pat
+					end
+					-- Directory-only patterns end with '/'
+					if pat:sub(-1) == "/" then
+						pat = pat .. "**"
+					end
+					-- Compile to regex
+					local ok, reg = pcall(vim.fn.glob2regpat, pat)
+					if ok and type(reg) == "string" and reg ~= "" then
+						if is_unignore then
+							table.insert(unignore_globs_git, reg)
+						else
+							table.insert(ignore_globs_git, reg)
+						end
+					end
+				end
+			end
+		end
+	end
+
+	local function is_ignored(rel_cwd, rel_root)
+		-- Prefer checking against git-root relative path for gitignore rules
+		if not rel_cwd and not rel_root then
+			return false
+		end
+		-- Unignore (negations) take precedence
+		for _, reg in ipairs(unignore_globs_git) do
+			if rel_root and vim.fn.match(rel_root, reg) ~= -1 then
+				return false
+			end
+		end
+		for _, reg in ipairs(ignore_globs_git) do
+			if rel_root and vim.fn.match(rel_root, reg) ~= -1 then
+				return true
+			end
+		end
+		for _, reg in ipairs(ignore_globs_user) do
+			if rel_cwd and vim.fn.match(rel_cwd, reg) ~= -1 then
+				return true
+			end
+		end
+		return false
+	end
+	watch:start(dir, { recursive = true }, function(err, fname, events)
+		if err then
+			return
+		end
+
+		vim.schedule(function()
+			-- If a concrete file changed, ensure it's present as a buffer
+			if type(fname) == "string" and fname ~= "" then
+				-- Skip ignored paths. We match .gitignore rules against the path
+				-- relative to the git root (if available) and custom ignores
+				-- against the path relative to the current working directory.
+				local fullpath = vim.fn.fnamemodify(dir .. "/" .. fname, ":p")
+				local rel_root = git_root and relpath(git_root, fullpath) or fname
+				if is_ignored(fname, rel_root) then
+					return
+				end
+				local stat = vim.uv.fs_stat(fullpath)
+				if stat and stat.type == "file" and vim.fn.filereadable(fullpath) == 1 then
+					local bufnr = vim.fn.bufnr(fullpath)
+					if bufnr == -1 then
+						vim.notify("calling :badd: " .. fullpath, vim.log.levels.DEBUG)
+						pcall(vim.cmd.badd, { args = { fullpath } })
+						bufnr = vim.fn.bufnr(fullpath)
+					end
+
+					-- Ensure the buffer is loaded so LSP/filetype autocmds can attach
+					if bufnr > 0 and not vim.api.nvim_buf_is_loaded(bufnr) then
+						vim.notify("calling bufload: " .. fullpath, vim.log.levels.DEBUG)
+						pcall(vim.fn.bufload, bufnr)
+						-- Trigger FileChangedShellPost to run any listeners (e.g., formatters) for this file
+						pcall(vim.api.nvim_exec_autocmds, "FileChangedShellPost", { buffer = bufnr })
+					end
+				end
+				-- Reload all open buffers after a relevant file change
+				reload_callback()
+				return
+			end
+			-- If we don't know the specific file, do a general reload
+			reload_callback()
+		end)
+	end)
+end
 
 return FileWatcher
