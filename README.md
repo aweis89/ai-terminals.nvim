@@ -115,7 +115,7 @@ a communication layer, providing:
 
 - **Universal CLI Integration:** Works with any terminal-based AI tool that accepts
   stdin — from Aider and Claude CLI to custom scripts and future tools.
-- **Data Bridge Architecture:** Creates a seamless bridge between your editor
+- **Data Bridge Architecture:** Creates a bridge between your editor
   context (code selections, diagnostics, file paths) and terminal AI agents.
 - **Tool Agnostic:** Instead of locking you into specific AI services, it lets
   you use whatever CLI tools work best for your workflow.
