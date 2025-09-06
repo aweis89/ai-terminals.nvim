@@ -133,8 +133,14 @@ function FileWatcher.reload_changes()
 	end)
 end
 
-local function has_client(bufnr, names)
-	local clients = vim.lsp.get_clients({ bufnr = bufnr })
+-- Returns true if any attached client matches one of the given names
+-- and (optionally) supports `textDocument/formatting`.
+local function has_client(bufnr, names, require_format_capability)
+	local method = require_format_capability and "textDocument/formatting" or nil
+	local clients = vim.lsp.get_clients({ bufnr = bufnr, method = method })
+	if not names or #names == 0 then
+		return #clients > 0
+	end
 	local set = {}
 	for _, n in ipairs(names) do
 		set[n] = true
@@ -163,32 +169,40 @@ local function format_on_external_change(args)
 
 	local timeout = cfg.timeout_ms or 5000
 
-	local log = function(msg)
+	local log = function(msg, level)
+		if Config.config.trigger_formatting and Config.config.trigger_formatting.notify == false then
+			return
+		end
 		local file = vim.api.nvim_buf_get_name(bufnr)
 		file = vim.fn.fnamemodify(file, ":t")
-		vim.notify(msg .. ": " .. file, vim.log.levels.INFO, { title = "FormatOnExternalChange" })
+		vim.notify(msg .. ": " .. file, level or vim.log.levels.INFO, { title = "FormatOnExternalChange" })
 	end
 
-	-- Always asynchronous: Conform → none/null-ls → any LSP
+	-- Always asynchronous: conform.nvim → none-ls/null-ls → any LSP
 	local ok, conform = pcall(require, "conform")
 	if ok then
-		log("formatting with conform")
+		log("formatting with conform.nvim")
 		conform.format({ bufnr = bufnr, async = true, timeout_ms = timeout, lsp_format = "never" })
 		return
 	end
-	if has_client(bufnr, { "none-ls", "null-ls" }) then
-		log("formatting with null-ls/none-ls")
+	if has_client(bufnr, { "none-ls", "null-ls" }, true) then
+		log("formatting with none-ls/null-ls")
 		vim.lsp.buf.format({
 			bufnr = bufnr,
 			async = true,
 			timeout_ms = timeout,
 			filter = function(c)
-				return c.name == "none-ls" or c.name == "null-ls"
+				return (c.name == "none-ls" or c.name == "null-ls")
 			end,
 		})
 		return
+	elseif has_client(bufnr, {}, true) then
+		log("formatting with LSP")
+		vim.lsp.buf.format({ bufnr = bufnr, async = true, timeout_ms = timeout })
+		return
+	else
+		log("no formatter attached; skipping", vim.log.levels.DEBUG)
 	end
-	vim.lsp.buf.format({ bufnr = bufnr, async = true, timeout_ms = timeout })
 end
 
 vim.api.nvim_create_autocmd("FileChangedShellPost", {
