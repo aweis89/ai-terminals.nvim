@@ -251,6 +251,41 @@ The plugin includes some additional convenience functions:
   management and are recommended for most workflows
   (`:h ai-terminals.diff_changes`).
 
+### 🧼 Format On External Change
+
+Format buffers automatically when they are reloaded due to an external file
+write (e.g., your AI tool edited the file). This hooks into Neovim’s
+`FileChangedShellPost` event, which fires after `autoread` reloads the buffer.
+
+- Default: disabled
+- Providers: built‑in LSP or [conform.nvim](https://github.com/stevearc/conform.nvim)
+- LSP filter: restrict which client(s) can format (e.g., `none-ls`, `null-ls`, `eslint`), or allow any
+- Options: `timeout_ms`, `async`, `notify`
+
+Enable via `setup` (auto-detects provider in order: Conform → none-ls/null-ls → any LSP). Formatting runs asynchronously. This option must be a table:
+
+```lua
+require("ai-terminals").setup({
+  trigger_formatting = {
+    enabled = true,
+    timeout_ms = 5000,
+    notify = true,
+  },
+})
+```
+
+Conform first, then LSP fallback (this is the default behavior):
+
+```lua
+require("ai-terminals").setup({
+  trigger_formatting = { enabled = true, timeout_ms = 5000 },
+})
+-- Internally first tries: require("conform").format({ lsp_format = "never" })
+-- If conform isn't available, tries none-ls/null-ls, then any LSP.
+```
+
+Note: If Conform is not installed or has no formatter for the filetype, it falls through to LSP automatically. Formatting is always non-blocking (async).
+
 #### Deprecated Functions
 
 These functions still work but are deprecated in favor of the generic file management:

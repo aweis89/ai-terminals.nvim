@@ -3,6 +3,35 @@
 ---and reloading buffers across different terminal backends
 local FileWatcher = {}
 
+local Config = require("ai-terminals.config")
+
+-- Tracks files we're intentionally writing so our fs watcher
+-- doesn't react to our own save events and loop
+local _suppress_events = {}
+
+---Suppress fs events for a path for a short window
+---@param path string
+---@param ms integer|nil  Duration in milliseconds (default 500)
+---@return boolean suppressed  True if a suppression window is already active
+local function suppress_path_for(path, ms)
+	if not path or path == "" then
+		return false
+	end
+
+	-- If already suppressed, signal caller to skip any write
+	if _suppress_events[path] then
+		return true
+	end
+
+	-- Start a new suppression window and allow caller to proceed
+	_suppress_events[path] = true
+	vim.defer_fn(function()
+		_suppress_events[path] = nil
+	end, ms or 500)
+
+	return false
+end
+
 -- Storage for active watchers by terminal name
 local _file_watchers = {}
 
@@ -125,16 +154,78 @@ function FileWatcher.reload_changes()
 		end
 
 		-- Single notification with all reloaded files
-		-- if #reloaded_files > 0 then
-		-- 	local message = string.format(
-		-- 		"Reloaded %d file%s:\n%s",
-		-- 		#reloaded_files,
-		-- 		#reloaded_files > 1 and "s" or "",
-		-- 		table.concat(reloaded_files, "\n")
-		-- 	)
-		-- 	vim.notify(message, vim.log.levels.INFO)
-		-- end
+		if #reloaded_files > 0 then
+			local message = string.format(
+				"Reloaded %d file%s:\n%s",
+				#reloaded_files,
+				#reloaded_files > 1 and "s" or "",
+				table.concat(reloaded_files, "\n")
+			)
+			vim.notify(message, vim.log.levels.DEBUG)
+		end
 	end)
 end
+
+local function has_client(bufnr, names)
+	local clients = vim.lsp.get_active_clients({ bufnr = bufnr })
+	local set = {}
+	for _, n in ipairs(names) do
+		set[n] = true
+	end
+	for _, c in ipairs(clients) do
+		if set[c.name] then
+			return true
+		end
+	end
+	return false
+end
+
+local function format_on_external_change(args)
+	local cfg = Config.config.trigger_formatting
+	if not cfg.enabled then
+		return
+	end
+
+	local bufnr = args.buf
+	if not vim.api.nvim_buf_is_loaded(bufnr) then
+		return
+	end
+	if not vim.bo[bufnr].modifiable or vim.bo[bufnr].readonly then
+		return
+	end
+
+	if cfg.notify then
+		vim.notify(
+			"formatting buffer due to external change: " .. vim.api.nvim_buf_get_name(bufnr),
+			vim.log.levels.INFO
+		)
+	end
+
+	local timeout = cfg.timeout_ms or 5000
+
+	-- Always asynchronous: Conform → none/null-ls → any LSP
+	local ok, conform = pcall(require, "conform")
+	if ok then
+		conform.format({ bufnr = bufnr, async = true, timeout_ms = timeout, lsp_format = "never" })
+		return
+	end
+	if has_client(bufnr, { "none-ls", "null-ls" }) then
+		vim.lsp.buf.format({
+			bufnr = bufnr,
+			async = true,
+			timeout_ms = timeout,
+			filter = function(c)
+				return c.name == "none-ls" or c.name == "null-ls"
+			end,
+		})
+		return
+	end
+	vim.lsp.buf.format({ bufnr = bufnr, async = true, timeout_ms = timeout })
+end
+
+vim.api.nvim_create_autocmd("FileChangedShellPost", {
+	group = vim.api.nvim_create_augroup("FormatOnExternalChange", { clear = true }),
+	callback = format_on_external_change,
+})
 
 return FileWatcher
