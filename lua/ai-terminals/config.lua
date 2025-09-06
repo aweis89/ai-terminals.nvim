@@ -41,6 +41,7 @@ local Config = {}
 ---@field enable_diffing boolean|nil
 ---@field env table|nil
 ---@field diff_close_keymap string|nil Default: "q"
+---@field trigger_formatting { enabled?: boolean, timeout_ms?: integer, notify?: boolean }
 ---@field prompts table<string, string | fun(): string>|nil A table of reusable prompt texts, keyed by a name. Values can be strings or functions returning strings (evaluated at runtime).
 ---@field prompt_keymaps {key: string, term: string, prompt: string, desc: string, include_selection?: boolean, submit?: boolean}[]|nil Keymaps for prompts (array of tables). `include_selection` (optional, boolean, default: true): If true, the keymap works in normal & visual modes (prefixing selection in visual). If false, it only works in normal mode (no selection). `submit` (optional, boolean, default: true): If true, sends a newline after the prompt.
 ---@field terminal_keymaps {key: string, action: string | fun(), desc: string, modes?: string | string[]}[]|nil Keymaps that only apply within terminal buffers (array of tables). `modes` (optional, string or array of strings, default: "t"): Specifies the modes for the keymap.
@@ -110,6 +111,15 @@ Config.config = {
 	default_position = "right", -- Default position if none is specified in toggle/open/get
 	enable_diffing = false, -- Enable backup sync and diff commands. Disabling this prevents `diff_changes` and `close_diff` from working.
 	backend = vim.env.TMUX and "tmux" or "snacks", -- Auto-detect: use tmux backend if in tmux session, otherwise snacks
+
+	-- Trigger formatting on external file changes (FileChangedShellPost)
+	-- Default disabled. When enabled, automatically formats the reloaded buffer.
+	-- Provider auto-detection order: conform -> none-ls/null-ls -> any LSP.
+	trigger_formatting = {
+		enabled = false,
+		timeout_ms = 5000,
+		notify = true,
+	},
 	tmux = {
 		-- Tmux popup configuration - simple width/height parameters
 		width = 0.9, -- 90% of terminal width (0.0-1.0)
