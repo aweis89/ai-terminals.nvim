@@ -269,8 +269,7 @@ function FileWatcher.setup_dir_watcher(terminal_name, reload_callback)
 
 	-- Prepare ignore patterns (globs -> vim regex) once
 	local ignore_globs_user = {}
-	local ignore_globs_git = {}
-	local unignore_globs_git = {}
+	local ignore_regex_user = {}
 	local ignored_cache = {}
 	local cfg = (Config.config and Config.config.watch_cwd) or {}
 	if type(cfg.ignore) == "table" then
@@ -302,69 +301,19 @@ function FileWatcher.setup_dir_watcher(terminal_name, reload_callback)
 					local ok, reg = pcall(vim.fn.glob2regpat, p)
 					if ok and type(reg) == "string" and reg ~= "" then
 						table.insert(ignore_globs_user, reg)
+						local ok_rx, rx = pcall(vim.regex, reg)
+						if ok_rx and rx then
+							table.insert(ignore_regex_user, rx)
+						end
 					end
 					if also_dir_only then
 						local dir_only = p:sub(1, -4) -- strip trailing "/**"
 						local ok2, reg2 = pcall(vim.fn.glob2regpat, dir_only)
 						if ok2 and type(reg2) == "string" and reg2 ~= "" then
 							table.insert(ignore_globs_user, reg2)
-						end
-					end
-				end
-			end
-		end
-	end
-
-	-- Optionally read patterns from .gitignore at repo root
-	if cfg.gitignore then
-		local root = git_root or dir
-		local gitignore_path = root .. "/.gitignore"
-		if vim.fn.filereadable(gitignore_path) == 1 then
-			local lines = vim.fn.readfile(gitignore_path)
-			for _, line in ipairs(lines) do
-				local pat = tostring(line)
-				-- Trim whitespace
-				pat = pat:gsub("^%s+", ""):gsub("%s+$", "")
-				if pat ~= "" and not pat:match("^#") then
-					local is_unignore = false
-					if pat:sub(1, 1) == "!" then
-						is_unignore = true
-						pat = pat:sub(2)
-					end
-					-- Convert .gitignore semantics to globs relative to git root
-					local anchored = pat:sub(1, 1) == "/"
-					if anchored then
-						pat = pat:sub(2)
-					else
-						-- Unanchored: match anywhere under root
-						pat = "**/" .. pat
-					end
-					-- Directory-only patterns end with '/'
-					local also_dir_only = false
-					if pat:sub(-1) == "/" then
-						pat = pat .. "**" -- e.g. "foo/" -> "foo/**"
-						also_dir_only = true
-					elseif pat:sub(-3) == "/**" then
-						also_dir_only = true
-					end
-					-- Compile to regex
-					local ok, reg = pcall(vim.fn.glob2regpat, pat)
-					if ok and type(reg) == "string" and reg ~= "" then
-						if is_unignore then
-							table.insert(unignore_globs_git, reg)
-						else
-							table.insert(ignore_globs_git, reg)
-						end
-					end
-					-- Also ignore the directory node itself for patterns ending with "/**"
-					if also_dir_only then
-						local dir_only = pat:sub(1, -4)
-						local ok2, reg2 = pcall(vim.fn.glob2regpat, dir_only)
-						if ok2 and type(reg2) == "string" and reg2 ~= "" then
-							if is_unignore then
-								table.insert(unignore_globs_git, reg2)
-							else
-								table.insert(ignore_globs_git, reg2)
+							local ok_rx2, rx2 = pcall(vim.regex, reg2)
+							if ok_rx2 and rx2 then
+								table.insert(ignore_regex_user, rx2)
 							end
 						end
 					end
@@ -372,6 +321,10 @@ function FileWatcher.setup_dir_watcher(terminal_name, reload_callback)
 			end
 		end
 	end
+
+	-- Note: We rely on `git check-ignore` as the source of truth
+	-- for .gitignore semantics. If we ever need a non-git fallback,
+	-- we can reintroduce parsing and use it only when git isn't available.
 
 	local function git_check_ignore(fullpath)
 		if not cfg.gitignore or not git_root or not fullpath or fullpath == "" then
@@ -409,16 +362,25 @@ function FileWatcher.setup_dir_watcher(terminal_name, reload_callback)
 			if not path or path == "" then
 				return false
 			end
-			return path == ".git"
-				or path:sub(1, 5) == ".git/"
-				or path:match("/.git$") ~= nil
-				or path:match("/.git/") ~= nil
+			-- Normalize separators and wrap with slashes to match the segment
+			local norm = "/" .. path:gsub("\\", "/") .. "/"
+			return norm:find("/%.git/") ~= nil
 		end
 		if is_dot_git(rel_cwd) or is_dot_git(rel_root) then
 			return true
 		end
 
-		-- Ask git only after the hard-coded .git exclusion; this covers nested .gitignore and complex rules
+		-- Apply user-defined ignore globs (relative to CWD) before asking git
+		if rel_cwd and rel_cwd ~= "" and #ignore_regex_user > 0 then
+			local s = rel_cwd:gsub("\\", "/")
+			for _, rx in ipairs(ignore_regex_user) do
+				if rx:match_str(s) then
+					return true
+				end
+			end
+		end
+
+		-- Ask git only after user globs and the hard-coded .git exclusion; this covers nested .gitignore and complex rules
 		local git_answer = git_check_ignore(fullpath)
 		if git_answer ~= nil then
 			return git_answer
