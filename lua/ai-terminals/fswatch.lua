@@ -420,22 +420,6 @@ function FileWatcher.setup_dir_watcher(terminal_name, reload_callback)
 		if git_answer ~= nil then
 			return git_answer
 		end
-		-- Unignore (negations) take precedence
-		for _, reg in ipairs(unignore_globs_git) do
-			if rel_root and vim.fn.match(rel_root, reg) ~= -1 then
-				return false
-			end
-		end
-		for _, reg in ipairs(ignore_globs_git) do
-			if rel_root and vim.fn.match(rel_root, reg) ~= -1 then
-				return true
-			end
-		end
-		for _, reg in ipairs(ignore_globs_user) do
-			if (rel_cwd and vim.fn.match(rel_cwd, reg) ~= -1) or (rel_root and vim.fn.match(rel_root, reg) ~= -1) then
-				return true
-			end
-		end
 		return false
 	end
 	watch:start(dir, { recursive = true }, function(err, fname, events)
