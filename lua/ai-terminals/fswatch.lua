@@ -405,11 +405,14 @@ function FileWatcher.setup_dir_watcher(terminal_name, reload_callback)
 			return false
 		end
 		-- Fast path: always ignore .git directory and its contents, regardless of git's answer
-		local function is_dot_git(p)
-			if not p or p == "" then
+		local function is_dot_git(path)
+			if not path or path == "" then
 				return false
 			end
-			return p == ".git" or p:sub(1, 5) == ".git/" or p:match("/.git$") ~= nil or p:match("/.git/") ~= nil
+			return path == ".git"
+				or path:sub(1, 5) == ".git/"
+				or path:match("/.git$") ~= nil
+				or path:match("/.git/") ~= nil
 		end
 		if is_dot_git(rel_cwd) or is_dot_git(rel_root) then
 			return true
