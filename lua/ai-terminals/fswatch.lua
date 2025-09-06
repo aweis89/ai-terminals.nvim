@@ -167,22 +167,23 @@ local function format_on_external_change(args)
 		return
 	end
 
-	if cfg.notify then
-		vim.notify(
-			"formatting buffer due to external change: " .. vim.api.nvim_buf_get_name(bufnr),
-			vim.log.levels.INFO
-		)
-	end
-
 	local timeout = cfg.timeout_ms or 5000
+
+	local log = function(msg)
+		local file = vim.api.nvim_buf_get_name(bufnr)
+		file = vim.fn.fnamemodify(file, ":t")
+		vim.notify(msg .. ": " .. file, vim.log.levels.INFO, { title = "FormatOnExternalChange" })
+	end
 
 	-- Always asynchronous: Conform → none/null-ls → any LSP
 	local ok, conform = pcall(require, "conform")
 	if ok then
+		log("formatting with conform")
 		conform.format({ bufnr = bufnr, async = true, timeout_ms = timeout, lsp_format = "never" })
 		return
 	end
 	if has_client(bufnr, { "none-ls", "null-ls" }) then
+		log("formatting with null-ls/none-ls")
 		vim.lsp.buf.format({
 			bufnr = bufnr,
 			async = true,
