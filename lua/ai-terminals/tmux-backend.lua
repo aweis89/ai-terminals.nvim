@@ -495,11 +495,8 @@ function TmuxBackend:register_autocmds(term)
 	local terminal_name = term.terminal_name
 	local config = require("ai-terminals.config").config
 
-	-- Set up diffing callback if enabled
-	local diff_callback = nil
-
 	-- Use unified file watching
-	FileWatcher.setup_unified_watching(terminal_name, diff_callback)
+	FileWatcher.setup_unified_watching(terminal_name)
 
 	-- Set up diffing pre-sync if enabled (backend-specific responsibility)
 	if config.enable_diffing then

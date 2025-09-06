@@ -90,16 +90,10 @@ end
 
 ---Unified setup for file watching with optional diffing callback
 ---@param terminal_name string The name of the terminal
----@param diff_callback function? Optional callback to trigger when files change (for diffing)
-function FileWatcher.setup_unified_watching(terminal_name, diff_callback)
+function FileWatcher.setup_unified_watching(terminal_name)
 	-- Set up file watching for immediate reload
 	FileWatcher.setup_watchers(terminal_name, function()
 		FileWatcher.reload_changes()
-
-		-- Trigger optional diff callback if provided
-		if diff_callback then
-			diff_callback()
-		end
 	end)
 
 	-- Set up cleanup
