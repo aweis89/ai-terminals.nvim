@@ -274,9 +274,25 @@ function FileWatcher.setup_dir_watcher(terminal_name, reload_callback)
 	if type(cfg.ignore) == "table" then
 		for _, pat in ipairs(cfg.ignore) do
 			if type(pat) == "string" and pat ~= "" then
-				local ok, reg = pcall(vim.fn.glob2regpat, pat)
-				if ok and type(reg) == "string" and reg ~= "" then
-					table.insert(ignore_globs_user, reg)
+				local p = tostring(pat)
+				-- Trim whitespace
+				p = p:gsub("^%s+", ""):gsub("%s+$", "")
+				if p ~= "" then
+					-- Treat leading "/" as CWD-anchored; `fname` is already relative,
+					-- so strip it to avoid mismatches like "/.git/**".
+					if p:sub(1, 1) == "/" then
+						p = p:sub(2)
+					end
+					-- If user provided a directory pattern (trailing slash) without a
+					-- recursive suffix, expand it to include all descendants.
+					-- E.g., ".git/" -> ".git/**" (matches .git and everything under it).
+					if p:sub(-1) == "/" and p:sub(-2) ~= "**" then
+						p = p .. "**"
+					end
+					local ok, reg = pcall(vim.fn.glob2regpat, p)
+					if ok and type(reg) == "string" and reg ~= "" then
+						table.insert(ignore_globs_user, reg)
+					end
 				end
 			end
 		end

@@ -119,11 +119,14 @@ Config.config = {
 		enabled = false,
 		-- Glob patterns to ignore when watching the directory recursively.
 		-- Examples: "**/.git/**", "**/node_modules/**", "**/.venv/**", "**/*.log"
-		ignore = {},
+		-- Note: Directory patterns should be recursive globs. For convenience,
+		-- values ending with "/" are treated as that directory and all
+		-- descendants (e.g., ".git/" becomes ".git/**").
+		ignore = { "**/.git/**" },
 		-- When true, also read ignore patterns from <git root>/.gitignore
 		-- and merge them. Negations (!) are honored. Patterns are interpreted
 		-- relative to the git root. Default: false
-		gitignore = false,
+		gitignore = true,
 	},
 
 	-- Trigger formatting on external file changes (FileChangedShellPost)
