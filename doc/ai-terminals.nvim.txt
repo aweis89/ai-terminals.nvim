@@ -604,232 +604,51 @@ control, skip `sa.apply()` and define your own actions/mappings;
 
 EXAMPLE USAGE ~
 
-Here’s a more complete example using `lazy.nvim`
+A concise `lazy.nvim` setup that relies on auto-generated keymaps. This keeps
+your config small while still exposing all the common actions.
 
 >lua
     -- lua/plugins/ai-terminals.lua
     return {
       {
         "aweis89/ai-terminals.nvim",
-        -- Example opts using functions for dynamic command generation
-        -- (matches plugin defaults)
-        opts = {
-          terminals = {
-            goose = {
-              cmd = function()
-                return string.format("GOOSE_CLI_THEME=%s goose", vim.o.background)
-              end,
-              path_header_template = "@%s", -- Default: @ prefix
-            },
-            cursor = {
-              cmd = function()
-                return "cursor-agent"
-              end,
-              path_header_template = "@%s", -- Default: @ prefix
-            },
-            codex = {
-              cmd = function()
-                return "codex"
-              end,
-              path_header_template = "@%s", -- Default: @ prefix
-            },
-            claude = {
-              cmd = function()
-                return string.format("claude config set -g theme %s && claude", vim.o.background)
-              end,
-              path_header_template = "@%s", -- Default: @ prefix
-            },
-            aider = {
-              cmd = function()
-                return string.format("aider --watch-files --%s-mode", vim.o.background)
-              end,
-              path_header_template = "`%s`", -- Special: backticks for Aider
-            },
-          },
-          -- You can also set window, default_position, enable_diffing here
-        },
         dependencies = { "folke/snacks.nvim" },
-        keys = {
-          -- Example Keymaps (using default terminal names: 'claude', 'goose',
-          -- 'cursor', 'aider', 'codex')
-          -- Claude Keymaps
-          {
-            "<leader>atc", -- Mnemonic: AI Terminal Claude
-            function() require("ai-terminals").toggle("claude") end,
-            mode = { "n", "v" }, -- Works in normal and visual mode
-            desc = "Toggle Claude terminal (sends selection in visual mode)",
+        opts = {
+          -- Optional: customize commands and per-terminal formatting
+          terminals = {
+            claude = { cmd = function() return "claude" end },
+            aider  = { cmd = function() return "aider --watch-files" end, path_header_template = "`%s`" },
+            goose  = { cmd = function() return string.format("GOOSE_CLI_THEME=%s goose", vim.o.background) end },
           },
-          {
-            "<leader>adc", -- Mnemonic: AI Diagnostics Claude
-            function() require("ai-terminals").send_diagnostics("claude") end,
-            mode = { "n", "v" },
-            desc = "Send diagnostics to Claude",
-          },
-          -- Goose Keymaps
-          {
-            "<leader>atg",
-            function() require("ai-terminals").toggle("goose") end,
-            mode = { "n", "v" },
-            desc = "Toggle Goose terminal (sends selection in visual mode)",
-          },
-          {
-            "<leader>adg",
-            function() require("ai-terminals").send_diagnostics("goose") end,
-            mode = { "n", "v" },
-            desc = "Send diagnostics to Goose",
-          },
-          -- Cursor Keymaps
-          {
-            "<leader>atr",
-            function() require("ai-terminals").toggle("cursor") end,
-            mode = { "n", "v" },
-            desc = "Toggle Cursor terminal (sends selection in visual mode)",
-          },
-          {
-            "<leader>adr",
-            function() require("ai-terminals").send_diagnostics("cursor") end,
-            mode = { "n", "v" },
-            desc = "Send diagnostics to Cursor",
-          },
-          -- Aider Keymaps
-          {
-            "<leader>ata",
-            function() require("ai-terminals").toggle("aider") end,
-            mode = { "n", "v" },
-            desc = "Toggle Aider terminal (sends selection in visual mode)",
-          },
-          {
-            "<leader>ac",
-            function()
-              -- Adds comment and saves file
-              require("ai-terminals").aider_comment("AI!")
-            end,
-            desc = "Add 'AI!' comment above line",
-          },
-          {
-            "<leader>aC",
-            function()
-              -- Adds comment and saves file
-              require("ai-terminals").aider_comment("AI?")
-            end,
-            desc = "Add 'AI?' comment above line",
-          },
-          -- Generic File Management (works with any terminal)
-          {
-            "<leader>af", -- Mnemonic: Add Files
-            function()
-              -- Add current file to Claude using generic function
-              require("ai-terminals").add_files_to_terminal("claude", {vim.fn.expand("%")})
-            end,
-            desc = "Add current file to Claude",
-          },
-          {
-            "<leader>aF", -- Mnemonic: Add Files (all buffers)
-            function()
-              -- Add all buffers to Claude using generic function
-              require("ai-terminals").add_buffers_to_terminal("claude")
-            end,
-            desc = "Add all buffers to Claude",
-          },
-          {
-            "<leader>aa", -- Mnemonic: Add files to Aider
-            function()
-              -- Add current file to Aider using generic function
-              require("ai-terminals").add_files_to_terminal("aider", {vim.fn.expand("%")})
-            end,
-            desc = "Add current file to Aider",
-          },
-          {
-            "<leader>aA", -- Mnemonic: Add all buffers to Aider
-            function()
-              -- Add all buffers to Aider using generic function
-              require("ai-terminals").add_buffers_to_terminal("aider")
-            end,
-            desc = "Add all buffers to Aider",
-          },
-          {
-            "<leader>ar", -- Mnemonic: Add read-only to Aider
-            function()
-              -- Add current file as read-only to Aider
-              require("ai-terminals").add_files_to_terminal("aider",
-                {vim.fn.expand("%")}, { read_only = true })
-            end,
-            desc = "Add current file to Aider (read-only)",
-          },
-          {
-            "<leader>ada",
-            function() require("ai-terminals").send_diagnostics("aider") end,
-            mode = { "n", "v" },
-            desc = "Send diagnostics to Aider",
-          },
-          -- Codex Keymaps
-          {
-            "<leader>atd",
-            function() require("ai-terminals").toggle("codex") end,
-            mode = { "n", "v" },
-            desc = "Toggle Codex terminal (sends selection in visual mode)",
-          },
-          {
-            "<leader>add",
-            function() require("ai-terminals").send_diagnostics("codex") end,
-            mode = { "n", "v" },
-            desc = "Send diagnostics to Codex",
-          },
-          -- Gemini Keymaps
-          {
-            "<leader>atm",
-            function() require("ai-terminals").toggle("gemini") end,
-            mode = { "n", "v" },
-            desc = "Toggle Gemini terminal (sends selection in visual mode)",
-          },
-          {
-            "<leader>adm",
-            function() require("ai-terminals").send_diagnostics("gemini") end,
-            mode = { "n", "v" },
-            desc = "Send diagnostics to Gemini",
-          },
-          -- Run Command and Send Output
-          {
-            "<leader>ar", -- Mnemonic: AI Run command (prompts)
-            function()
-              -- Prompts user for a command, then sends its output to the
-              -- active/last-focused AI terminal.
-              require("ai-terminals").send_command_output()
-            end,
-            desc = "Run command (prompts) and send output to active AI terminal",
-          },
-          {
-            "<leader>aj", -- Mnemonic: AI Jira (example fixed command)
-            function()
-              -- Sends output of a fixed command to the active/last-focused AI terminal.
-              -- Replace with your actual command, e.g., dynamically get ticket ID.
-              require("ai-terminals").send_command_output(
-                "jira issue view YOUR-TICKET-ID --plain")
-            end,
-            desc = "Send Jira ticket (example) to active AI terminal",
-          },
-          -- Destroy All Terminals
-          {
-            "<leader>ax", -- Mnemonic: AI eXterminate
-            function() require("ai-terminals").destroy_all() end,
-            desc = "Destroy all AI terminals (closes windows, stops processes)",
-          },
-          -- Focus Terminal
-          {
-            "<leader>af", -- Mnemonic: AI Focus
-            function() require("ai-terminals").focus() end,
-            desc = "Focus the last used AI terminal window",
-          },
-          -- Diff Changes (requires enable_diffing = true in config)
-          {
-            "<leader>ad", -- Mnemonic: AI Diff
-            function() require("ai-terminals").diff_changes() end,
-            desc = "Show vim diff of all changed files in tabs",
+          -- One line to get consistent mappings for all terminals
+          auto_terminal_keymaps = {
+            prefix = "<leader>at",
+            terminals = {
+              { name = "claude", key = "c" },
+              { name = "aider",  key = "a" },
+              { name = "goose",  key = "g" },
+              -- { name = "cursor", key = "r", enabled = false }, -- example disabled
+            },
           },
         },
+        config = function(_, opts)
+          require("ai-terminals").setup(opts)
+          -- Optional: integrate Snacks pickers with add-file actions
+          local sa = require("ai-terminals.snacks_actions")
+          require("snacks").setup({}) -- or your existing Snacks opts
+          sa.apply(require("snacks").config) -- merges actions + safe default picker keys
+        end,
       },
     }
 <
+
+What you get out of the box (with the config above):
+
+- `<leader>atc` / `<leader>ata` / `<leader>atg` — Toggle Claude/Aider/Goose; sends visual selection.
+- `<leader>adc` — Send diagnostics to Claude. Same pattern for other terminals.
+- `<leader>alc` / `<leader>aLc` — Add current file / all buffers to Claude.
+- `<leader>arc` — Prompt for a shell command and send output to Claude.
+- Picker adds: `<localleader>ac` adds the selected file(s) to Claude. Same for `a` (Aider), `g` (Goose), etc.
 
 
 INSTALLATION ~
@@ -844,31 +663,19 @@ USING LAZY.NVIM
     return {
       "aweis89/ai-terminals.nvim",
       dependencies = { "folke/snacks.nvim" },
-      -- Optional: Add opts = {} to configure, or define keys as shown above
+      opts = {
+        auto_terminal_keymaps = {
+          prefix = "<leader>at",
+          terminals = {
+            { name = "claude", key = "c" },
+            { name = "aider",  key = "a" },
+          },
+        },
+      },
       config = function(_, opts)
         require("ai-terminals").setup(opts)
-        -- Define your keymaps here (or use auto_terminal_keymaps)
-    
-        -- Example manual keymaps - consider using auto_terminal_keymaps instead
-        vim.keymap.set({"n", "v"}, "<leader>atc",
-          function() require("ai-terminals").toggle("claude") end,
-          { desc = "Toggle Claude terminal" })
-        vim.keymap.set({"n", "v"}, "<leader>ata",
-          function() require("ai-terminals").toggle("aider") end,
-          { desc = "Toggle Aider terminal" })
-        vim.keymap.set({"n", "v"}, "<leader>adc",
-          function() require("ai-terminals").send_diagnostics("claude") end,
-          { desc = "Send diagnostics to Claude" })
-        vim.keymap.set("n", "<leader>aa",
-          function() require("ai-terminals").add_files_to_terminal("aider",
-            {vim.fn.expand("%")}) end, { desc = "Add current file to Aider" })
-        vim.keymap.set("n", "<leader>ax",
-          function() require("ai-terminals").destroy_all() end,
-          { desc = "Destroy all AI terminals" })
-    
-    
-        -- More examples available in the first example above
-        -- Or better: use auto_terminal_keymaps for automatic generation!
+        local sa = require("ai-terminals.snacks_actions")
+        sa.apply(require("snacks").config)
       end,
     }
 <
@@ -885,114 +692,24 @@ If you are using `packer.nvim`, you only need to call the `setup` function in
 your configuration if you want to customize the defaults.
 
 >lua
-    -- In your Neovim configuration (e.g., lua/plugins.lua or similar)
+    -- In your Neovim configuration (e.g., lua/plugins.lua)
     use({
       "aweis89/ai-terminals.nvim",
       requires = { "folke/snacks.nvim" },
       config = function()
-        -- Optional: Call setup only if you need to customize defaults
         require("ai-terminals").setup({
-          -- Your custom configuration here (see Configuration section)
-          -- e.g., default_position = "bottom"
+          auto_terminal_keymaps = {
+            prefix = "<leader>at",
+            terminals = {
+              { name = "claude", key = "c" },
+              { name = "aider",  key = "a" },
+            },
+          },
         })
     
-        -- Define your keymaps here or in a separate keymap file
-    
-        -- Claude Keymaps
-        vim.keymap.set({"n", "v"}, "<leader>atc",
-          function() require("ai-terminals").toggle("claude") end,
-          { desc = "Toggle Claude terminal (sends selection)" })
-        vim.keymap.set({"n", "v"}, "<leader>adc",
-          function() require("ai-terminals").send_diagnostics("claude") end,
-          { desc = "Send diagnostics to Claude" })
-    
-        -- Goose Keymaps
-        vim.keymap.set({"n", "v"}, "<leader>atg",
-          function() require("ai-terminals").toggle("goose") end,
-          { desc = "Toggle Goose terminal (sends selection)" })
-        vim.keymap.set({"n", "v"}, "<leader>adg",
-          function() require("ai-terminals").send_diagnostics("goose") end,
-          { desc = "Send diagnostics to Goose" })
-    
-        -- Cursor Keymaps
-        vim.keymap.set({"n", "v"}, "<leader>atr",
-          function() require("ai-terminals").toggle("cursor") end,
-          { desc = "Toggle Cursor terminal (sends selection)" })
-        vim.keymap.set({"n", "v"}, "<leader>adr",
-          function() require("ai-terminals").send_diagnostics("cursor") end,
-          { desc = "Send diagnostics to Cursor" })
-    
-        -- Aider Keymaps
-        vim.keymap.set({"n", "v"}, "<leader>ata",
-          function() require("ai-terminals").toggle("aider") end,
-          { desc = "Toggle Aider terminal (sends selection)" })
-        vim.keymap.set("n", "<leader>ac",
-          function() require("ai-terminals").aider_comment("AI!") end,
-          { desc = "Add 'AI!' comment above line" })
-        vim.keymap.set("n", "<leader>aC",
-          function() require("ai-terminals").aider_comment("AI?") end,
-          { desc = "Add 'AI?' comment above line" })
-        -- Generic File Management (works with any terminal)
-        vim.keymap.set("n", "<leader>af",
-          function() require("ai-terminals").add_files_to_terminal("claude",
-            {vim.fn.expand("%")}) end, { desc = "Add current file to Claude" })
-        vim.keymap.set("n", "<leader>aF",
-          function() require("ai-terminals").add_buffers_to_terminal("claude") end,
-          { desc = "Add all buffers to Claude" })
-        vim.keymap.set("n", "<leader>aa",
-          function() require("ai-terminals").add_files_to_terminal("aider",
-            {vim.fn.expand("%")}) end, { desc = "Add current file to Aider" })
-        vim.keymap.set("n", "<leader>aA",
-          function() require("ai-terminals").add_buffers_to_terminal("aider") end,
-          { desc = "Add all buffers to Aider" })
-        vim.keymap.set("n", "<leader>ar",
-          function() require("ai-terminals").add_files_to_terminal("aider",
-            {vim.fn.expand("%")}, { read_only = true }) end,
-          { desc = "Add current file to Aider (read-only)" })
-        vim.keymap.set({"n", "v"}, "<leader>ada",
-          function() require("ai-terminals").send_diagnostics("aider") end,
-          { desc = "Send diagnostics to Aider" })
-    
-        -- Codex Keymaps
-        vim.keymap.set({"n", "v"}, "<leader>atd",
-          function() require("ai-terminals").toggle("codex") end,
-          { desc = "Toggle Codex terminal (sends selection)" })
-        vim.keymap.set({"n", "v"}, "<leader>add",
-          function() require("ai-terminals").send_diagnostics("codex") end,
-          { desc = "Send diagnostics to Codex" })
-    
-        -- Gemini Keymaps
-        vim.keymap.set({"n", "v"}, "<leader>atm",
-          function() require("ai-terminals").toggle("gemini") end,
-          { desc = "Toggle Gemini terminal (sends selection)" })
-        vim.keymap.set({"n", "v"}, "<leader>adm",
-          function() require("ai-terminals").send_diagnostics("gemini") end,
-          { desc = "Send diagnostics to Gemini" })
-    
-        -- Example: Run a command and send output to a specific terminal
-        vim.keymap.set("n", "<leader>ar",
-          function() require("ai-terminals").send_command_output("aider") end,
-          { desc = "Run command (prompts) and send output to Aider" })
-        -- Or use a fixed command like:
-        -- vim.keymap.set("n", "<leader>ar",
-        --   function() require("ai-terminals").send_command_output("aider",
-        --     "make test") end,
-        --   { desc = "Run 'make test' and send output to Aider" })
-    
-       -- Destroy All Terminals
-       vim.keymap.set("n", "<leader>ax",
-          function() require("ai-terminals").destroy_all() end,
-          { desc = "Destroy all AI terminals (closes windows, stops processes)" })
-    
-       -- Focus Terminal
-       vim.keymap.set("n", "<leader>af",
-          function() require("ai-terminals").focus() end,
-          { desc = "Focus the last used AI terminal window" })
-    
-       -- Diff Changes (requires enable_diffing = true in config)
-       vim.keymap.set("n", "<leader>ad",
-          function() require("ai-terminals").diff_changes() end,
-          { desc = "Show vim diff of all changed files in tabs" })
+        -- Optional Snacks picker integration
+        local sa = require("ai-terminals.snacks_actions")
+        sa.apply(require("snacks").config)
       end,
     })
 <
