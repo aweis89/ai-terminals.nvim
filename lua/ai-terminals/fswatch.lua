@@ -8,6 +8,16 @@ local Config = require("ai-terminals.config")
 -- Storage for active watchers by terminal name
 local _file_watchers = {}
 
+-- Local logger for this module
+-- Defaults to DEBUG level and sets a consistent title
+local function log(msg, level, opts)
+	local notify_opts = opts or {}
+	if notify_opts.title == nil then
+		notify_opts.title = "fswatch"
+	end
+	vim.notify(msg, level or vim.log.levels.DEBUG, notify_opts)
+end
+
 ---Initialize watchers storage for a terminal
 ---@param terminal_name string The name of the terminal
 function FileWatcher.init_watchers(terminal_name)
@@ -141,7 +151,7 @@ function FileWatcher.reload_changes()
 				#reloaded_files > 1 and "s" or "",
 				table.concat(reloaded_files, "\n")
 			)
-			vim.notify(message, vim.log.levels.DEBUG)
+			log(message)
 		end
 	end)
 end
@@ -232,7 +242,7 @@ function FileWatcher.setup_dir_watcher(terminal_name, reload_callback)
 
 	local watch = vim.uv.new_fs_event()
 	if not watch then
-		vim.notify("Failed to create fs_event watcher", vim.log.levels.ERROR)
+		log("Failed to create fs_event watcher", vim.log.levels.ERROR)
 		return
 	end
 	-- Store the directory watcher to prevent garbage collection and allow cleanup
@@ -411,14 +421,14 @@ function FileWatcher.setup_dir_watcher(terminal_name, reload_callback)
 				if stat and stat.type == "file" and vim.fn.filereadable(fullpath) == 1 then
 					local bufnr = vim.fn.bufnr(fullpath)
 					if bufnr == -1 then
-						vim.notify("calling :badd: " .. fullpath, vim.log.levels.DEBUG)
+						log("calling :badd: " .. fullpath)
 						pcall(vim.cmd.badd, { args = { fullpath } })
 						bufnr = vim.fn.bufnr(fullpath)
 					end
 
 					-- Ensure the buffer is loaded so LSP/filetype autocmds can attach
 					if bufnr > 0 and not vim.api.nvim_buf_is_loaded(bufnr) then
-						vim.notify("calling bufload: " .. fullpath, vim.log.levels.DEBUG)
+						log("calling bufload: " .. fullpath)
 						pcall(vim.fn.bufload, bufnr)
 						-- Trigger FileChangedShellPost to run any listeners (e.g., formatters) for this file
 						pcall(vim.api.nvim_exec_autocmds, "FileChangedShellPost", { buffer = bufnr })
