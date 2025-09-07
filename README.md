@@ -390,69 +390,6 @@ allows you to quickly hide the terminal popup from within tmux.
 The code has been integrated directly into this repository for additional
 control and to avoid external dependencies.
 
-default configuration (e.g., change terminal commands, window dimensions, or the
-default position). The core functionality, including autocommands for file
-reloading and backup syncing, works out of the box without calling `setup()`.
-
-```lua
--- In your Neovim configuration (e.g., lua/plugins/ai-terminals.lua)
-require("ai-terminals").setup({
-  -- Override or add terminal configurations
-  terminals = {
-    -- Example: Override the default Aider command
-    aider = {
-      cmd = function()
-        -- Use dark/light mode based on background
-        return string.format("aider --watch-files --%s-mode", vim.o.background)
-      end,
-      -- Custom path header template for Aider (uses backticks)
-      path_header_template = "`%s`",
-      -- File management commands (optional)
-      file_commands = {
-        add_files = "/add %s",           -- Template for adding files
-        add_files_readonly = "/read-only %s",  -- Template for read-only files
-        submit = true,                   -- Auto-submit after sending command
-      },
-    },
-    -- Example: Add a new terminal for a custom script
-    my_custom_ai = {
-      cmd = "/path/to/my/ai_script.sh --interactive",
-      -- Custom path header template with '@' prefix
-      path_header_template = "@%s",
-    },
-    -- Example: Remove a default terminal if you don't use it
-    goose = nil,
-  },
-  -- Override default window dimensions (uses Snacks options)
-  -- Keys correspond to positions: 'float', 'bottom', 'top', 'left', 'right'
-  window_dimensions = {
-    float = { width = 0.8, height = 0.7 }, -- Example: Change float dimensions
-    bottom = { width = 1.0, height = 0.4 }, -- Example: Change bottom dimensions
-    border = "rounded",
-  },
-  -- Set the default window position if none is specified (default: "float")
-  default_position = "bottom", -- Example: Make terminals open at the bottom
-  -- Environment variables to set for terminal commands
-  env = {
-    PAGER = "cat", -- Example: Set PAGER to cat
-    -- MY_API_KEY = os.getenv("MY_SECRET_API_KEY"), -- Example: Pass an env var
-  },
-  -- Define keymaps that only apply within terminal buffers (snacks backend only)
-  terminal_keymaps = {
-    { key = "<C-w>q", action = "close", desc = "Close terminal window",
-      modes = "t" },
-    { key = "<Esc>", action = function() vim.cmd("stopinsert") end,
-      desc = "Exit terminal insert mode", modes = "t" },
-    -- Add more terminal-specific keymaps here
-  },
-})
-```
-
-The `cmd` field for each terminal can be a `string` or a `function` that returns
-a string. Using a function allows the command to be generated dynamically *just
-before* the terminal is opened (e.g., to check `vim.o.background` at invocation
-time).
-
 ### 🎯 Path Header Templates
 
 Each terminal can have a custom `path_header_template` that controls how file
