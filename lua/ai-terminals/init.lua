@@ -1,5 +1,8 @@
 local M = {}
 
+-- Internal helpers
+local insert_comment = require("ai-terminals.comment")
+
 local AiderLib = require("ai-terminals.aider")
 local DiagnosticsLib = require("ai-terminals.diagnostics")
 local TerminalLib = require("ai-terminals.terminal")
@@ -107,27 +110,27 @@ local function setup_auto_terminal_keymaps()
 		-- Toggle terminal keymap
 		vim.keymap.set({ "n", "v" }, prefix .. key, function()
 			M.toggle(name)
-		end, { desc = "Toggle " .. display_name .. " terminal" })
+		end, { desc = display_name .. ": Toggle terminal" })
 
 		-- Send diagnostics keymap
 		vim.keymap.set({ "n", "v" }, "<leader>ad" .. key, function()
 			M.send_diagnostics(name)
-		end, { desc = "Send diagnostics to " .. display_name })
+		end, { desc = display_name .. ": Send diagnostics" })
 
 		-- Add current file keymap
 		vim.keymap.set("n", "<leader>al" .. key, function()
 			M.add_files_to_terminal(name, { vim.fn.expand("%") })
-		end, { desc = "Add current file to " .. display_name })
+		end, { desc = display_name .. ": Add current file" })
 
 		-- Add all buffers keymap
 		vim.keymap.set("n", "<leader>aL" .. key, function()
 			M.add_buffers_to_terminal(name)
-		end, { desc = "Add all buffers to " .. display_name })
+		end, { desc = display_name .. ": Add all buffers" })
 
 		-- Send command output keymap
 		vim.keymap.set("n", "<leader>ar" .. key, function()
 			M.send_command_output(name)
-		end, { desc = "Run command and send output to " .. display_name })
+		end, { desc = display_name .. ": Run command and send output" })
 
 		vim.keymap.set("n", "<leader>ac" .. key, function()
 			M.comment(name)
@@ -449,52 +452,9 @@ function M.aider_comment(prefix)
 	AiderLib.comment(prefix)
 end
 
----Prompt for text and insert a comment above the current line.
----This is a generic helper that other modules can reuse.
----@param prefix string|nil Prefix placed before the user's text (default: "AI!")
----@param callback fun(ctx: { bufnr: integer, comment_text: string, prefix: string, formatted_comment: string })|nil
----@return nil
-function M.insert_comment(prefix, callback)
-	prefix = prefix or "AI!"
-	local bufnr = vim.api.nvim_get_current_buf()
-
-	vim.ui.input({ prompt = "Enter comment (" .. prefix .. "): " }, function(comment_text)
-		if not comment_text then
-			vim.notify("No comment entered")
-			return
-		end
-
-		local current_line = vim.api.nvim_win_get_cursor(0)[1]
-
-		local cs = vim.bo.commentstring
-		local comment_string = (cs and #cs > 0) and cs or "# %s"
-
-		local formatted_prefix = " " .. prefix .. " "
-		local formatted_comment
-		if comment_string:find("%%s") then
-			formatted_comment = comment_string:format(formatted_prefix .. comment_text)
-		else
-			formatted_comment = comment_string .. formatted_prefix .. comment_text
-		end
-
-		vim.api.nvim_buf_set_lines(bufnr, current_line - 1, current_line - 1, false, { formatted_comment })
-		vim.cmd.write()
-		vim.cmd.stopinsert()
-
-		if type(callback) == "function" then
-			pcall(callback, {
-				bufnr = bufnr,
-				comment_text = comment_text,
-				prefix = prefix,
-				formatted_comment = formatted_comment,
-			})
-		end
-	end)
-end
-
 function M.comment(terminal)
 	local prefix = string.upper(terminal .. "!")
-	M.insert_comment(prefix, function(ctx)
+	insert_comment(prefix, function(ctx)
 		local path = vim.api.nvim_buf_get_name(ctx.bufnr)
 		local terminal_config = ConfigLib.config.terminals[terminal]
 		local path_tmpl = (terminal_config and terminal_config.path_header_template) or "@%s"
@@ -510,7 +470,7 @@ function M.comment(terminal)
 			formatted_path,
 			prefix
 		)
-		M.send_term(terminal, ai_prompt, { submit = true })
+		M.send_term(terminal, ai_prompt, { submit = true, focus = false })
 	end)
 end
 
@@ -549,7 +509,7 @@ end
 function M.send_command_output(term_name, cmd, opts)
 	term_name = term_name or vim.b[0].term_title
 	opts = opts or {}
-	opts.terminal_name = term_name
+	opts.term = term_name
 
 	TerminalLib.run_command_and_send_output(cmd, opts)
 end

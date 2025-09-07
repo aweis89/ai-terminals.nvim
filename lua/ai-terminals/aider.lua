@@ -5,20 +5,20 @@ local Aider = {}
 ---@param prefix string The prefix to add before the user's comment text
 ---@return nil
 function Aider.comment(prefix)
-    prefix = prefix or "AI!" -- Default prefix if none provided
+	prefix = prefix or "AI!" -- Default prefix if none provided
 
-    -- Start terminal in background so it's watching files (don't show popup yet)
-    local term, _ = Term.get_hidden("aider")
-    if not term then
-        vim.notify("Unable to get terminal: aider", vim.log.levels.ERROR)
-        return nil
-    end
+	-- Start terminal in background so it's watching files (don't show popup yet)
+	local term, _ = Term.get_hidden("aider")
+	if not term then
+		vim.notify("Unable to get terminal: aider", vim.log.levels.ERROR)
+		return nil
+	end
 
-    -- Use generic helper and perform aider-specific follow-up in callback
-    local M = require("ai-terminals")
-    M.insert_comment(prefix, function()
-        Term.open("aider") -- Focus/show aider terminal after insertion
-    end)
+	-- Use helper and perform aider-specific follow-up in callback
+	local insert_comment = require("ai-terminals.comment")
+	insert_comment(prefix, function()
+		Term.open("aider") -- Focus/show aider terminal after insertion
+	end)
 end
 
 -- Helper function to send commands to the aider terminal
