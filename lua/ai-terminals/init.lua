@@ -129,6 +129,10 @@ local function setup_auto_terminal_keymaps()
 			require("ai-terminals").send_command_output(name)
 		end, { desc = "Run command and send output to " .. display_name })
 
+		--  AI? what does this do?
+		vim.keymap.set("n", "<leader>ac" .. key, function()
+			require("ai-terminals").comment("codex")
+		end, { desc = display_name .. ": Add comment for AI to address" })
 		::continue::
 	end
 end
@@ -444,6 +448,71 @@ end
 ---@return nil
 function M.aider_comment(prefix)
 	AiderLib.comment(prefix)
+end
+
+---Prompt for text and insert a comment above the current line.
+---This is a generic helper that other modules can reuse.
+---@param prefix string|nil Prefix placed before the user's text (default: "AI!")
+---@param callback fun(ctx: { bufnr: integer, comment_text: string, prefix: string, formatted_comment: string })|nil
+---@return nil
+function M.insert_comment(prefix, callback)
+	prefix = prefix or "AI!"
+	local bufnr = vim.api.nvim_get_current_buf()
+
+	vim.ui.input({ prompt = "Enter comment (" .. prefix .. "): " }, function(comment_text)
+		if not comment_text then
+			vim.notify("No comment entered")
+			return
+		end
+
+		local current_line = vim.api.nvim_win_get_cursor(0)[1]
+
+		local cs = vim.bo.commentstring
+		local comment_string = (cs and #cs > 0) and cs or "# %s"
+
+		local formatted_prefix = " " .. prefix .. " "
+		local formatted_comment
+		if comment_string:find("%%s") then
+			formatted_comment = comment_string:format(formatted_prefix .. comment_text)
+		else
+			formatted_comment = comment_string .. formatted_prefix .. comment_text
+		end
+
+		vim.api.nvim_buf_set_lines(bufnr, current_line - 1, current_line - 1, false, { formatted_comment })
+		vim.cmd.write()
+		vim.cmd.stopinsert()
+
+		if type(callback) == "function" then
+			pcall(callback, {
+				bufnr = bufnr,
+				comment_text = comment_text,
+				prefix = prefix,
+				formatted_comment = formatted_comment,
+			})
+		end
+	end)
+end
+
+function M.comment(terminal)
+	local prefix = string.upper(terminal .. "!")
+	M.insert_comment(prefix, function(ctx)
+		local path = vim.api.nvim_buf_get_name(ctx.bufnr)
+		local terminal_config = ConfigLib.config.terminals[terminal]
+		local path_tmpl = (terminal_config and terminal_config.path_header_template) or "@%s"
+		local formatted_path = string.format(path_tmpl, path)
+
+		local ai_prompt = string.format(
+			[[
+1) Read the file: %s
+2) Look for comments starting with `%s` to get your actual instructions
+3) Follow those instructions and complete the request/s
+4) Remove the comment from the file
+    ]],
+			formatted_path,
+			prefix
+		)
+		M.send_term(terminal, ai_prompt, { submit = true })
+	end)
 end
 
 -- Helper function to send commands to the aider terminal (delegates to AiderLib)

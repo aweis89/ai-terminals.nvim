@@ -5,43 +5,20 @@ local Aider = {}
 ---@param prefix string The prefix to add before the user's comment text
 ---@return nil
 function Aider.comment(prefix)
-	prefix = prefix or "AI!" -- Default prefix if none provided
-	local bufnr = vim.api.nvim_get_current_buf()
+    prefix = prefix or "AI!" -- Default prefix if none provided
 
-	-- Start terminal in background so it's watching files (don't show popup yet)
-	local term, created = Term.get_hidden("aider")
-	if not term then
-		vim.notify("Unable to get terminal: aider", vim.log.levels.ERROR)
-		return nil
-	end
+    -- Start terminal in background so it's watching files (don't show popup yet)
+    local term, _ = Term.get_hidden("aider")
+    if not term then
+        vim.notify("Unable to get terminal: aider", vim.log.levels.ERROR)
+        return nil
+    end
 
-	vim.ui.input({ prompt = "Enter comment (" .. prefix .. "): " }, function(comment_text)
-		if not comment_text then
-			vim.notify("No comment entered")
-			return -- Do nothing if the user entered nothing
-		end
-
-		local current_line = vim.api.nvim_win_get_cursor(0)[1]
-
-		local cs = vim.bo.commentstring
-		local comment_string = (cs and #cs > 0) and cs or "# %s"
-
-		-- Format the comment string
-		local formatted_prefix = " " .. prefix .. " " -- Add spaces around the prefix
-		local formatted_comment
-		if comment_string:find("%%s") then
-			formatted_comment = comment_string:format(formatted_prefix .. comment_text)
-		else
-			-- Handle cases where commentstring might not have %s (less common)
-			-- or just prepend if it's a simple prefix like '#'
-			formatted_comment = comment_string .. formatted_prefix .. comment_text
-		end
-		-- Insert the comment above the current line
-		vim.api.nvim_buf_set_lines(bufnr, current_line - 1, current_line - 1, false, { formatted_comment })
-		vim.cmd.write() -- Save the file
-		vim.cmd.stopinsert() -- Exit insert mode
-		Term.open("aider") -- Ensure terminal is focused/open for potential follow-up, using name
-	end)
+    -- Use generic helper and perform aider-specific follow-up in callback
+    local M = require("ai-terminals")
+    M.insert_comment(prefix, function()
+        Term.open("aider") -- Focus/show aider terminal after insertion
+    end)
 end
 
 -- Helper function to send commands to the aider terminal
