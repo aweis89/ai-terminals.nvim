@@ -151,7 +151,8 @@ function FileWatcher.reload_changes()
 				#reloaded_files > 1 and "s" or "",
 				table.concat(reloaded_files, "\n")
 			)
-			log(message)
+			local level = _notify_info and vim.log.levels.INFO or vim.log.levels.DEBUG
+			log(message, level)
 		end
 	end)
 end
@@ -230,7 +231,12 @@ end
 
 vim.api.nvim_create_autocmd("FileChangedShellPost", {
 	group = vim.api.nvim_create_augroup("FormatOnExternalChange", { clear = true }),
-	callback = format_on_external_change,
+	callback = function(args)
+		local path = vim.api.nvim_buf_get_name(args.buf)
+		local filename = vim.fn.fnamemodify(path, ":t")
+		log("Modified: " .. filename, vim.log.levels.INFO, { title = "ai-terminal" })
+		format_on_external_change(args)
+	end,
 })
 
 ---@param terminal_name string The name of the terminal

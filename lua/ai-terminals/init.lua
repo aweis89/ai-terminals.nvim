@@ -279,8 +279,6 @@ function M.setup(user_config)
 		else
 			-- Initialize tmux-toggle-popup with our tmux config
 			local tmux_config = ConfigLib.config.tmux or {}
-			-- Enable debug logging to troubleshoot tmux issues
-			tmux_config.log_level = vim.log.levels.DEBUG
 			local setup_ok, _ = pcall(tmux_popup.setup, tmux_config)
 			if not setup_ok then
 				vim.notify("Warning: Failed to setup tmux backend", vim.log.levels.WARN)
@@ -400,11 +398,30 @@ function M.send_term(name, text, opts)
 		submit = opts.submit or false,
 	}
 
+	local focus = opts.focus == true
+	if not focus then
+		-- Open (or create) the terminal session without showing the popup/window
+		local term
+		if ConfigLib.config.backend == "tmux" then
+			term = select(1, TerminalLib.get_hidden(name, nil))
+		else
+			term = select(1, TerminalLib.get_hidden(name, nil))
+		end
+
+		if not term then
+			vim.notify("Terminal '" .. name .. "' not found or could not be created", vim.log.levels.ERROR)
+			return
+		end
+
+		term:send(text, send_opts)
+		-- Do not focus/show when focus is false
+		return
+	end
+
+	-- focus requested: open (shows popup/window) then send and focus
 	local term = M.open(name, nil, function(term)
 		term:send(text, send_opts)
-		if opts.focus then -- Only focus if requested
-			term:focus()
-		end
+		term:focus()
 	end)
 
 	if not term then
@@ -452,8 +469,15 @@ function M.aider_comment(prefix)
 	AiderLib.comment(prefix)
 end
 
-function M.comment(terminal)
+function M.comment(terminal, opts)
+	opts = opts or {}
+	local background = opts.background
+	if background == nil then
+		background = true
+	end
+	local focus = not background
 	local prefix = string.upper(terminal .. "!")
+
 	insert_comment(prefix, function(ctx)
 		local path = vim.api.nvim_buf_get_name(ctx.bufnr)
 		local terminal_config = ConfigLib.config.terminals[terminal]
@@ -470,7 +494,7 @@ function M.comment(terminal)
 			formatted_path,
 			prefix
 		)
-		M.send_term(terminal, ai_prompt, { submit = true, focus = false })
+		M.send_term(terminal, ai_prompt, { submit = true, focus = focus })
 	end)
 end
 
