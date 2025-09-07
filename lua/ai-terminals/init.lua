@@ -106,31 +106,31 @@ local function setup_auto_terminal_keymaps()
 
 		-- Toggle terminal keymap
 		vim.keymap.set({ "n", "v" }, prefix .. key, function()
-			require("ai-terminals").toggle(name)
+			M.toggle(name)
 		end, { desc = "Toggle " .. display_name .. " terminal" })
 
 		-- Send diagnostics keymap
 		vim.keymap.set({ "n", "v" }, "<leader>ad" .. key, function()
-			require("ai-terminals").send_diagnostics(name)
+			M.send_diagnostics(name)
 		end, { desc = "Send diagnostics to " .. display_name })
 
 		-- Add current file keymap
 		vim.keymap.set("n", "<leader>al" .. key, function()
-			require("ai-terminals").add_files_to_terminal(name, { vim.fn.expand("%") })
+			M.add_files_to_terminal(name, { vim.fn.expand("%") })
 		end, { desc = "Add current file to " .. display_name })
 
 		-- Add all buffers keymap
 		vim.keymap.set("n", "<leader>aL" .. key, function()
-			require("ai-terminals").add_buffers_to_terminal(name)
+			M.add_buffers_to_terminal(name)
 		end, { desc = "Add all buffers to " .. display_name })
 
 		-- Send command output keymap
 		vim.keymap.set("n", "<leader>ar" .. key, function()
-			require("ai-terminals").send_command_output(name)
+			M.send_command_output(name)
 		end, { desc = "Run command and send output to " .. display_name })
 
 		vim.keymap.set("n", "<leader>ac" .. key, function()
-			require("ai-terminals").comment(name)
+			M.comment(name)
 		end, { desc = display_name .. ": Add comment for AI to address" })
 		::continue::
 	end
