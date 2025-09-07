@@ -129,7 +129,6 @@ local function setup_auto_terminal_keymaps()
 			require("ai-terminals").send_command_output(name)
 		end, { desc = "Run command and send output to " .. display_name })
 
-		--  AI? what does this do?
 		vim.keymap.set("n", "<leader>ac" .. key, function()
 			require("ai-terminals").comment(name)
 		end, { desc = display_name .. ": Add comment for AI to address" })
