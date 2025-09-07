@@ -190,24 +190,26 @@ local function build_default_keys(actions)
 		end
 	end
 
-  local has_auto = type(auto) == "table" and type(auto.terminals) == "table" and #auto.terminals > 0
-  if not has_auto then
-    return keys -- no auto keymaps configured; expose actions only (no defaults)
-  end
+	local has_auto = type(auto) == "table" and type(auto.terminals) == "table" and #auto.terminals > 0
+	if not has_auto then
+		return keys -- no auto keymaps configured; expose actions only (no defaults)
+	end
 
-  for _, entry in ipairs(auto.terminals) do
-    if entry and entry.enabled ~= false and type(entry.name) == "string" and type(entry.key) == "string" then
-      local add_action = entry.name .. "_add"
-      if actions[add_action] then
-        add("<localleader>a" .. entry.key, add_action)
-      end
-      local ro_action = entry.name .. "_read_only"
-      if actions[ro_action] then
-        add("<localleader>A" .. entry.key, ro_action)
-      end
-    end
-  end
-  return keys
+	-- Use a separate prefix for picker actions. Defaults to <localleader>.
+	local pfx = (auto and auto.picker_prefix) or "<localleader>"
+	for _, entry in ipairs(auto.terminals) do
+		if entry and entry.enabled ~= false and type(entry.name) == "string" and type(entry.key) == "string" then
+			local add_action = entry.name .. "_add"
+			if actions[add_action] then
+				add(pfx .. "a" .. entry.key, add_action)
+			end
+			local ro_action = entry.name .. "_read_only"
+			if actions[ro_action] then
+				add(pfx .. "A" .. entry.key, ro_action)
+			end
+		end
+	end
+	return keys
 end
 
 -- Ensure nested table path exists and return the final table

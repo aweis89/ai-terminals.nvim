@@ -488,6 +488,12 @@ Built-in integration with [Snacks.nvim](https://github.com/folke/snacks.nvim)
 lets you add the currently selected files in any picker to an AI terminal in a
 single keystroke — without overriding your own Snacks configuration.
 
+Important: prefixes
+- Toggle/diagnostics/etc. keymaps (set by `auto_terminal_keymaps`) use
+  `auto_terminal_keymaps.prefix` (default in examples: `<leader>at`).
+- Picker actions use a separate `auto_terminal_keymaps.picker_prefix` and
+  default to `<localleader>` so they don’t conflict with toggles.
+
 What you get
 - Actions for every configured terminal: `<term>_add` is generated for all
   entries in `Config.config.terminals`; `<term>_read_only` is added only when
@@ -513,12 +519,15 @@ return {
 ```
 
 Default keymaps (added only if unset)
-- Keys are derived from your `auto_terminal_keymaps` entries:
-  - `<localleader>a{key}` → `{terminal}_add`
-  - `<localleader>A{key}` → `{terminal}_read_only` (only when supported)
-  Example: with `{ name = "claude", key = "c" }`, the picker maps use
-  `<localleader>ac` for `claude_add`.
-  If `auto_terminal_keymaps` is not set, no default picker mappings are added (actions are still available to bind manually).
+- Keys derive from your `auto_terminal_keymaps` entries:
+  - `{picker_prefix}a{key}` → `{terminal}_add`
+  - `{picker_prefix}A{key}` → `{terminal}_read_only` (only when supported)
+  Where `{picker_prefix}` is `auto_terminal_keymaps.picker_prefix` (defaults to
+  `<localleader>`). Example: with `picker_prefix = "<localleader>"` and
+  `{ name = "claude", key = "c" }`, the picker maps use `<localleader>ac` for
+  `claude_add`.
+- If `auto_terminal_keymaps` is not set, no default picker mappings are added
+  (actions are still available to bind manually).
 
 Applied to these pickers
 - `buffers`, `files`, `git_diff`, `git_files`, `git_log_file`, `git_log`,

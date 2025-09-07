@@ -31,7 +31,8 @@ local Config = {}
 ---@field enabled? boolean Whether to generate keymaps for this terminal (default: true)
 
 ---@class AutoTerminalKeymapsConfig
----@field prefix? string Base prefix for all keymaps (default: "<leader>at")
+---@field prefix? string Base prefix for toggle/diagnostics keymaps (default: "<leader>at")
+---@field picker_prefix? string Base prefix for Snacks picker actions (default: "<localleader>")
 ---@field terminals? AutoTerminalKeymapEntry[] List of terminals to generate keymaps for
 
 ---@class ConfigType
@@ -48,7 +49,7 @@ local Config = {}
 ---@field terminal_keymaps {key: string, action: string | fun(), desc: string, modes?: string | string[]}[]|nil Keymaps that only apply within terminal buffers (array of tables). `modes` (optional, string or array of strings, default: "t"): Specifies the modes for the keymap.
 ---@field backend "snacks"|"tmux"|nil Terminal backend to use. "snacks" uses snacks.nvim terminal (default), "tmux" uses tmux-toggle-popup.nvim
 ---@field tmux TmuxConfig|nil Configuration for tmux backend when backend="tmux"
----@field auto_terminal_keymaps AutoTerminalKeymapsConfig|nil Auto-generated keymaps for all configured terminals
+---@field auto_terminal_keymaps AutoTerminalKeymapsConfig|nil Auto-generated keymaps for all configured terminals. `prefix` applies to toggle/diagnostics/etc.; `picker_prefix` applies to Snacks picker actions.
 
 ---@type ConfigType
 Config.config = {
@@ -112,6 +113,18 @@ Config.config = {
 	default_position = "right", -- Default position if none is specified in toggle/open/get
 	enable_diffing = false, -- Enable backup sync and diff commands. Disabling this prevents `diff_changes` and `close_diff` from working.
 	backend = vim.env.TMUX and "tmux" or "snacks", -- Auto-detect: use tmux backend if in tmux session, otherwise snacks
+
+	-- Auto-generated keymaps (optional)
+	-- Example:
+	-- auto_terminal_keymaps = {
+	-- 	prefix = "<leader>at",         -- used for toggles/diagnostics/etc.
+	-- 	picker_prefix = "<localleader>", -- used for Snacks picker actions
+	-- 	terminals = {
+	-- 		{ name = "claude", key = "c" },
+	-- 		{ name = "aider",  key = "a" },
+	-- 		{ name = "codex",  key = "d", enabled = true },
+	-- 	},
+	-- },
 
 	-- Watch strategy: when enabled, watch the entire current working directory
 	-- recursively instead of only the files open in the current tab. Defaults to false.
