@@ -212,21 +212,6 @@ The plugin provides generic file management functions that work with any termina
   - Filters out invalid, unloaded, or non-modifiable buffers
   - Uses the same command templates as `add_files_to_terminal`
 
-**Configuration:** Add `file_commands` to your terminal config to customize:
-
-```lua
-terminals = {
-  my_ai_tool = {
-    cmd = "my-ai-cli",
-    file_commands = {
-      add_files = "load %s",           -- Template for adding files
-      add_files_readonly = "view %s",  -- Template for read-only files  
-      submit = true,                   -- Whether to auto-submit
-    },
-  },
-}
-```
-
 **File Picker Integration:** These functions integrate with file
 pickers like Snacks.nvim. You can configure picker actions to add selected files
 directly to any terminal with keymaps like `<localleader>aa` for Aider or
