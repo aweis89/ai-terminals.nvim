@@ -484,103 +484,76 @@ header will be formatted according to that terminal's template:
 
 ## 🔌 Snacks Picker Integration
 
-The plugin integrates with [Snacks.nvim](https://github.com/folke/snacks.nvim)
-pickers, allowing you to add selected files from any picker directly to your AI
-terminals. Here's a complete working example:
+Built-in integration with [Snacks.nvim](https://github.com/folke/snacks.nvim)
+lets you add the currently selected files in any picker to an AI terminal in a
+single keystroke — without overriding your own Snacks configuration.
 
+What you get
+- Actions for every configured terminal: `<term>_add` is generated for all
+  entries in `Config.config.terminals`; `<term>_read_only` is added only when
+  that terminal defines `file_commands.add_files_readonly` (e.g., `aider`).
+- Safe defaults: default keymaps are added to common file pickers only when a
+  key is not already defined.
+- Absolute path resolution: uses `Snacks.picker.util.path(item)` to resolve
+  project-relative entries to full paths.
+- Claude directory special-case: selecting a single directory triggers
+  `claude /add-dir <dir>`.
+
+Enable it (lazy.nvim)
 ```lua
--- Helper function to extract files from a snacks picker and send them to ai-terminals
----@param picker snacks.Picker
----@param term string
----@param opts? { read_only?: boolean } Options for the command
-local function add_files_from_picker(picker, term, opts)
-  local selected = picker:selected({ fallback = true })
-  local files_to_add = {}
-  for _, item in pairs(selected) do
-    if item.file then
-      -- Use Snacks.picker.util.path() to get the absolute path
-      -- This is necessary to get the absolute path from project picker
-      local abs_path = Snacks.picker.util.path(item)
-      if abs_path then
-        table.insert(files_to_add, abs_path)
-      end
-    end
-  end
-  require("ai-terminals").add_files_to_terminal(term, files_to_add, opts)
-end
-
--- Configure Snacks picker with ai-terminals actions
 return {
-  "folke/snacks.nvim",
-  opts = function(_, opts)
-    return vim.tbl_deep_extend("force", opts or {}, {
-      picker = {
-        actions = {
-          -- Actions for adding files to different AI terminals
-          ["aider_add"] = function(picker)
-            picker:close()
-            add_files_from_picker(picker, "aider")
-          end,
-          ["aider_read_only"] = function(picker)
-            picker:close()
-            add_files_from_picker(picker, "aider", { read_only = true })
-          end,
-          ["claude_add"] = function(picker)
-            picker:close()
-            add_files_from_picker(picker, "claude")
-          end,
-          ["codex_add"] = function(picker)
-            picker:close()
-            add_files_from_picker(picker, "codex")
-          end,
-        },
-        sources = {
-          -- Apply file actions to multiple picker sources
-          files = {
-            win = {
-              input = {
-                keys = {
-                  ["<localleader>aa"] = { "aider_add", mode = { "n", "i" } },
-                  ["<localleader>Aa"] = { "aider_read_only", mode = { "n", "i" } },
-                  ["<localleader>ac"] = { "claude_add", mode = { "n", "i" } },
-                  ["<localleader>ad"] = { "codex_add", mode = { "n", "i" } },
-                },
-              },
-            },
-          },
-          git_files = {
-            win = {
-              input = {
-                keys = {
-                  ["<localleader>aa"] = { "aider_add", mode = { "n", "i" } },
-                  ["<localleader>Aa"] = { "aider_read_only", mode = { "n", "i" } },
-                  ["<localleader>ac"] = { "claude_add", mode = { "n", "i" } },
-                  ["<localleader>ad"] = { "codex_add", mode = { "n", "i" } },
-                },
-              },
-            },
-          },
-          -- Add the same keymaps to other pickers like git_status, recent, etc.
-        },
-      },
-    })
-  end,
+  {
+    "folke/snacks.nvim",
+    opts = function(_, opts)
+      local sa = require("ai-terminals.snacks_actions")
+      return sa.apply(opts) -- merges actions + default keymaps; user options win
+    end,
+  },
 }
 ```
 
-**Usage:**
+Default keymaps (added only if unset)
+- Keys are derived from your `auto_terminal_keymaps` entries:
+  - `<localleader>a{key}` → `{terminal}_add`
+  - `<localleader>A{key}` → `{terminal}_read_only` (only when supported)
+  Example: with `{ name = "claude", key = "c" }`, the picker maps use
+  `<localleader>ac` for `claude_add`.
+  If `auto_terminal_keymaps` is not set, no default picker mappings are added (actions are still available to bind manually).
 
-1. Open any Snacks picker (files, git_files, git_status, etc.)
-2. Select one or more files using `<Tab>` or navigate to the file you want
-3. Use the keymaps to add files to your AI terminals:
-   - `<localleader>aa` - Add to Aider (normal mode)
-   - `<localleader>Aa` - Add to Aider (read-only mode)  
-   - `<localleader>ac` - Add to Claude
-   - `<localleader>ad` - Add to Codex
+Applied to these pickers
+- `buffers`, `files`, `git_diff`, `git_files`, `git_log_file`, `git_log`,
+  `git_status`, `grep_buffers`, `grep_word`, `grep`, `projects`, `recent`,
+  `smart`, `explorer`.
 
-This integration works with all Snacks pickers that show files and uses the modern
-generic `add_files_to_terminal()` function, which automatically handles the
-appropriate file commands for each terminal type.
+Customize
+- Mappings never override yours. To change keys, set them in your Snacks opts
+  as usual; `sa.apply()` will leave existing mappings intact.
+- Add keys for other terminals by binding to the generated actions (e.g.,
+  `goose_add`, `cursor_add`). Example:
+
+```lua
+opts = {
+  picker = {
+    sources = {
+      files = {
+        win = {
+          input = {
+            keys = {
+              ["<localleader>ag"] = { "goose_add", mode = { "n", "i" } },
+            },
+          },
+        },
+      },
+    },
+  },
+}
+```
+
+Notes
+- Disable notifications from the integration with
+  `vim.g.ai_terminals_snacks_actions_notify = false`.
+- If you prefer full manual control, skip `sa.apply()` and define your own
+  actions/mappings; `ai-terminals.add_files_to_terminal()` works everywhere.
 
 ### 📋 Example Usage
 
