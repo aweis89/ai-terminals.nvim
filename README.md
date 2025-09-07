@@ -18,54 +18,27 @@ Using lazy.nvim:
 {
   "aweis89/ai-terminals.nvim",
   dependencies = { "folke/snacks.nvim" },
-  opts = {}, -- uses sensible defaults; tmux backend auto-selected in tmux
+  opts = {
+    auto_terminal_keymaps = {
+      prefix = "<leader>at",
+      terminals = {
+        {name = "claude", key = "c"},
+        {name = "aider", key = "a"},
+        {name = "goose", key = "g"},
+      }
+    }
+  }
 }
 ```
 
-Try it:
+This automatically generates consistent keymaps for all configured terminals:
 
-- Visual select code, then: `:lua require("ai-terminals").toggle("claude")`
-- Send diagnostics: `:lua require("ai-terminals").send_diagnostics("claude")`
-- Add current file: `:lua require("ai-terminals").add_files_to_terminal("claude", { vim.fn.expand("%") })`
-
-### 🚀 Auto Terminal Keymaps
-
-The plugin can automatically generate consistent keymaps for all your configured terminals, eliminating the need to manually create repetitive keymap configurations.
-
-**Configuration:**
-
-```lua
-require("ai-terminals").setup({
-  auto_terminal_keymaps = {
-    prefix = "<leader>at",            -- Base prefix for toggle keymaps (default: "<leader>at")
-    terminals = {
-      {name = "claude", key = "c"},
-      {name = "aider", key = "a"},
-      {name = "goose", key = "g"},
-      {name = "codex", key = "d", enabled = false}, -- Disabled
-    }
-  }
-})
-```
-
-**Generated Keymaps:**
-
-For each enabled terminal, the following keymaps are automatically created:
-
-- `<prefix><key>` - Toggle terminal (normal/visual modes)
-- `<leader>ad<key>` - Send diagnostics to terminal (normal/visual modes)
-- `<leader>al<key>` - Add current file to terminal (normal mode)
-- `<leader>aL<key>` - Add all buffers to terminal (normal mode)
-- `<leader>ar<key>` - Run command and send output to terminal (normal mode)
-
-**Example:** With the above configuration, you get:
-
-- `<leader>atc` - Toggle Claude terminal
+- `<leader>atc` - Toggle Claude terminal (sends visual selection if active)
 - `<leader>adc` - Send diagnostics to Claude
 - `<leader>alc` - Add current file to Claude
-- And the same pattern for `a` (Aider), `g` (Goose), etc.
-
-This feature provides a quick way to get consistent keymaps across all your terminals while maintaining full control over which ones are enabled.
+- `<leader>aLc` - Add all buffers to Claude
+- `<leader>arc` - Run command and send output to Claude
+- Same pattern for `a` (Aider), `g` (Goose), etc.
 
 ## Public API
 
