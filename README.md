@@ -109,9 +109,24 @@ want a single, configurable way to manage them within Neovim.
   various AI CLI tools (e.g., Claude, Goose, Cursor, Aider, custom scripts)
   through a simple configuration table. Uses `Snacks` for terminal window
   management.
-- **🔃 Automatic File Reloading:** Real-time file reloading using file watchers
-  automatically detects and reloads changes made by AI tools instantly,
-  ensuring you see the latest modifications as they happen.
+- **🔃 File Modification Hooks:**
+  - Real-time file reloading so active buffers always have the latest changes
+  - Format files using Neovim, supports Conform, None-LS and LSP fallback
+  - Notify on file changes so you don't need to babysit the terminal output
+- **📋 Send Visual Selection:** Send the currently selected text (visual mode) to
+  the AI terminal, automatically wrapped in a markdown code block with the file
+  path and language type included. Each terminal can have a custom path header
+  template to format file paths according to the AI tool's preferences (e.g.,
+  `@filename` or `` `filename` ``).
+- **🩺 Send Diagnostics:** Send diagnostics (errors, warnings, etc.) for the
+  current buffer or visual selection to the AI terminal
+  (`:h ai-terminals.send_diagnostics`), formatted with severity, line/column
+  numbers, messages, and the corresponding source code lines.
+- **📁 File Context Management:** Generic functions to add files or buffers to any
+  terminal using configurable commands (`:h ai-terminals.add_files_to_terminal`,
+  `:h ai-terminals.add_buffers_to_terminal`). Picker integration with Snacks files can be selected
+  from any of your existing file pickers (e.g. `git_files`, `git_status`, `buffers`, `smart` ..)
+  using a custom actions.
 - **🔍 Git Integration Recommendation:** For tracking changes made by AI tools,
   we recommend using established git plugins:
   - **[gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim):** Shows git
@@ -121,39 +136,7 @@ want a single, configurable way to manage them within Neovim.
     status with custom actions for staging, discarding, or viewing changes
   - **[diffview.nvim](https://github.com/sindrets/diffview.nvim):** Comprehensive
     git diff viewer with side-by-side comparisons
-- **📋 Send Visual Selection:** Send the currently selected text (visual mode) to
-  the AI terminal, automatically wrapped in a markdown code block with the file
-  path and language type included. Each terminal can have a custom path header
-  template to format file paths according to the AI tool's preferences (e.g.,
-  `@filename` or `` `filename` ``).
 
-- **🩺 Send Diagnostics:** Send diagnostics (errors, warnings, etc.) for the
-  current buffer or visual selection to the AI terminal
-  (`:h ai-terminals.send_diagnostics`), formatted with severity, line/column
-  numbers, messages, and the corresponding source code lines.
-- **🚀 Run Command and Send Output:** Execute an arbitrary shell command and
-  send its standard output and exit code to the active AI terminal
-  (`:h ai-terminals.send_command_output`). Useful for running tests, linters,
-  or even fetching information from other CLIs (e.g.,
-  `jira issue view MYTICKET-123`) and feeding results to the AI.
-- **📁 File Management:** Generic functions to add files or buffers to any
-  terminal using configurable commands
-  (`:h ai-terminals.add_files_to_terminal`,
-  `:h ai-terminals.add_buffers_to_terminal`). Works with all terminals, with
-  fallback behavior for terminals without specific file commands configured.
-- **📝 Prompt Keymaps:** Define custom keymaps (`:h ai-terminals-config-prompt-keymaps`) to
-  send pre-defined prompts to specific terminals.
-  - **Selection Handling:** Configure whether the keymap includes visual
-    selection (`include_selection` option, defaults to `true`).
-    - If `true`, the keymap works in normal and visual modes. In visual mode,
-      the selection is prefixed to the prompt.
-    - If `false`, the keymap works only in normal mode and sends just the prompt.
-  - **Submission Control:** Configure whether a newline is sent after the
-    prompt (`submit` option, defaults to `true`).
-  - **Dynamic Prompts:** Prompt text can be a string or a function that returns
-    a string. Functions are evaluated when the keymap is triggered, allowing
-    dynamic content (e.g., current file path). See example in
-    `:h ai-terminals-configuration`.
 
 ### 📁 File Management
 
