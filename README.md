@@ -154,20 +154,6 @@ want a single, configurable way to manage them within Neovim.
     a string. Functions are evaluated when the keymap is triggered, allowing
     dynamic content (e.g., current file path). See example in
     `:h ai-terminals-configuration`.
-- **⌨️ Terminal Keymaps:** Define custom keymaps (`:h ai-terminals-configuration`)
-  that only apply within the AI terminal buffers. **Note: Only works with the
-  Snacks backend** - tmux terminals cannot execute Neovim functions.
-  - **Modes:** Specify which modes the keymap applies to (e.g., "t" for
-    terminal mode, "n" for normal mode within the terminal). Defaults to "t".
-  - **Actions:** Actions can be functions or strings (e.g., to close the
-    terminal or send keys).
-- **🚀 Auto Terminal Keymaps:** Automatically generate consistent keymaps for
-  all your configured terminals (`:h ai-terminals-configuration`).
-  - **Consistent Patterns:** Creates standardized keymaps following a common
-    pattern for each terminal (toggle, diagnostics, add files, etc.).
-  - **Customizable:** Configure key suffixes, display names, and enable/disable
-    individual terminals.
-  - **Global Control:** Enable or disable the entire feature with a single flag.
 
 ### 📁 File Management
 
