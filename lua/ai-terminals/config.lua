@@ -24,6 +24,7 @@ local Config = {}
 ---@field flags? table Tmux popup flags configuration
 ---@field toggle? table Tmux toggle keymap configuration
 ---@field on_init? string[] Tmux commands to run after popup creation
+---@field startup_delay_ms? integer Delay before sending text to a newly created tmux session (milliseconds). Default: 500
 
 ---@class AutoTerminalKeymapEntry
 ---@field name string Terminal name (must match key in terminals config)
@@ -154,6 +155,9 @@ Config.config = {
 		-- Tmux popup configuration - simple width/height parameters
 		width = 0.9, -- 90% of terminal width (0.0-1.0)
 		height = 0.85, -- 85% of terminal height (accounts for tmux status bar)
+		-- How long to wait before sending text to a brand-new tmux session
+		-- to allow it to initialize. Measured in milliseconds.
+		startup_delay_ms = 500,
 		flags = {
 			close_on_exit = true, -- Close popup when command exits
 			start_directory = function()

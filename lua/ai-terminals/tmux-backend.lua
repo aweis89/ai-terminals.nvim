@@ -92,8 +92,13 @@ function TmuxTerminalObject:send(text, opts)
 
 	-- Check if session needs startup delay
 	if TmuxBackend._needs_startup_delay(session_name) then
-		vim.notify("Tmux: deferring send 1000ms for new session " .. session_name, vim.log.levels.DEBUG)
-		vim.defer_fn(send_text, 1000)
+		local cfg = require("ai-terminals.config").config
+		local delay_ms = (cfg.tmux and cfg.tmux.startup_delay_ms) or 500
+		vim.notify(
+			"Tmux: deferring send " .. tostring(delay_ms) .. "ms for new session " .. session_name,
+			vim.log.levels.DEBUG
+		)
+		vim.defer_fn(send_text, delay_ms)
 	else
 		send_text()
 	end
