@@ -46,9 +46,26 @@ end
 
 function FileWatcher.setup_watchers(terminal_name, reload_callback)
 	local watch_cwd = (Config.config and Config.config.watch_cwd) or { enabled = false }
-	if watch_cwd.enabled then
+
+	-- Helper: only use directory watcher inside a git repository
+	local function in_git_repo()
+		local cwd = vim.fn.getcwd()
+		local ok, _ = pcall(function()
+			vim.fn.system({ "git", "-C", cwd, "rev-parse", "--is-inside-work-tree" })
+		end)
+		if not ok then
+			return false
+		end
+		return vim.v.shell_error == 0
+	end
+
+	if watch_cwd.enabled and in_git_repo() then
 		FileWatcher.setup_dir_watcher(terminal_name, reload_callback)
 	else
+		if watch_cwd.enabled then
+			-- Fallback when not in a git repo to avoid noisy recursive watching
+			log("Not a git repo; falling back to file watchers", vim.log.levels.DEBUG)
+		end
 		FileWatcher.file_watchers(terminal_name, reload_callback)
 	end
 end
