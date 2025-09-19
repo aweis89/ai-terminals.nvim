@@ -23,7 +23,7 @@ end
 
 -- Helper function to send commands to the aider terminal
 ---@deprecated Use M.add_files_to_terminal("aider", files, opts) instead
----@param files string[] List of file paths to add to aider. Paths will be converted to absolute paths.
+---@param files string[] List of file paths to add to aider. Paths will be converted to paths relative to the current working directory.
 ---@param opts? { read_only?: boolean } Options for the command
 function Aider.add_files(files, opts)
 	vim.notify(

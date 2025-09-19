@@ -170,7 +170,7 @@ Backend differences:
 ### 7) Add Files/Buffers to Terminals (Generic)
 
 - M.add_files_to_terminal(terminal_name, files, opts?)
-  - Convert to absolute paths; choose template from terminal_config.file_commands (add_files or add_files_readonly); or fallback “@path1 @path2”.
+  - Convert to paths relative to the current working directory; choose template from terminal_config.file_commands (add_files or add_files_readonly); or fallback “@path1 @path2”.
   - Opens terminal and sends command; submit obeys file_commands.submit (default false).
 - M.add_buffers_to_terminal(terminal_name, opts?)
   - Collects buflisted/loaded/modifiable files in current session and delegates to add_files_to_terminal.

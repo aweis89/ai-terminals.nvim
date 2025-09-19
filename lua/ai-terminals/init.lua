@@ -480,9 +480,10 @@ function M.comment(terminal, opts)
 
 	insert_comment(prefix, function(ctx)
 		local path = vim.api.nvim_buf_get_name(ctx.bufnr)
+		local rel_path = vim.fn.fnamemodify(path, ":.")
 		local terminal_config = ConfigLib.config.terminals[terminal]
 		local path_tmpl = (terminal_config and terminal_config.path_header_template) or "@%s"
-		local formatted_path = string.format(path_tmpl, path)
+		local formatted_path = string.format(path_tmpl, rel_path)
 
 		local ai_prompt = string.format(
 			[[
@@ -540,7 +541,7 @@ end
 
 ---Send files to a terminal using its configured file commands
 ---@param terminal_name string The name of the terminal (key in ConfigLib.config.terminals)
----@param files string[] List of file paths to add to terminal. Paths will be converted to absolute paths.
+---@param files string[] List of file paths to add to terminal. Paths will be converted to paths relative to the current working directory.
 ---@param opts? { read_only?: boolean } Options for the command
 function M.add_files_to_terminal(terminal_name, files, opts)
 	opts = opts or {}
@@ -557,11 +558,11 @@ function M.add_files_to_terminal(terminal_name, files, opts)
 		return
 	end
 
-	-- Convert all file paths to absolute paths
-	local absolute_files = {}
+	-- Convert all file paths to paths relative to the current working directory
+	local relative_files = {}
 	for _, file in ipairs(files) do
-		local absolute = vim.fn.fnamemodify(file, ":p")
-		table.insert(absolute_files, absolute)
+		local rel = vim.fn.fnamemodify(file, ":.")
+		table.insert(relative_files, rel)
 	end
 
 	-- Get file commands config or use defaults
@@ -576,13 +577,13 @@ function M.add_files_to_terminal(terminal_name, files, opts)
 		-- to keep behavior consistent with visual selection handling.
 		local path_tmpl = terminal_config.path_header_template or "@%s"
 		local formatted_files = {}
-		for _, file in ipairs(absolute_files) do
+		for _, file in ipairs(relative_files) do
 			table.insert(formatted_files, string.format(path_tmpl, file))
 		end
 		command = table.concat(formatted_files, " ")
 	else
 		-- Use configured template
-		local files_str = table.concat(absolute_files, " ")
+		local files_str = table.concat(relative_files, " ")
 		command = string.format(template, files_str)
 	end
 

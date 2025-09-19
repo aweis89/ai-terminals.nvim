@@ -27,20 +27,20 @@ local function is_dir(path)
 	return s and s.type == "directory" or false
 end
 
--- Extract absolute path for a Snacks picker item.
+-- Extract relative path (to CWD) for a Snacks picker item.
 -- Prefers Snacks.picker.util.path(item), falls back to common fields.
-local function item_abs_path(item)
+local function item_rel_path(item)
 	local ok, Snacks = pcall(require, "snacks")
 	if ok and Snacks and Snacks.picker and Snacks.picker.util and Snacks.picker.util.path then
 		local ok2, p = pcall(Snacks.picker.util.path, item)
 		if ok2 and type(p) == "string" and p ~= "" then
-			return p
+			return vim.fn.fnamemodify(p, ":.")
 		end
 	end
 	-- Fallbacks
 	local cand = item and (item.path or item.file or item.value)
 	if type(cand) == "string" and cand ~= "" then
-		return vim.fn.fnamemodify(cand, ":p")
+		return vim.fn.fnamemodify(cand, ":.")
 	end
 	return nil
 end
@@ -57,9 +57,9 @@ local function add_files_from_picker(picker, term, opts)
 
 	for _, item in pairs(selected) do
 		if item and (item.file or item.path or item.value) then
-			local abs_path = item_abs_path(item)
-			if abs_path then
-				table.insert(files_to_add, abs_path)
+			local rel_path = item_rel_path(item)
+			if rel_path then
+				table.insert(files_to_add, rel_path)
 			end
 		else
 			local text = (item and item.text) and tostring(item.text) or "<no text>"

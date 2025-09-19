@@ -164,14 +164,14 @@ Options: ~
 	Example: >lua
 	prompts = {
 	  explain_code = "Explain the selected code snippet.",
-	  summarize_file = function()
-	    local file_path = vim.fn.expand("%:p")
-	    if file_path == "" then
-	      return "Summarize the current buffer content."
-	    else
-	      return string.format("Summarize the content of the file: `%s`", file_path)
-	    end
-	  end,
+  summarize_file = function()
+    local file_path = vim.fn.fnamemodify(vim.fn.expand("%"), ":.")
+    if file_path == "" then
+      return "Summarize the current buffer content."
+    else
+      return string.format("Summarize the content of the file: `%s`", file_path)
+    end
+  end,
 	}
 <
 *ai-terminals-config-prompt-keymaps*
@@ -334,7 +334,7 @@ Public Lua functions available under `require("ai-terminals")`:
 	Sends a tool-specific file add command to the named terminal, using its
 	configured templates if available, otherwise a generic fallback.
 	- `{terminal_name}`: string. Key from the `terminals` table.
-	- `{files}`: string[]. List of file paths; converted to absolute paths.
+  - `{files}`: string[]. List of file paths; converted to paths relative to the current working directory.
 	- `{opts}`: table|nil. Options:
 		- `read_only`: boolean (optional). If `true`, uses the
 		  `add_files_readonly` template when available (e.g., Aider `/read-only`).
@@ -397,9 +397,9 @@ open before sending the command.
 *ai-terminals.aider_add_files()*
 `aider_add_files({files}, {opts})`
 	Sends Aider's `/add` or `/read-only` command to the "aider" terminal.
-	- `{files}`: string | string[]. A single file path or a list of file paths
-	  to add to the Aider chat context. Relative paths are made absolute based
-	  on the current working directory.
+  - `{files}`: string | string[]. A single file path or a list of file paths
+    to add to the Aider chat context. Paths are sent relative to the current
+    working directory.
 	- `{opts}`: table|nil, options:
 		- `read_only`: boolean (optional, default `false`). If `true`, sends the
 		  `/read-only` command instead of `/add`.
