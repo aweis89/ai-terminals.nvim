@@ -191,7 +191,8 @@ Config.config = {
 		summarize = "Summarize the provided text or code.",
 		-- Example: Function prompt using current file context
 		summarize_file = function()
-			local file_path = vim.fn.expand("%:p") -- Get full path of current buffer
+			local raw = vim.fn.expand("%")
+			local file_path = vim.fn.fnamemodify(raw, ":.") -- Prefer relative path to CWD
 			if file_path == "" then
 				return "Summarize the current buffer content."
 			else

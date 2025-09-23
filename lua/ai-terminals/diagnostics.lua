@@ -18,6 +18,7 @@ function Diagnostics.get_formatted()
 	local diagnostics = {}
 	local bufnr = vim.api.nvim_get_current_buf() -- Use current buffer explicitly
 	local file = vim.api.nvim_buf_get_name(bufnr)
+	local rel_file = vim.fn.fnamemodify(file, ":.")
 	local filetype = vim.bo[bufnr].filetype or "" -- Get filetype for code blocks
 
 	local mode = vim.api.nvim_get_mode().mode
@@ -57,10 +58,10 @@ function Diagnostics.get_formatted()
 			"Diagnostics for selection (Lines %d-%d) in file: %q\n",
 			selection_start_line,
 			selection_end_line,
-			file
+			rel_file
 		)
 	else
-		header_message = string.format("Diagnostics for file: %q\n", file)
+		header_message = string.format("Diagnostics for file: %q\n", rel_file)
 	end
 
 	if #diagnostics == 0 then
