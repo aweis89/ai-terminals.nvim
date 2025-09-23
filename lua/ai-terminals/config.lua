@@ -9,6 +9,7 @@ local Config = {}
 ---@field cmd string | fun(): string
 ---@field path_header_template string|nil Template for path header in visual selection. Use %s as placeholder for path.
 ---@field file_commands FileCommands|nil Commands for file operations
+---@field tmux TmuxConfig|nil Optional per-terminal tmux overrides. Merged over global `config.tmux`.
 
 ---@alias TerminalsMap table<string, TerminalConfig>
 
@@ -75,6 +76,9 @@ Config.config = {
 				return string.format("claude config set -g theme %s && claude", vim.o.background)
 			end,
 			path_header_template = "@%s",
+			tmux = {
+				startup_delay_ms = 2000,
+			},
 		},
 		aider = {
 			cmd = function()
@@ -157,7 +161,7 @@ Config.config = {
 		height = 0.85, -- 85% of terminal height (accounts for tmux status bar)
 		-- How long to wait before sending text to a brand-new tmux session
 		-- to allow it to initialize. Measured in milliseconds.
-		startup_delay_ms = 2000,
+		startup_delay_ms = 500,
 		flags = {
 			close_on_exit = true, -- Close popup when command exits
 			start_directory = function()

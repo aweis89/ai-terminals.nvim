@@ -92,8 +92,8 @@ function TmuxTerminalObject:send(text, opts)
 
 	-- Check if session needs startup delay
 	if TmuxBackend._needs_startup_delay(session_name) then
-		local cfg = require("ai-terminals.config").config
-		local delay_ms = (cfg.tmux and cfg.tmux.startup_delay_ms) or 500
+		-- Respect per-session (per-terminal merged) startup delay, fallback to 500ms
+		local delay_ms = (self.session and self.session.startup_delay_ms) or 500
 		vim.notify(
 			"Tmux: deferring send " .. tostring(delay_ms) .. "ms for new session " .. session_name,
 			vim.log.levels.DEBUG
@@ -273,10 +273,15 @@ function TmuxBackend:_resolve_tmux_session_options(terminal_name, _position)
 	}
 
 	-- Add tmux-specific options
-	local tmux_config = config.tmux or {}
+	-- Merge global tmux config with per-terminal overrides (terminal overrides win)
+	local global_tmux = config.tmux or {}
+	local per_term_tmux = term_config.tmux or {}
+	local tmux_config = vim.tbl_deep_extend("force", {}, global_tmux, per_term_tmux)
 	session_opts.width = tmux_config.width or 0.9
 	session_opts.height = tmux_config.height or 0.9
 	session_opts.flags = tmux_config.flags
+	-- Capture resolved startup delay so send() can respect per-terminal overrides
+	session_opts.startup_delay_ms = tmux_config.startup_delay_ms or 500
 
 	-- Use custom id_format with resolved path to handle symlinks properly
 	-- This ensures the same session is used whether accessing via symlink or real path
