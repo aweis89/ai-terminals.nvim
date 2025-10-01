@@ -1,4 +1,4 @@
-*ai-terminals.nvim.txt*   For Neovim >= 0.8.0   Last change: 2025 September 23
+*ai-terminals.nvim.txt*    For Neovim >= 0.8.0    Last change: 2025 October 01
 
 ==============================================================================
 Table of Contents                        *ai-terminals.nvim-table-of-contents*
@@ -64,13 +64,13 @@ This automatically generates consistent keymaps for all configured terminals:
 
 PUBLIC API           *ai-terminals.nvim-ai-terminals-neovim-plugin-public-api*
 
-- `toggle(name, position?)`open/toggle a terminal; sends visual selection if active. See |ai-terminals.toggle()|.
-- `send_term(name, text, opts?)`send text to a specific named terminal; opts `{ submit?, focus? }`. See |ai-terminals.send_term()|.
-- `send_diagnostics(name, opts?)`send formatted diagnostics; opts `{ submit?, prefix? }`. See |ai-terminals.send_diagnostics()|.
-- `add_files_to_terminal(name, files, opts?)`add files to terminal. See |ai-terminals.nvim-snacks-picker-integration| for picker examples.
-- `send_command_output(name, cmd?, opts?)`run a shell command and send stdout/exit code. See |ai-terminals.send_command_output()|.
-- `open(name, position?, callback?)`open a terminal and optionally run a callback with it. See |ai-terminals.open()|.
-- `setup(opts)`initialize and merge configuration with sensible defaults. See |ai-terminals-configuration|.
+- `toggle(name, position?)`: open/toggle a terminal; sends visual selection if active. See |ai-terminals.toggle()|.
+- `send_term(name, text, opts?)`: send text to a specific named terminal; opts `{ submit?, focus? }`. See |ai-terminals.send_term()|.
+- `send_diagnostics(name, opts?)`: send formatted diagnostics; opts `{ submit?, prefix? }`. See |ai-terminals.send_diagnostics()|.
+- `add_files_to_terminal(name, files, opts?)`: add files to terminal. See |ai-terminals.nvim-snacks-picker-integration| for picker examples.
+- `send_command_output(name, cmd?, opts?)`: run a shell command and send stdout/exit code. See |ai-terminals.send_command_output()|.
+- `open(name, position?, callback?)`: open a terminal and optionally run a callback with it. See |ai-terminals.open()|.
+- `setup(opts)`: initialize and merge configuration with sensible defaults. See |ai-terminals-configuration|.
 
 
 INTEGRATIONS       *ai-terminals.nvim-ai-terminals-neovim-plugin-integrations*
@@ -156,11 +156,11 @@ GENERIC FEATURES (WORKS WITH ANY TERMINAL-BASED AI AGENT) ~
     using a custom actions.
 - **Git Integration Recommendation:** For tracking changes made by AI tools,
     we recommend using established git plugins:
-    - **gitsigns.nvim**Shows git
+    - **gitsigns.nvim:** Shows git
         changes in the sign column and provides inline diff views
     - **telescope.nvim or snacks.nvim git pickers:** Browse git
         status with custom actions for staging, discarding, or viewing changes
-    - **diffview.nvim**Comprehensive
+    - **diffview.nvim:** Comprehensive
         git diff viewer with side-by-side comparisons
 
 
@@ -311,7 +311,7 @@ management:
 
 DEPENDENCIES       *ai-terminals.nvim-ai-terminals-neovim-plugin-dependencies*
 
-- Snacks.nvim <https://github.com/folke/snacks.nvim>Required for terminal
+- Snacks.nvim <https://github.com/folke/snacks.nvim>: Required for terminal
     window management. 
 - OptionalCLI tools (install on demand):
     Aider <https://github.com/paul-gauthier/aider>,
@@ -575,11 +575,11 @@ your configuration if you want to customize the defaults.
     })
 <
 
-**Note on destroy_all**This function stops the underlying processes associated
-with the AI terminals and closes their windows/buffers using the underlying
-`Snacks` library’s `destroy()` method. The next time you use `toggle` or
-`open` for a specific AI tool, a completely new instance of that tool will be
-started.
+**Note on destroy_all:** This function stops the underlying processes
+associated with the AI terminals and closes their windows/buffers using the
+underlying `Snacks` library’s `destroy()` method. The next time you use
+`toggle` or `open` for a specific AI tool, a completely new instance of that
+tool will be started.
 
 
 INTEGRATING WITH OTHER TOOLS OR PICKERS ~
