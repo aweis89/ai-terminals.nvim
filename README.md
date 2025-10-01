@@ -128,6 +128,26 @@ want a single, configurable way to manage them within Neovim.
   `:h ai-terminals.add_buffers_to_terminal`). Picker integration with Snacks files can be selected
   from any of your existing file pickers (e.g. `git_files`, `git_status`, `buffers`, `smart` ..)
   using a custom actions.
+- **💬 Background Comment Processing:** Insert comments above the current line
+  that AI terminals execute in the background. By default, the terminal reads the
+  file, finds comments with the terminal-specific prefix (e.g., `AIDER!`,
+  `CLAUDE!`), executes the instructions in the comment, and removes it — all
+  without bringing the terminal into focus. This allows you to send prompts
+  completely in the background while continuing to read code. Use
+  `M.comment(terminal_name)` to trigger this workflow. The automated mappings
+  create comment shortcuts for each terminal: `<leader>ac<term-key>` (e.g.,
+  `<leader>acc` for Claude, `<leader>aca` for Aider). For Aider specifically, you
+  can also use the legacy `M.aider_comment(prefix, focus)` function
+  (`:h ai-terminals.aider_comment`, `:h ai-terminals.comment`).
+- **🔄 Diff Changes:** View changes made by AI tools in vim diff tabs.
+  Requires `enable_diffing = true` in your config. Each changed file opens in
+  its own tab for review. Reopening the terminal window resets the changes.
+  See `:help diff-mode` for vim's diff commands like `:diffput` and `:diffget`
+  to manipulate changes. Alternatively, use `diff_changes({ delta = true })` to
+  view changes with the delta diff viewer in a terminal. Note: Git-based diff
+  tools (like gitsigns.nvim or fugitive.vim) provide more feature-rich diff
+  management and are recommended for most workflows
+  (`:h ai-terminals.diff_changes`).
 - **🔍 Git Integration Recommendation:** For tracking changes made by AI tools,
   we recommend using established git plugins:
   - **[gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim):** Shows git
@@ -161,31 +181,6 @@ directly to any terminal with keymaps like `<localleader>aa` for Aider or
 `<localleader>cc` for Claude. See the [Snacks Picker Integration](#-snacks-picker-integration)
 section below for a complete working example and the
 [picker integration recipe](recipes/picker_integration.md) for additional approaches.
-
-### 🔥 Additional Features
-
-The plugin includes some additional convenience functions:
-
-- **💬 Add Comments (All Terminals):** Insert comments above the current line
-  that AI terminals execute in the background. By default, the terminal reads the
-  file, finds comments with the terminal-specific prefix (e.g., `AIDER!`,
-  `CLAUDE!`), executes the instructions in the comment, and removes it — all
-  without bringing the terminal into focus. This allows you to send prompts
-  completely in the background while continuing to read code. Use
-  `M.comment(terminal_name)` to trigger this workflow. The automated mappings
-  create comment shortcuts for each terminal: `<leader>ac<term-key>` (e.g.,
-  `<leader>acc` for Claude, `<leader>aca` for Aider). For Aider specifically, you
-  can also use the legacy `M.aider_comment(prefix, focus)` function
-  (`:h ai-terminals.aider_comment`, `:h ai-terminals.comment`).
-- **🔄 Diff Changes:** View changes made by AI tools in vim diff tabs.
-  Requires `enable_diffing = true` in your config. Each changed file opens in
-  its own tab for review. Reopening the terminal window resets the changes.
-  See `:help diff-mode` for vim's diff commands like `:diffput` and `:diffget`
-  to manipulate changes. Alternatively, use `diff_changes({ delta = true })` to
-  view changes with the delta diff viewer in a terminal. Note: Git-based diff
-  tools (like gitsigns.nvim or fugitive.vim) provide more feature-rich diff
-  management and are recommended for most workflows
-  (`:h ai-terminals.diff_changes`).
 
 ### 🧼 Format On External Change
 
