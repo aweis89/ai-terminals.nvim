@@ -3,9 +3,13 @@ local Aider = {}
 
 ---Add a comment above the current line based on user input
 ---@param prefix string|nil The prefix to add before the user's comment text
+---@param focus boolean|nil Whether to focus the terminal after adding comment (default: false)
 ---@return nil
-function Aider.comment(prefix)
+function Aider.comment(prefix, focus)
 	prefix = prefix or "AI!" -- Default prefix if none provided
+	if focus == nil then
+		focus = false
+	end
 
 	-- Start terminal in background so it's watching files (don't show popup yet)
 	local term, _ = Term.get_hidden("aider")
@@ -17,7 +21,9 @@ function Aider.comment(prefix)
 	-- Use helper and perform aider-specific follow-up in callback
 	local insert_comment = require("ai-terminals.comment")
 	insert_comment(prefix, function()
-		Term.open("aider") -- Focus/show aider terminal after insertion
+		if focus then
+			Term.open("aider") -- Focus/show aider terminal after insertion
+		end
 	end)
 end
 

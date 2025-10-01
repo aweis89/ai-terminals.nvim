@@ -464,9 +464,13 @@ end
 
 ---Add a comment above the current line based on user input (delegates to AiderLib)
 ---@param prefix string|nil The prefix to add before the user's comment text
+---@param focus boolean|nil Whether to focus the terminal after adding comment (default: false)
 ---@return nil
-function M.aider_comment(prefix)
-	AiderLib.comment(prefix)
+function M.aider_comment(prefix, focus)
+	if focus == nil then
+		focus = false
+	end
+	AiderLib.comment(prefix, focus)
 end
 
 function M.comment(terminal, opts)
@@ -513,9 +517,9 @@ function M.aider_add_files(files, opts)
 	M.add_files_to_terminal("aider", files, opts)
 end
 
--- Add all buffers to aider (delegates to AiderLib)
+-- Add all buffers to aider
 function M.aider_add_buffers()
-	AiderLib.add_buffers()
+	M.add_buffers_to_terminal("aider")
 end
 
 ---Destroy all active AI terminals (closes windows and stops processes).

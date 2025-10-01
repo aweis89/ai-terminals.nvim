@@ -38,6 +38,7 @@ This automatically generates consistent keymaps for all configured terminals:
 - `<leader>alc` - Add current file to Claude
 - `<leader>aLc` - Add all buffers to Claude
 - `<leader>arc` - Run command and send output to Claude
+- `<leader>acc` - Add comment for Claude to execute in background
 - Same pattern for `a` (Aider), `g` (Goose), etc.
 
 ## Public API
@@ -165,9 +166,17 @@ section below for a complete working example and the
 
 The plugin includes some additional convenience functions:
 
-- **💬 Add Comments (Aider):** Insert comments above the current line with a
-  custom prefix (e.g., `AI!`, `AI?`) and automatically start the Aider terminal
-  if not already running (`:h ai-terminals.aider_comment`).
+- **💬 Add Comments (All Terminals):** Insert comments above the current line
+  that AI terminals execute in the background. By default, the terminal reads the
+  file, finds comments with the terminal-specific prefix (e.g., `AIDER!`,
+  `CLAUDE!`), executes the instructions in the comment, and removes it — all
+  without bringing the terminal into focus. This allows you to send prompts
+  completely in the background while continuing to read code. Use
+  `M.comment(terminal_name)` to trigger this workflow. The automated mappings
+  create comment shortcuts for each terminal: `<leader>ac<term-key>` (e.g.,
+  `<leader>acc` for Claude, `<leader>aca` for Aider). For Aider specifically, you
+  can also use the legacy `M.aider_comment(prefix, focus)` function
+  (`:h ai-terminals.aider_comment`, `:h ai-terminals.comment`).
 - **🔄 Diff Changes:** View changes made by AI tools in vim diff tabs.
   Requires `enable_diffing = true` in your config. Each changed file opens in
   its own tab for review. Reopening the terminal window resets the changes.
@@ -473,6 +482,7 @@ What you get out of the box (with the config above):
 - `<leader>adc` — Send diagnostics to Claude. Same pattern for other terminals.
 - `<leader>alc` / `<leader>aLc` — Add current file / all buffers to Claude.
 - `<leader>arc` — Prompt for a shell command and send output to Claude.
+- `<leader>acc` — Add comment for Claude to execute in background.
 - Picker adds: `<localleader>ac` adds the selected file(s) to Claude. Same for `a` (Aider), `g` (Goose), etc.
 
 ### 📦 Installation
