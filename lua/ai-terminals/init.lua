@@ -48,26 +48,10 @@ local function setup_terminal_keymaps()
 					vim.keymap.set(modes, key, action, { buffer = ev.buf, desc = description })
 				elseif type(action) == "string" then
 					-- Handle string actions
-					if action == "close" then
-						vim.keymap.set(modes, key, function()
-							local config = ConfigLib.config
-							if config.backend == "tmux" then
-								-- For tmux backend, we can't easily close individual terminals
-								-- since they don't map to vim buffers in the same way
-								vim.notify("Terminal close not supported for tmux backend", vim.log.levels.WARN)
-							else
-								local term = Snacks.terminal.for_buf(ev.buf)
-								if term then
-									term:close()
-								end
-							end
-						end, { buffer = ev.buf, desc = description })
-					else
-						-- Default: treat as raw keys to send (if action is a string of keys)
-						-- For string actions that are meant to be sent as keys, they should typically be in terminal mode.
-						-- If the user wants to map a string action to normal mode in a terminal, they can specify modes = "n".
-						vim.keymap.set(modes, key, action, { buffer = ev.buf, desc = description })
-					end
+					-- Default: treat as raw keys to send (if action is a string of keys)
+					-- For string actions that are meant to be sent as keys, they should typically be in terminal mode.
+					-- If the user wants to map a string action to normal mode in a terminal, they can specify modes = "n".
+					vim.keymap.set(modes, key, action, { buffer = ev.buf, desc = description })
 				end
 			end
 		end,
