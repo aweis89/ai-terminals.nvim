@@ -2,7 +2,7 @@ local Term = require("ai-terminals.terminal") -- Require TerminalLib directly
 local Aider = {}
 
 ---Add a comment above the current line based on user input
----@param prefix string The prefix to add before the user's comment text
+---@param prefix string|nil The prefix to add before the user's comment text
 ---@return nil
 function Aider.comment(prefix)
 	prefix = prefix or "AI!" -- Default prefix if none provided

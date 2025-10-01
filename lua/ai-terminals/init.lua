@@ -463,7 +463,7 @@ function M.diag_format(diagnostics)
 end
 
 ---Add a comment above the current line based on user input (delegates to AiderLib)
----@param prefix string The prefix to add before the user's comment text
+---@param prefix string|nil The prefix to add before the user's comment text
 ---@return nil
 function M.aider_comment(prefix)
 	AiderLib.comment(prefix)
@@ -477,6 +477,10 @@ function M.comment(terminal, opts)
 	end
 	local focus = not background
 	local prefix = string.upper(terminal .. "!")
+	if terminal == "aider" then
+		M.aider_comment()
+		return
+	end
 
 	insert_comment(prefix, function(ctx)
 		local path = vim.api.nvim_buf_get_name(ctx.bufnr)
@@ -506,7 +510,7 @@ function M.aider_add_files(files, opts)
 	if type(files) == "string" then
 		files = { files } -- Assign as table if input is string
 	end
-	AiderLib.add_files(files, opts)
+	M.add_files_to_terminal("aider", files, opts)
 end
 
 -- Add all buffers to aider (delegates to AiderLib)
