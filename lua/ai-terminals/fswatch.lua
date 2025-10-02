@@ -227,7 +227,7 @@ vim.api.nvim_create_autocmd("FileChangedShellPost", {
 	callback = function(args)
 		local path = vim.api.nvim_buf_get_name(args.buf)
 		local filename = vim.fn.fnamemodify(path, ":t")
-		log("Updated: " .. filename, vim.log.levels.INFO, { title = "ai-terminal" })
+		log("Updated: " .. filename, vim.log.levels.DEBUG, { title = "ai-terminal" })
 		format_on_external_change(args)
 	end,
 })
