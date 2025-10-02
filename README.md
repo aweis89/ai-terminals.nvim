@@ -41,6 +41,8 @@ This automatically generates consistent keymaps for all configured terminals:
 - `<leader>acc` - Add comment for Claude to execute in background
 - Same pattern for `a` (Aider), `g` (Goose), etc.
 
+**For single terminal users:** See the [Single Terminal Setup](#single-terminal-setup) section for shorter keymaps without terminal suffixes (e.g., `<leader>a` instead of `<leader>ac`).
+
 ## Public API
 
 - `toggle(name, position?)`: open/toggle a terminal; sends visual selection if active. See `:h ai-terminals.toggle()`.
@@ -482,6 +484,66 @@ What you get out of the box (with the config above):
 - `<leader>arc` — Prompt for a shell command and send output to Claude.
 - `<leader>acc` — Add comment for Claude to execute in background.
 - Picker adds: `<localleader>ac` adds the selected file(s) to Claude. Same for `a` (Aider), `g` (Goose), etc.
+
+#### Single Terminal Setup
+
+If you only use one AI tool, you can skip `auto_terminal_keymaps` and create simpler keymaps manually:
+
+```lua
+-- lua/plugins/ai-terminals.lua
+return {
+  {
+    "aweis89/ai-terminals.nvim",
+    dependencies = { "folke/snacks.nvim" },
+    opts = {
+      terminals = {
+        claude = { cmd = "claude" },
+      },
+    },
+    config = function(_, opts)
+      require("ai-terminals").setup(opts)
+      
+      local ai = require("ai-terminals")
+      
+      -- Toggle terminal (sends visual selection if active)
+      vim.keymap.set({ "n", "v" }, "<leader>a", function() ai.toggle("claude") end, 
+        { desc = "Claude: Toggle terminal" })
+      
+      -- Send diagnostics
+      vim.keymap.set({ "n", "v" }, "<leader>ad", function() ai.send_diagnostics("claude") end, 
+        { desc = "Claude: Send diagnostics" })
+      
+      -- Add current file
+      vim.keymap.set("n", "<leader>al", function() 
+        ai.add_files_to_terminal("claude", { vim.fn.expand("%") }) 
+      end, { desc = "Claude: Add current file" })
+      
+      -- Add all buffers
+      vim.keymap.set("n", "<leader>aL", function() ai.add_buffers_to_terminal("claude") end, 
+        { desc = "Claude: Add all buffers" })
+      
+      -- Run command and send output
+      vim.keymap.set("n", "<leader>ar", function() ai.send_command_output("claude") end, 
+        { desc = "Claude: Run command and send output" })
+      
+      -- Add comment for background execution
+      vim.keymap.set("n", "<leader>ac", function() ai.comment("claude") end, 
+        { desc = "Claude: Add comment for AI to address" })
+    end,
+  },
+}
+```
+
+**Keymaps generated:**
+
+- `<leader>a` — Toggle Claude terminal (sends visual selection if active)
+- `<leader>ad` — Send diagnostics to Claude
+- `<leader>al` — Add current file to Claude
+- `<leader>aL` — Add all buffers to Claude
+- `<leader>ar` — Run command and send output to Claude
+- `<leader>ac` — Add comment for Claude to execute in background
+
+This gives you shorter keymaps without the terminal-specific suffix. Simply replace `"claude"` with your preferred terminal name (`"aider"`, `"goose"`, etc.).
 
 ### 📦 Installation
 
