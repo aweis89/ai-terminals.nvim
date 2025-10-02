@@ -1,7 +1,7 @@
----@class FileWatcher
+---@class M
 ---File watching module that provides a common interface for watching file changes
 ---and reloading buffers across different terminal backends
-local FileWatcher = {}
+local M = {}
 
 local Config = require("ai-terminals.config")
 
@@ -20,7 +20,7 @@ end
 
 ---Initialize watchers storage for a terminal
 ---@param terminal_name string The name of the terminal
-function FileWatcher.init_watchers(terminal_name)
+function M.init_watchers(terminal_name)
 	if not _file_watchers then
 		_file_watchers = {}
 	end
@@ -29,7 +29,7 @@ end
 
 ---Clean up existing watchers for a terminal
 ---@param terminal_name string The name of the terminal
-function FileWatcher.cleanup_watchers(terminal_name)
+function M.cleanup_watchers(terminal_name)
 	if _file_watchers and _file_watchers[terminal_name] then
 		for _, watcher in pairs(_file_watchers[terminal_name]) do
 			if watcher then
@@ -44,7 +44,7 @@ end
 ---@param terminal_name string The name of the terminal
 ---@param reload_callback function Function to call when files change
 
-function FileWatcher.setup_watchers(terminal_name, reload_callback)
+function M.setup_watchers(terminal_name, reload_callback)
 	local watch_cwd = (Config.config and Config.config.watch_cwd) or { enabled = false }
 
 	-- Helper: only use directory watcher inside a git repository
@@ -60,23 +60,23 @@ function FileWatcher.setup_watchers(terminal_name, reload_callback)
 	end
 
 	if watch_cwd.enabled then
-		FileWatcher.setup_dir_watcher(terminal_name, reload_callback)
+		M.setup_dir_watcher(terminal_name, reload_callback)
 	else
 		if watch_cwd.enabled then
 			-- Fallback when not in a git repo to avoid noisy recursive watching
 			log("Not a git repo; falling back to file watchers", vim.log.levels.DEBUG)
 		end
-		FileWatcher.file_watchers(terminal_name, reload_callback)
+		M.file_watchers(terminal_name, reload_callback)
 	end
 end
 
 ---Set up file watchers for all files in the current tabpage
 ---@param terminal_name string The name of the terminal
 ---@param reload_callback function Function to call when files change
-function FileWatcher.file_watchers(terminal_name, reload_callback)
+function M.file_watchers(terminal_name, reload_callback)
 	-- Clean up old watchers before setting up new ones
-	FileWatcher.cleanup_watchers(terminal_name)
-	FileWatcher.init_watchers(terminal_name)
+	M.cleanup_watchers(terminal_name)
+	M.init_watchers(terminal_name)
 
 	-- Get all windows in the current tab and set up file watchers for their buffers
 	local current_tabpage = vim.api.nvim_get_current_tabpage()
@@ -111,15 +111,15 @@ end
 
 ---Unified setup for file watching with optional diffing callback
 ---@param terminal_name string The name of the terminal
-function FileWatcher.setup_unified_watching(terminal_name)
+function M.setup_unified_watching(terminal_name)
 	-- Set up file watching for immediate reload
-	FileWatcher.setup_watchers(terminal_name, function()
-		FileWatcher.reload_changes()
+	M.setup_watchers(terminal_name, function()
+		M.reload_changes()
 	end)
 end
 
 ---Reload changes for all open buffers
-function FileWatcher.reload_changes()
+function M.reload_changes()
 	vim.schedule(function()
 		local reloaded_files = {}
 
@@ -234,10 +234,10 @@ vim.api.nvim_create_autocmd("FileChangedShellPost", {
 
 ---@param terminal_name string The name of the terminal
 ---@param reload_callback function Function to call when files change
-function FileWatcher.setup_dir_watcher(terminal_name, reload_callback)
+function M.setup_dir_watcher(terminal_name, reload_callback)
 	-- Clean up old watchers before setting up new ones
-	FileWatcher.cleanup_watchers(terminal_name)
-	FileWatcher.init_watchers(terminal_name)
+	M.cleanup_watchers(terminal_name)
+	M.init_watchers(terminal_name)
 
 	local watch = vim.uv.new_fs_event()
 	if not watch then
@@ -443,4 +443,4 @@ function FileWatcher.setup_dir_watcher(terminal_name, reload_callback)
 	end)
 end
 
-return FileWatcher
+return M
