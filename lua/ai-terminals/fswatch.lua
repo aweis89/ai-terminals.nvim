@@ -59,7 +59,7 @@ function FileWatcher.setup_watchers(terminal_name, reload_callback)
 		return vim.v.shell_error == 0
 	end
 
-	if watch_cwd.enabled and in_git_repo() then
+	if watch_cwd.enabled then
 		FileWatcher.setup_dir_watcher(terminal_name, reload_callback)
 	else
 		if watch_cwd.enabled then
@@ -107,25 +107,6 @@ function FileWatcher.file_watchers(terminal_name, reload_callback)
 			end)
 		end
 	end
-
-	-- Single notification with all watched files
-	-- if #watched_files > 0 then
-	-- 	local message = "Setting up file watchers for:\n" .. table.concat(watched_files, "\n")
-	-- 	vim.notify(message)
-	-- end
-end
-
----Create cleanup autocmd for when vim exits
----@param terminal_name string The name of the terminal
----@param group_name string The autocmd group name
-function FileWatcher.setup_cleanup_autocmd(terminal_name, group_name)
-	vim.api.nvim_create_autocmd("VimLeavePre", {
-		group = group_name,
-		callback = function()
-			FileWatcher.cleanup_watchers(terminal_name)
-		end,
-		desc = "Clean up file watchers for terminal: " .. terminal_name,
-	})
 end
 
 ---Unified setup for file watching with optional diffing callback
@@ -135,11 +116,6 @@ function FileWatcher.setup_unified_watching(terminal_name)
 	FileWatcher.setup_watchers(terminal_name, function()
 		FileWatcher.reload_changes()
 	end)
-
-	-- Set up cleanup
-	local group_name = "AITerminal_" .. terminal_name
-	vim.api.nvim_create_augroup(group_name, { clear = true })
-	FileWatcher.setup_cleanup_autocmd(terminal_name, group_name)
 end
 
 ---Reload changes for all open buffers

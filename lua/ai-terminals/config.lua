@@ -134,7 +134,7 @@ Config.config = {
 	-- Watch strategy: when enabled, watch the entire current working directory
 	-- recursively instead of only the files open in the current tab. Defaults to false.
 	watch_cwd = {
-		enabled = false,
+		enabled = true,
 		-- Glob patterns to ignore when watching the directory recursively.
 		-- Examples: "**/.git/**", "**/node_modules/**", "**/.venv/**", "**/*.log"
 		-- Note: Directory patterns should be recursive globs. For convenience,
