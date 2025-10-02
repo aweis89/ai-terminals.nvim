@@ -219,7 +219,7 @@ Note: If conform.nvim is not installed or has no formatter for the filetype, it 
 
 Control what gets watched for external edits made by your AI agent.
 
-- Default: disabled (`watch_cwd.enabled = false`).
+- Default: enabled (`watch_cwd.enabled = true`).
 - When enabled, the plugin watches the current working directory recursively and will:
   - Load files changed by the agent even if they were not previously open in Neovim.
   - Reload and (if `trigger_formatting.enabled = true`) format those files after edits.

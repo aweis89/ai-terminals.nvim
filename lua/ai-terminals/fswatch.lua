@@ -21,9 +21,6 @@ end
 ---Initialize watchers storage for a terminal
 ---@param terminal_name string The name of the terminal
 function M.init_watchers(terminal_name)
-	if not _file_watchers then
-		_file_watchers = {}
-	end
 	_file_watchers[terminal_name] = {}
 end
 
@@ -42,38 +39,19 @@ end
 
 ---Set up file watchers for all files in the current tabpage
 ---@param terminal_name string The name of the terminal
----@param reload_callback function Function to call when files change
-
-function M.setup_watchers(terminal_name, reload_callback)
+function M.setup_watchers(terminal_name)
 	local watch_cwd = (Config.config and Config.config.watch_cwd) or { enabled = false }
 
-	-- Helper: only use directory watcher inside a git repository
-	local function in_git_repo()
-		local cwd = vim.fn.getcwd()
-		local ok, _ = pcall(function()
-			vim.fn.system({ "git", "-C", cwd, "rev-parse", "--is-inside-work-tree" })
-		end)
-		if not ok then
-			return false
-		end
-		return vim.v.shell_error == 0
-	end
-
 	if watch_cwd.enabled then
-		M.setup_dir_watcher(terminal_name, reload_callback)
+		M.setup_dir_watcher(terminal_name)
 	else
-		if watch_cwd.enabled then
-			-- Fallback when not in a git repo to avoid noisy recursive watching
-			log("Not a git repo; falling back to file watchers", vim.log.levels.DEBUG)
-		end
-		M.file_watchers(terminal_name, reload_callback)
+		M.file_watchers(terminal_name)
 	end
 end
 
 ---Set up file watchers for all files in the current tabpage
 ---@param terminal_name string The name of the terminal
----@param reload_callback function Function to call when files change
-function M.file_watchers(terminal_name, reload_callback)
+function M.file_watchers(terminal_name)
 	-- Clean up old watchers before setting up new ones
 	M.cleanup_watchers(terminal_name)
 	M.init_watchers(terminal_name)
@@ -81,7 +59,6 @@ function M.file_watchers(terminal_name, reload_callback)
 	-- Get all windows in the current tab and set up file watchers for their buffers
 	local current_tabpage = vim.api.nvim_get_current_tabpage()
 	local windows = vim.api.nvim_tabpage_list_wins(current_tabpage)
-	local watched_files = {}
 
 	for _, win in ipairs(windows) do
 		local buf = vim.api.nvim_win_get_buf(win)
@@ -93,45 +70,47 @@ function M.file_watchers(terminal_name, reload_callback)
 
 			-- Store the watcher to prevent garbage collection
 			table.insert(_file_watchers[terminal_name], w)
-			table.insert(watched_files, "- " .. file_path)
 
 			-- Watch the file for changes
-			w:start(file_path, {}, function(err, fname, events)
+			w:start(file_path, {}, function(err)
 				if err then
 					return
 				end
 
-				vim.schedule(function()
-					reload_callback()
-				end)
+				M.reload_changes(file_path)
 			end)
 		end
 	end
 end
 
----Unified setup for file watching with optional diffing callback
----@param terminal_name string The name of the terminal
-function M.setup_unified_watching(terminal_name)
-	-- Set up file watching for immediate reload
-	M.setup_watchers(terminal_name, function()
-		M.reload_changes()
-	end)
-end
-
----Reload changes for all open buffers
-function M.reload_changes()
+---Reload changes for specific file or all open buffers
+---@param file_path? string Optional specific file path to reload. If nil, reloads all buffers.
+function M.reload_changes(file_path)
 	vim.schedule(function()
 		local reloaded_files = {}
 
-		-- Loop through all open buffers and trigger checktime for each
-		for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-			if vim.api.nvim_buf_is_valid(buf) and vim.api.nvim_buf_is_loaded(buf) then
-				local file_path = vim.api.nvim_buf_get_name(buf)
-				if file_path and file_path ~= "" and vim.fn.filereadable(file_path) == 1 then
-					table.insert(reloaded_files, "- " .. file_path)
-					vim.api.nvim_buf_call(buf, function()
+		if file_path then
+			-- Reload only the specific file
+			local bufnr = vim.fn.bufnr(file_path)
+			if bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) and vim.api.nvim_buf_is_loaded(bufnr) then
+				if vim.fn.filereadable(file_path) == 1 then
+					vim.api.nvim_buf_call(bufnr, function()
 						vim.cmd.checktime()
 					end)
+					table.insert(reloaded_files, "- " .. file_path)
+				end
+			end
+		else
+			-- Loop through all open buffers and trigger checktime for each
+			for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+				if vim.api.nvim_buf_is_valid(buf) and vim.api.nvim_buf_is_loaded(buf) then
+					local buf_path = vim.api.nvim_buf_get_name(buf)
+					if buf_path and buf_path ~= "" and vim.fn.filereadable(buf_path) == 1 then
+						table.insert(reloaded_files, "- " .. buf_path)
+						vim.api.nvim_buf_call(buf, function()
+							vim.cmd.checktime()
+						end)
+					end
 				end
 			end
 		end
@@ -144,8 +123,7 @@ function M.reload_changes()
 				#reloaded_files > 1 and "s" or "",
 				table.concat(reloaded_files, "\n")
 			)
-			local level = _notify_info and vim.log.levels.INFO or vim.log.levels.DEBUG
-			log(message, level)
+			log(message, vim.log.levels.DEBUG)
 		end
 	end)
 end
@@ -186,7 +164,7 @@ local function format_on_external_change(args)
 
 	local timeout = cfg.timeout_ms or 5000
 
-	local log = function(msg, level)
+	local function format_log(msg, level)
 		if Config.config.trigger_formatting and Config.config.trigger_formatting.notify == false then
 			return
 		end
@@ -198,12 +176,12 @@ local function format_on_external_change(args)
 	-- Always asynchronous: conform.nvim → none-ls/null-ls → any LSP
 	local ok, conform = pcall(require, "conform")
 	if ok then
-		log("formatting with conform.nvim")
+		format_log("formatting with conform.nvim")
 		conform.format({ bufnr = bufnr, async = true, timeout_ms = timeout, lsp_format = "never" })
 		return
 	end
 	if has_client(bufnr, { "none-ls", "null-ls" }, true) then
-		log("formatting with none-ls/null-ls")
+		format_log("formatting with none-ls/null-ls")
 		vim.lsp.buf.format({
 			bufnr = bufnr,
 			async = true,
@@ -214,11 +192,11 @@ local function format_on_external_change(args)
 		})
 		return
 	elseif has_client(bufnr, {}, true) then
-		log("formatting with LSP")
+		format_log("formatting with LSP")
 		vim.lsp.buf.format({ bufnr = bufnr, async = true, timeout_ms = timeout })
 		return
 	else
-		log("no formatter attached; skipping", vim.log.levels.DEBUG)
+		format_log("no formatter attached; skipping", vim.log.levels.DEBUG)
 	end
 end
 
@@ -227,14 +205,13 @@ vim.api.nvim_create_autocmd("FileChangedShellPost", {
 	callback = function(args)
 		local path = vim.api.nvim_buf_get_name(args.buf)
 		local filename = vim.fn.fnamemodify(path, ":t")
-		log("Updated: " .. filename, vim.log.levels.DEBUG, { title = "ai-terminal" })
+		log("Updated: " .. filename, vim.log.levels.INFO, { title = "ai-terminal" })
 		format_on_external_change(args)
 	end,
 })
 
 ---@param terminal_name string The name of the terminal
----@param reload_callback function Function to call when files change
-function M.setup_dir_watcher(terminal_name, reload_callback)
+function M.setup_dir_watcher(terminal_name)
 	-- Clean up old watchers before setting up new ones
 	M.cleanup_watchers(terminal_name)
 	M.init_watchers(terminal_name)
@@ -277,16 +254,14 @@ function M.setup_dir_watcher(terminal_name, reload_callback)
 	end
 
 	-- Prepare ignore patterns (globs -> vim regex) once
-	local ignore_globs_user = {}
 	local ignore_regex_user = {}
 	local ignored_cache = {}
 	local cfg = (Config.config and Config.config.watch_cwd) or {}
 	if type(cfg.ignore) == "table" then
 		for _, pat in ipairs(cfg.ignore) do
 			if type(pat) == "string" and pat ~= "" then
-				local p = tostring(pat)
 				-- Trim whitespace
-				p = p:gsub("^%s+", ""):gsub("%s+$", "")
+				local p = pat:gsub("^%s+", ""):gsub("%s+$", "")
 				if p ~= "" then
 					-- Treat leading "/" as CWD-anchored; `fname` is already relative,
 					-- so strip it to avoid mismatches like "/.git/**".
@@ -309,7 +284,6 @@ function M.setup_dir_watcher(terminal_name, reload_callback)
 
 					local ok, reg = pcall(vim.fn.glob2regpat, p)
 					if ok and type(reg) == "string" and reg ~= "" then
-						table.insert(ignore_globs_user, reg)
 						local ok_rx, rx = pcall(vim.regex, reg)
 						if ok_rx and rx then
 							table.insert(ignore_regex_user, rx)
@@ -319,7 +293,6 @@ function M.setup_dir_watcher(terminal_name, reload_callback)
 						local dir_only = p:sub(1, -4) -- strip trailing "/**"
 						local ok2, reg2 = pcall(vim.fn.glob2regpat, dir_only)
 						if ok2 and type(reg2) == "string" and reg2 ~= "" then
-							table.insert(ignore_globs_user, reg2)
 							local ok_rx2, rx2 = pcall(vim.regex, reg2)
 							if ok_rx2 and rx2 then
 								table.insert(ignore_regex_user, rx2)
@@ -433,12 +406,12 @@ function M.setup_dir_watcher(terminal_name, reload_callback)
 						pcall(vim.api.nvim_exec_autocmds, "FileChangedShellPost", { buffer = bufnr })
 					end
 				end
-				-- Reload all open buffers after a relevant file change
-				reload_callback()
+				-- Reload only the changed file
+				M.reload_changes(fullpath)
 				return
 			end
-			-- If we don't know the specific file, do a general reload
-			reload_callback()
+			-- If we don't know the specific file, do a general reload (reload all buffers)
+			M.reload_changes(nil)
 		end)
 	end)
 end
