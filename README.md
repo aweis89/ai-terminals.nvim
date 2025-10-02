@@ -221,8 +221,11 @@ Control what gets watched for external edits made by your AI agent.
 
 - Default: enabled (`watch_cwd.enabled = true`).
 - When enabled, the plugin watches the current working directory recursively and will:
-  - Load files changed by the agent even if they were not previously open in Neovim.
-  - Reload and (if `trigger_formatting.enabled = true`) format those files after edits.
+  - Automatically load files modified by the agent into Neovim as buffers (using `:badd` and `bufload`), even if they were not previously open.
+  - Attach LSP servers and filetype autocmds to newly loaded buffers.
+  - Reload all modified files with `:checktime`.
+  - Format modified files if `trigger_formatting.enabled = true` (supports [conform.nvim](https://github.com/stevearc/conform.nvim), none-ls/null-ls, or LSP formatting as fallback).
+  - Show notifications when files are updated.
 - When disabled, only files that were already open in Neovim are reloaded/formatted.
 
 Enable in setup:
