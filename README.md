@@ -20,7 +20,7 @@ Using lazy.nvim:
   dependencies = { "folke/snacks.nvim" },
   opts = {
     auto_terminal_keymaps = {
-      prefix = "<leader>at",
+      prefix = "<leader>a",
       terminals = {
         {name = "claude", key = "c"},
         {name = "aider", key = "a"},
@@ -33,7 +33,7 @@ Using lazy.nvim:
 
 This automatically generates consistent keymaps for all configured terminals:
 
-- `<leader>atc` - Toggle Claude terminal (sends visual selection if active)
+- `<leader>ac` - Toggle Claude terminal (sends visual selection if active)
 - `<leader>adc` - Send diagnostics to Claude
 - `<leader>alc` - Add current file to Claude
 - `<leader>aLc` - Add all buffers to Claude
@@ -358,7 +358,7 @@ single keystroke — without overriding your own Snacks configuration.
 
 Important: prefixes
 - Toggle/diagnostics/etc. keymaps (set by `auto_terminal_keymaps`) use
-  `auto_terminal_keymaps.prefix` (default in examples: `<leader>at`).
+  `auto_terminal_keymaps.prefix` (default: `<leader>a`).
 - Picker actions use a separate `auto_terminal_keymaps.picker_prefix` and
   default to `<localleader>` so they don’t conflict with toggles.
 
@@ -451,7 +451,7 @@ return {
       },
       -- One line to get consistent mappings for all terminals
       auto_terminal_keymaps = {
-        prefix = "<leader>at",
+        prefix = "<leader>a",
         terminals = {
           { name = "claude", key = "c" },
           { name = "aider",  key = "a" },
@@ -473,7 +473,7 @@ return {
 
 What you get out of the box (with the config above):
 
-- `<leader>atc` / `<leader>ata` / `<leader>atg` — Toggle Claude/Aider/Goose; sends visual selection.
+- `<leader>ac` / `<leader>aa` / `<leader>ag` — Toggle Claude/Aider/Goose; sends visual selection.
 - `<leader>adc` — Send diagnostics to Claude. Same pattern for other terminals.
 - `<leader>alc` / `<leader>aLc` — Add current file / all buffers to Claude.
 - `<leader>arc` — Prompt for a shell command and send output to Claude.
@@ -493,7 +493,7 @@ What you get out of the box (with the config above):
       dependencies = { "folke/snacks.nvim" },
       opts = {
         auto_terminal_keymaps = {
-          prefix = "<leader>at",
+          prefix = "<leader>a",
           terminals = {
             { name = "claude", key = "c" },
             { name = "aider",  key = "a" },
@@ -523,7 +523,7 @@ use({
   config = function()
     require("ai-terminals").setup({
       auto_terminal_keymaps = {
-        prefix = "<leader>at",
+        prefix = "<leader>a",
         terminals = {
           { name = "claude", key = "c" },
           { name = "aider",  key = "a" },

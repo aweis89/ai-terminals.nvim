@@ -33,7 +33,7 @@ local Config = {}
 ---@field enabled? boolean Whether to generate keymaps for this terminal (default: true)
 
 ---@class AutoTerminalKeymapsConfig
----@field prefix? string Base prefix for toggle/diagnostics keymaps (default: "<leader>at")
+---@field prefix? string Base prefix for toggle/diagnostics keymaps (default: "<leader>a")
 ---@field picker_prefix? string Base prefix for Snacks picker actions (default: "<localleader>")
 ---@field terminals? AutoTerminalKeymapEntry[] List of terminals to generate keymaps for
 
@@ -122,7 +122,7 @@ Config.config = {
 	-- Auto-generated keymaps (optional)
 	-- Example:
 	-- auto_terminal_keymaps = {
-	-- 	prefix = "<leader>at",         -- used for toggles/diagnostics/etc.
+	-- 	prefix = "<leader>a",         -- used for toggles/diagnostics/etc.
 	-- 	picker_prefix = "<localleader>", -- used for Snacks picker actions
 	-- 	terminals = {
 	-- 		{ name = "claude", key = "c" },

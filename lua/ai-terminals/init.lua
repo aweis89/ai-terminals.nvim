@@ -65,7 +65,7 @@ local function setup_auto_terminal_keymaps()
 	end
 
 	local auto_config = config.auto_terminal_keymaps
-	local prefix = auto_config.prefix or "<leader>at"
+	local prefix = auto_config.prefix or "<leader>a"
 
 	if not auto_config.terminals or #auto_config.terminals == 0 then
 		return -- No terminals configured for auto keymaps
@@ -97,26 +97,26 @@ local function setup_auto_terminal_keymaps()
 		end, { desc = display_name .. ": Toggle terminal" })
 
 		-- Send diagnostics keymap
-		vim.keymap.set({ "n", "v" }, "<leader>ad" .. key, function()
+		vim.keymap.set({ "n", "v" }, prefix .. "d" .. key, function()
 			M.send_diagnostics(name)
 		end, { desc = display_name .. ": Send diagnostics" })
 
 		-- Add current file keymap
-		vim.keymap.set("n", "<leader>al" .. key, function()
+		vim.keymap.set("n", prefix .. "l" .. key, function()
 			M.add_files_to_terminal(name, { vim.fn.expand("%") })
 		end, { desc = display_name .. ": Add current file" })
 
 		-- Add all buffers keymap
-		vim.keymap.set("n", "<leader>aL" .. key, function()
+		vim.keymap.set("n", prefix .. "L" .. key, function()
 			M.add_buffers_to_terminal(name)
 		end, { desc = display_name .. ": Add all buffers" })
 
 		-- Send command output keymap
-		vim.keymap.set("n", "<leader>ar" .. key, function()
+		vim.keymap.set("n", prefix .. "r" .. key, function()
 			M.send_command_output(name)
 		end, { desc = display_name .. ": Run command and send output" })
 
-		vim.keymap.set("n", "<leader>ac" .. key, function()
+		vim.keymap.set("n", prefix .. "c" .. key, function()
 			M.comment(name)
 		end, { desc = display_name .. ": Add comment for AI to address" })
 		::continue::
