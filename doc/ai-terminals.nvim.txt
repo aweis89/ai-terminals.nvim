@@ -1,4 +1,4 @@
-*ai-terminals.nvim.txt*    For Neovim >= 0.8.0    Last change: 2025 October 02
+*ai-terminals.nvim.txt*    For Neovim >= 0.8.0    Last change: 2025 October 06
 
 ==============================================================================
 Table of Contents                        *ai-terminals.nvim-table-of-contents*
