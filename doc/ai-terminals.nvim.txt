@@ -515,7 +515,6 @@ your config small while still exposing all the common actions.
 
 What you get out of the box (with the config above):
 
-- `<leader>ac` / `<leader>aa` / `<leader>ag` — Toggle Claude/Aider/Goose; sends visual selection.
 - `<leader>acc` / `<leader>aaa` / `<leader>agg` — Toggle Claude/Aider/Goose (double-tap); sends visual selection.
 - `<leader>acd` — Send diagnostics to Claude. Same pattern for other terminals.
 - `<leader>acl` / `<leader>acL` — Add current file / all buffers to Claude.
