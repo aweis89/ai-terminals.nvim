@@ -54,13 +54,13 @@ Using lazy.nvim:
 
 This automatically generates consistent keymaps for all configured terminals:
 
-- `<leader>ac` - Toggle Claude terminal (sends visual selection if active)
-- `<leader>adc` - Send diagnostics to Claude
-- `<leader>alc` - Add current file to Claude
-- `<leader>aLc` - Add all buffers to Claude
-- `<leader>arc` - Run command and send output to Claude
-- `<leader>acc` - Add comment for Claude to execute in background
-- Same pattern for `a` (Aider), `g` (Goose), etc.
+- `<leader>acc` - Toggle Claude terminal (double-tap, sends visual selection if active)
+- `<leader>acd` - Send diagnostics to Claude
+- `<leader>acl` - Add current file to Claude
+- `<leader>acL` - Add all buffers to Claude
+- `<leader>acr` - Run command and send output to Claude
+- `<leader>acm` - Add comment for Claude to execute in background
+- Same pattern for `a` (Aider: `<leader>aaa`), `g` (Goose: `<leader>agg`), etc.
 
 **For single terminal users:** See the
 |ai-terminals.nvim-single-terminal-setup| section for shorter keymaps without
@@ -516,10 +516,11 @@ your config small while still exposing all the common actions.
 What you get out of the box (with the config above):
 
 - `<leader>ac` / `<leader>aa` / `<leader>ag` — Toggle Claude/Aider/Goose; sends visual selection.
-- `<leader>adc` — Send diagnostics to Claude. Same pattern for other terminals.
-- `<leader>alc` / `<leader>aLc` — Add current file / all buffers to Claude.
-- `<leader>arc` — Prompt for a shell command and send output to Claude.
-- `<leader>acc` — Add comment for Claude to execute in background.
+- `<leader>acc` / `<leader>aaa` / `<leader>agg` — Toggle Claude/Aider/Goose (double-tap); sends visual selection.
+- `<leader>acd` — Send diagnostics to Claude. Same pattern for other terminals.
+- `<leader>acl` / `<leader>acL` — Add current file / all buffers to Claude.
+- `<leader>acr` — Prompt for a shell command and send output to Claude.
+- `<leader>acm` — Add comment for Claude to execute in background.
 - Picker adds: `<localleader>ac` adds the selected file(s) to Claude. Same for `a` (Aider), `g` (Goose), etc.
 
 

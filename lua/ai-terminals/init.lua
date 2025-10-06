@@ -91,32 +91,33 @@ local function setup_auto_terminal_keymaps()
 			goto continue
 		end
 
-		-- Toggle terminal keymap
-		vim.keymap.set({ "n", "v" }, prefix .. key, function()
+		-- Toggle terminal keymap (double-tap for instant response, no timeout wait)
+		vim.keymap.set({ "n", "v" }, prefix .. key .. key, function()
 			M.toggle(name)
 		end, { desc = display_name .. ": Toggle terminal" })
 
-		-- Send diagnostics keymap
-		vim.keymap.set({ "n", "v" }, prefix .. "d" .. key, function()
+		-- Send diagnostics keymap (instant, no conflicts)
+		vim.keymap.set({ "n", "v" }, prefix .. key .. "d", function()
 			M.send_diagnostics(name)
 		end, { desc = display_name .. ": Send diagnostics" })
 
-		-- Add current file keymap
-		vim.keymap.set("n", prefix .. "l" .. key, function()
+		-- Add current file keymap (instant, no conflicts)
+		vim.keymap.set("n", prefix .. key .. "l", function()
 			M.add_files_to_terminal(name, { vim.fn.expand("%") })
 		end, { desc = display_name .. ": Add current file" })
 
-		-- Add all buffers keymap
-		vim.keymap.set("n", prefix .. "L" .. key, function()
+		-- Add all buffers keymap (instant, no conflicts)
+		vim.keymap.set("n", prefix .. key .. "L", function()
 			M.add_buffers_to_terminal(name)
 		end, { desc = display_name .. ": Add all buffers" })
 
-		-- Send command output keymap
-		vim.keymap.set("n", prefix .. "r" .. key, function()
+		-- Send command output keymap (instant, no conflicts)
+		vim.keymap.set("n", prefix .. key .. "r", function()
 			M.send_command_output(name)
 		end, { desc = display_name .. ": Run command and send output" })
 
-		vim.keymap.set("n", prefix .. "c" .. key, function()
+		-- Add comment keymap (instant, no conflicts)
+		vim.keymap.set("n", prefix .. key .. "m", function()
 			M.comment(name)
 		end, { desc = display_name .. ": Add comment for AI to address" })
 		::continue::

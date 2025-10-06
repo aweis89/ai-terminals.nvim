@@ -43,7 +43,14 @@ function M.setup_watchers(terminal_name)
 	local watch_cwd = (Config.config and Config.config.watch_cwd) or { enabled = false }
 
 	if watch_cwd.enabled then
-		M.setup_dir_watcher(terminal_name)
+		-- Only use directory watcher if we're in a git directory
+		local git_root = vim.fn.system("git rev-parse --show-toplevel 2>/dev/null"):gsub("\n", "")
+		if vim.v.shell_error == 0 and git_root ~= "" then
+			M.setup_dir_watcher(terminal_name)
+		else
+			-- Fall back to individual file watchers if not in a git directory
+			M.file_watchers(terminal_name)
+		end
 	else
 		M.file_watchers(terminal_name)
 	end
