@@ -72,9 +72,7 @@ Config.config = {
 			path_header_template = "@%s",
 		},
 		claude = {
-			cmd = function()
-				return string.format("claude config set -g theme %s && claude", vim.o.background)
-			end,
+			cmd = "claude",
 			path_header_template = "@%s",
 			tmux = {
 				startup_delay_ms = 2000,
